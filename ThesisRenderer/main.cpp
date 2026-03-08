@@ -8,6 +8,7 @@
 #include "Shader.h"
 #include "Mesh.h"
 #include "Renderer.h"
+#include "Scene.h"
 // ================= CAMERA VARIABLES =================
 
 glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
@@ -193,6 +194,7 @@ int main()
 
     Shader shader(vertexShaderSource, fragmentShaderSource);
     Renderer renderer;
+    Scene scene;
     // ================= CUBE DATA =================
 
     float vertices[] = {
@@ -243,6 +245,15 @@ int main()
     
 
     Mesh cube(vertices, sizeof(vertices));
+    SceneObject cube1(&cube, &shader);
+    SceneObject cube2(&cube, &shader);
+    SceneObject cube3(&cube, &shader);
+    cube1.position = glm::vec3(0.0f, 0.0f, 0.0f);
+    cube2.position = glm::vec3(2.0f, 0.0f, 0.0f);
+    cube3.position = glm::vec3(-2.0f, 0.0f, 0.0f);
+    scene.AddObject(&cube1);
+    scene.AddObject(&cube2);
+    scene.AddObject(&cube3);
     /*glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
@@ -337,10 +348,7 @@ int main()
             800.0f / 600.0f,
             0.1f,
             100.0f);
-        
-        SceneObject cubeObj(&cube, &shader);
-        cubeObj.position = glm::vec3(0.0f, 0.0f, 0.0f);
-        cubeObj.position = glm::vec3(0.0f, 0.0f, 0.0f);
+      
         // ===== DRAW MAIN CUBE =====
         
 
@@ -359,23 +367,10 @@ int main()
         shader.setVec3("materialSpecular", glm::vec3(0.5f, 0.5f, 0.5f));
 
         shader.setMat4("model", glm::value_ptr(model));
-
+        scene.Render(renderer);
         glUniform1f(glGetUniformLocation(shader.ID, "materialShininess"), 32.0f);
-       // shader.setVec3("objectColor", glm::vec3(1.0f, 0.5f, 0.3f));
-        for (unsigned int i = 0; i < 10; i++)
-        {
-            glm::mat4 model = glm::mat4(1.0f);
-
-            model = glm::translate(model, cubePositions[i]);
-
-            float angle = 20.0f * i;
-
-            model = glm::rotate(model,
-                glm::radians(angle) + (float)glfwGetTime(),
-                glm::vec3(1.0f, 0.3f, 0.5f));
-
-            renderer.DrawMesh(cube, shader, model);
-        }
+       
+        
 
 
         // ===== DRAW LIGHT CUBE =====
@@ -390,8 +385,7 @@ int main()
         lightShader.setMat4("view", glm::value_ptr(view));
         lightShader.setMat4("projection", glm::value_ptr(projection));
 
-
-        renderer.DrawMesh(cube, shader, model);
+        scene.Render(renderer);
     
         glfwSwapBuffers(window);
     }

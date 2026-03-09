@@ -92,43 +92,39 @@ void main()
 
 )";
 const char* fragmentShaderSource = R"(
-
 #version 330 core
 
 out vec4 FragColor;
 
 in vec3 FragPos;
 in vec3 Normal;
+in vec2 TexCoord;
 
 uniform vec3 lightPos;
 uniform vec3 viewPos;
 uniform vec3 lightColor;
 
-uniform vec3 materialAmbient;
-uniform vec3 materialDiffuse;
+uniform sampler2D texture1;
+
 uniform vec3 materialSpecular;
 uniform float materialShininess;
 
 void main()
 {
-    // Ambient
-    vec3 ambient = 0.2 * materialAmbient;
+    vec3 textureColor = texture(texture1, TexCoord).rgb;
 
-    // Diffuse
+    vec3 ambient = 0.2 * textureColor;
+
     vec3 norm = normalize(Normal);
     vec3 lightDir = normalize(lightPos - FragPos);
 
     float diff = max(dot(norm, lightDir), 0.0);
+    vec3 diffuse = diff * textureColor;
 
-    vec3 diffuse = diff * materialDiffuse;
-
-    // Specular
     vec3 viewDir = normalize(viewPos - FragPos);
-
     vec3 reflectDir = reflect(-lightDir, norm);
 
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), materialShininess);
-
     vec3 specular = materialSpecular * spec;
 
     vec3 result = (ambient + diffuse + specular) * lightColor;

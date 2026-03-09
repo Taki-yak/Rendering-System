@@ -9,6 +9,7 @@
 #include "Mesh.h"
 #include "Renderer.h"
 #include "Scene.h"
+#include "Texture.h""
 // ================= CAMERA VARIABLES =================
 
 glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
@@ -265,30 +266,20 @@ int main()
 
     // ================= TEXTURE =================
 
-    unsigned int texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+   unsigned int texture;
+    //glGenTextures(1, &texture);
+   //glBindTexture(GL_TEXTURE_2D, texture);
+   Texture containerTexture("D:\\taki\\POLAND\\POLAND\\ThesisRenderer\\ThesisRenderer\\container.jpg");
+      /*  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);*/
 
     int width, height, nrChannels;
-    unsigned char* data = stbi_load("D:\\taki\\POLAND\\POLAND\\ThesisRenderer\\ThesisRenderer\\container.jpg", &width, &height, &nrChannels, 0);
+   // unsigned char* data = stbi_load("D:\\taki\\POLAND\\POLAND\\ThesisRenderer\\ThesisRenderer\\container.jpg", &width, &height, &nrChannels, 0);
 
-    if (data)
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
-            width, height, 0,
-            GL_RGB, GL_UNSIGNED_BYTE, data);
 
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    else
         std::cout << "Failed to load texture\n";
-
-    stbi_image_free(data);
 
     Shader lightShader(lightVertexSource, lightFragmentSource);
     glUniform1i(glGetUniformLocation(shader.ID, "texture1"), 0);
@@ -349,7 +340,7 @@ int main()
         
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture);
+        containerTexture.Bind();
 
         shader.setMat4("model", glm::value_ptr(model));
         shader.setMat4("view", glm::value_ptr(view));

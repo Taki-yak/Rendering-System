@@ -1,10 +1,11 @@
 #include "SceneObject.h"
 #include <glm/gtc/matrix_transform.hpp>
 
-SceneObject::SceneObject(Mesh* m, Shader* s)
+SceneObject::SceneObject(Mesh* m, Shader* s, Texture* t)
 {
     mesh = m;
     shader = s;
+    texture = t;
 
     position = glm::vec3(0.0f);
     rotation = glm::vec3(0.0f);

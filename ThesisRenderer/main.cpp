@@ -9,9 +9,9 @@
 #include "Mesh.h"
 #include "Renderer.h"
 #include "Scene.h"
-#include "Texture.h""
-// ================= CAMERA VARIABLES =================
+#include "Texture.h"
 
+// ================= CAMERA VARIABLES =================
 glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -240,11 +240,11 @@ int main()
         -0.5f, 0.5f,-0.5f, 0,1,0, 0,1
     };
     
-
+    Texture containerTexture("container.jpg");
     Mesh cube(vertices, sizeof(vertices));
-    SceneObject cube1(&cube, &shader);
-    SceneObject cube2(&cube, &shader);
-    SceneObject cube3(&cube, &shader);
+    SceneObject cube1(&cube, &shader, &containerTexture);
+    SceneObject cube2(&cube, &shader, &containerTexture);
+    SceneObject cube3(&cube, &shader, &containerTexture);
     cube1.position = glm::vec3(0.0f, 0.0f, 0.0f);
     cube2.position = glm::vec3(2.0f, 0.0f, 0.0f);
     cube3.position = glm::vec3(-2.0f, 0.0f, 0.0f);
@@ -269,7 +269,7 @@ int main()
    unsigned int texture;
     //glGenTextures(1, &texture);
    //glBindTexture(GL_TEXTURE_2D, texture);
-   Texture containerTexture("D:\\taki\\POLAND\\POLAND\\ThesisRenderer\\ThesisRenderer\\container.jpg");
+   //Texture containerTexture("D:\\taki\\POLAND\\POLAND\\ThesisRenderer\\ThesisRenderer\\container.jpg");
       /*  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);

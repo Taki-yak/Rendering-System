@@ -245,9 +245,9 @@ int main()
     SceneObject cube1(&cube, &shader, &containerTexture);
     SceneObject cube2(&cube, &shader, &containerTexture);
     SceneObject cube3(&cube, &shader, &containerTexture);
-    cube1.position = glm::vec3(0.0f, 0.0f, 0.0f);
-    cube2.position = glm::vec3(2.0f, 0.0f, 0.0f);
-    cube3.position = glm::vec3(-2.0f, 0.0f, 0.0f);
+    cube1.transform.position = glm::vec3(0.0f, 0.0f, 0.0f);
+    cube2.transform.position = glm::vec3(2.0f, 0.0f, 0.0f);
+    cube3.transform.position = glm::vec3(-2.0f, 0.0f, 0.0f);
     scene.AddObject(&cube1);
     scene.AddObject(&cube2);
     scene.AddObject(&cube3);

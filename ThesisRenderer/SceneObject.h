@@ -1,9 +1,9 @@
 #pragma once
 
-#include <glm/glm.hpp>
 #include "Mesh.h"
 #include "Shader.h"
 #include "Texture.h"
+#include "Transform.h"
 
 class SceneObject
 {
@@ -13,11 +13,7 @@ public:
     Shader* shader;
     Texture* texture;
 
-    glm::vec3 position;
-    glm::vec3 rotation;
-    glm::vec3 scale;
+    Transform transform;
 
     SceneObject(Mesh* m, Shader* s, Texture* t);
-
-    glm::mat4 GetModelMatrix();
 };

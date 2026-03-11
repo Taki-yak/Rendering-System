@@ -9,7 +9,6 @@ void Renderer::DrawMesh(Mesh& mesh, Shader& shader, glm::mat4 model)
 
     mesh.Draw();
 }
-
 void Renderer::DrawObject(SceneObject& obj)
 {
     obj.shader->use();
@@ -17,7 +16,7 @@ void Renderer::DrawObject(SceneObject& obj)
     glActiveTexture(GL_TEXTURE0);
     obj.texture->Bind();
 
-    glm::mat4 model = obj.GetModelMatrix();
+    glm::mat4 model = obj.transform.GetModelMatrix();
 
     obj.shader->setMat4("model", glm::value_ptr(model));
 

@@ -10,6 +10,7 @@
 #include "Renderer.h"
 #include "Scene.h"
 #include "Texture.h"
+#include "Model.h"
 
 // ================= CAMERA VARIABLES =================
 glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
@@ -194,6 +195,7 @@ int main()
     Shader shader(vertexShaderSource, fragmentShaderSource);
     Renderer renderer;
     Scene scene;
+    Model myModel("model.obj");
     // ================= CUBE DATA =================
 
     float vertices[] = {
@@ -343,7 +345,7 @@ int main()
         shader.setMat4("model", glm::value_ptr(model));
         shader.setMat4("view", glm::value_ptr(view));
         shader.setMat4("projection", glm::value_ptr(projection));
-
+        myModel.Draw();
         shader.setVec3("lightPos", glm::vec3(2.0f, 2.0f, 2.0f));
         shader.setVec3("viewPos", cameraPos);
         shader.setVec3("lightColor", glm::vec3(1.0f));
@@ -356,7 +358,7 @@ int main()
         glUniform1f(glGetUniformLocation(shader.ID, "materialShininess"), 32.0f);
        
         
-
+ 
 
         // ===== DRAW LIGHT CUBE =====
         lightShader.use();
@@ -373,6 +375,7 @@ int main()
         scene.Render(renderer);
     
         glfwSwapBuffers(window);
+     
     }
 
     glfwTerminate();

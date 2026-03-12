@@ -1,18 +1,14 @@
-#ifndef MESH_H
-#define MESH_H
-
+#pragma once
 #include <glad/glad.h>
 
 class Mesh
 {
 public:
 
-    unsigned int VAO;
-    unsigned int VBO;
+    unsigned int VAO, VBO;
+    int vertexCount;
 
     Mesh(float* vertices, int size);
 
     void Draw();
 };
-
-#endif

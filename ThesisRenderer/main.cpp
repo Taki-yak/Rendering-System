@@ -23,7 +23,7 @@ float lastX = 400;
 float lastY = 300;
 
 bool firstMouse = true;
-
+void TestAssimp();
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
@@ -161,6 +161,7 @@ void main()
 
 int main()
 {
+
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -187,6 +188,7 @@ int main()
 
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
+    TestAssimp();
     // ================= SHADER CLASS =================
 
     Shader shader(vertexShaderSource, fragmentShaderSource);
@@ -277,10 +279,6 @@ int main()
 
     int width, height, nrChannels;
    // unsigned char* data = stbi_load("D:\\taki\\POLAND\\POLAND\\ThesisRenderer\\ThesisRenderer\\container.jpg", &width, &height, &nrChannels, 0);
-
-
-        std::cout << "Failed to load texture\n";
-
     Shader lightShader(lightVertexSource, lightFragmentSource);
     glUniform1i(glGetUniformLocation(shader.ID, "texture1"), 0);
     shader.setVec3("lightPos", glm::vec3(1.2f, 1.0f, 2.0f));

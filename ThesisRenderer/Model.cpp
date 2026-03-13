@@ -5,9 +5,13 @@ Model::Model(const std::string& path)
 {
     LoadModel(path);
 }
-
 void Model::Draw()
 {
+    if (!loadedTextures.empty())
+    {
+        loadedTextures[0].Bind();
+    }
+
     for (unsigned int i = 0; i < meshes.size(); i++)
         meshes[i].Draw();
 }
@@ -26,7 +30,7 @@ void Model::LoadModel(std::string path)
         std::cout << "Assimp error: " << importer.GetErrorString() << std::endl;
         return;
     }
-
+    directory = path.substr(0, path.find_last_of("/\\"));
     ProcessNode(scene->mRootNode, scene);
 }
 
@@ -42,7 +46,8 @@ void Model::ProcessNode(aiNode* node, const aiScene* scene)
     {
         ProcessNode(node->mChildren[i], scene);
     }
-}Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
+}
+Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 {
     std::vector<float> vertices;
 
@@ -54,12 +59,10 @@ void Model::ProcessNode(aiNode* node, const aiScene* scene)
         {
             unsigned int index = face.mIndices[j];
 
-            // position
             vertices.push_back(mesh->mVertices[index].x);
             vertices.push_back(mesh->mVertices[index].y);
             vertices.push_back(mesh->mVertices[index].z);
 
-            // normal
             if (mesh->HasNormals())
             {
                 vertices.push_back(mesh->mNormals[index].x);
@@ -73,7 +76,6 @@ void Model::ProcessNode(aiNode* node, const aiScene* scene)
                 vertices.push_back(0.0f);
             }
 
-            // texture coordinates
             if (mesh->mTextureCoords[0])
             {
                 vertices.push_back(mesh->mTextureCoords[0][index].x);
@@ -84,6 +86,26 @@ void Model::ProcessNode(aiNode* node, const aiScene* scene)
                 vertices.push_back(0.0f);
                 vertices.push_back(0.0f);
             }
+        }
+    }
+
+
+    if (mesh->mMaterialIndex >= 0)
+    {
+        aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+
+        aiString str;
+        if (material->GetTexture(aiTextureType_DIFFUSE, 0, &str) == AI_SUCCESS)
+        {
+            std::string filename = std::string(str.C_Str());
+
+            std::string fullPath = directory + "/" + filename;
+
+            std::cout << "Trying to load texture: " << fullPath << std::endl;
+
+            Texture texture(fullPath.c_str());
+
+            loadedTextures.push_back(texture);
         }
     }
 

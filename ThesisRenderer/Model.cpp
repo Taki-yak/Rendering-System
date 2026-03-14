@@ -30,7 +30,10 @@ void Model::LoadModel(std::string path)
         std::cout << "Assimp error: " << importer.GetErrorString() << std::endl;
         return;
     }
-    directory = path.substr(0, path.find_last_of("/\\"));
+
+    size_t slash = path.find_last_of("/\\");
+    directory = (slash == std::string::npos) ? "." : path.substr(0, slash);
+
     ProcessNode(scene->mRootNode, scene);
 }
 
@@ -101,6 +104,7 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 
             std::string fullPath = directory + "/" + filename;
 
+            std::replace(fullPath.begin(), fullPath.end(), '\\', '/');
             std::cout << "Trying to load texture: " << fullPath << std::endl;
 
             Texture texture(fullPath.c_str());

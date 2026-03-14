@@ -282,7 +282,6 @@ int main()
     int width, height, nrChannels;
    // unsigned char* data = stbi_load("D:\\taki\\POLAND\\POLAND\\ThesisRenderer\\ThesisRenderer\\container.jpg", &width, &height, &nrChannels, 0);
     Shader lightShader(lightVertexSource, lightFragmentSource);
-    glUniform1i(glGetUniformLocation(shader.ID, "texture1"), 0);
     shader.setVec3("lightPos", glm::vec3(1.2f, 1.0f, 2.0f));
     shader.setVec3("viewPos", cameraPos);
     shader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
@@ -337,26 +336,22 @@ int main()
             100.0f);
       
         // ===== DRAW MAIN CUBE =====
-        
-
-        glActiveTexture(GL_TEXTURE0);
-        containerTexture.Bind();
+        shader.use();
 
         shader.setMat4("model", glm::value_ptr(model));
         shader.setMat4("view", glm::value_ptr(view));
         shader.setMat4("projection", glm::value_ptr(projection));
-        myModel.Draw();
+
         shader.setVec3("lightPos", glm::vec3(2.0f, 2.0f, 2.0f));
         shader.setVec3("viewPos", cameraPos);
         shader.setVec3("lightColor", glm::vec3(1.0f));
-        shader.setVec3("materialAmbient", glm::vec3(1.0f, 0.5f, 0.31f));
-        shader.setVec3("materialDiffuse", glm::vec3(1.0f, 0.5f, 0.31f));
-        shader.setVec3("materialSpecular", glm::vec3(0.5f, 0.5f, 0.5f));
 
-        shader.setMat4("model", glm::value_ptr(model));
-        scene.Render(renderer);
+        shader.setVec3("materialSpecular", glm::vec3(0.5f));
         glUniform1f(glGetUniformLocation(shader.ID, "materialShininess"), 32.0f);
-       
+
+        shader.setInt("texture1", 0);
+
+        myModel.Draw();
         
  
 

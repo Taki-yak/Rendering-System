@@ -9,6 +9,6 @@ void Scene::Render(Renderer& renderer)
 {
     for (SceneObject* obj : objects)
     {
-        renderer.DrawObject(*obj);
+        renderer.DrawObject(obj);
     }
 }

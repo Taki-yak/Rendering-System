@@ -4,7 +4,6 @@
 #include "Shader.h"
 #include "Texture.h"
 #include "Transform.h"
-
 class SceneObject
 {
 public:
@@ -15,5 +14,6 @@ public:
 
     Transform transform;
 
-    SceneObject(Mesh* m, Shader* s, Texture* t);
+    SceneObject(Mesh* m, Shader* s, Texture* t)
+        : mesh(m), shader(s), texture(t) {}
 };

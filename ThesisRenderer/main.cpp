@@ -11,14 +11,13 @@
 #include "Scene.h"
 #include "Texture.h"
 #include "Model.h"
-
+#include "Camera.h"
 // ================= CAMERA VARIABLES =================
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-
-float yaw = -90.0f;
-float pitch = 0.0f;
+//glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+//glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+//glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+//float yaw = -90.0f;
+//float pitch = 0.0f;
 
 float lastX = 400;
 float lastY = 300;
@@ -27,7 +26,7 @@ bool firstMouse = true;
 void TestAssimp();
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
-
+Camera camera;
 
 // ================= MOUSE CALLBACK =================
 
@@ -40,29 +39,13 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
         firstMouse = false;
     }
 
-    float sensitivity = 0.1f;
-
     float xoffset = (float)xpos - lastX;
     float yoffset = lastY - (float)ypos;
 
     lastX = (float)xpos;
     lastY = (float)ypos;
 
-    xoffset *= sensitivity;
-    yoffset *= sensitivity;
-
-    yaw += xoffset;
-    pitch += yoffset;
-
-    if (pitch > 89.0f) pitch = 89.0f;
-    if (pitch < -89.0f) pitch = -89.0f;
-
-    glm::vec3 direction;
-    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-    direction.y = sin(glm::radians(pitch));
-    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-
-    cameraFront = glm::normalize(direction);
+    camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
 
@@ -283,7 +266,7 @@ int main()
    // unsigned char* data = stbi_load("D:\\taki\\POLAND\\POLAND\\ThesisRenderer\\ThesisRenderer\\container.jpg", &width, &height, &nrChannels, 0);
     Shader lightShader(lightVertexSource, lightFragmentSource);
     shader.setVec3("lightPos", glm::vec3(1.2f, 1.0f, 2.0f));
-    shader.setVec3("viewPos", cameraPos);
+   shader.setVec3("viewPos", camera.Position);
     shader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
     shader.setVec3("objectColor", glm::vec3(1.0f, 1.0f, 1.0f));
 
@@ -313,13 +296,16 @@ int main()
         glfwPollEvents();
 
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-            cameraPos += cameraSpeed * cameraFront;
+            camera.Position += cameraSpeed * camera.Front;
+
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-            cameraPos -= cameraSpeed * cameraFront;
+            camera.Position -= cameraSpeed * camera.Front;
+
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-            cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+            camera.Position -= glm::normalize(glm::cross(camera.Front, camera.Up)) * cameraSpeed;
+
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-            cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+            camera.Position += glm::normalize(glm::cross(camera.Front, camera.Up)) * cameraSpeed;
 
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -327,8 +313,7 @@ int main()
         glm::mat4 model = glm::rotate(glm::mat4(1.0f),
             (float)glfwGetTime(),
             glm::vec3(0.5f, 1.0f, 0.0f));
-
-        glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+        glm::mat4 view = camera.GetViewMatrix();
 
         glm::mat4 projection = glm::perspective(glm::radians(45.0f),
             800.0f / 600.0f,
@@ -343,7 +328,7 @@ int main()
         shader.setMat4("projection", glm::value_ptr(projection));
 
         shader.setVec3("lightPos", glm::vec3(2.0f, 2.0f, 2.0f));
-        shader.setVec3("viewPos", cameraPos);
+        shader.setVec3("viewPos", camera.Position);
         shader.setVec3("lightColor", glm::vec3(1.0f));
 
         shader.setVec3("materialSpecular", glm::vec3(0.5f));

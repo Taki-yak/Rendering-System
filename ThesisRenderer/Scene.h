@@ -10,8 +10,7 @@ public:
 
     std::vector<SceneObject*> objects;
 
-    void AddObject(SceneObject* obj);
+    void AddObject(SceneObject* object);
 
     void Render(Renderer& renderer);
-   
 };

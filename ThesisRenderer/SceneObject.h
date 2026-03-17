@@ -2,7 +2,7 @@
 
 #include "Mesh.h"
 #include "Shader.h"
-#include "Texture.h"
+#include "Material.h"
 #include "Transform.h"
 
 class SceneObject
@@ -11,9 +11,9 @@ public:
 
     Mesh* mesh;
     Shader* shader;
-    Texture* texture;
+    Material* material;
 
     Transform transform;
 
-    SceneObject(Mesh* m, Shader* s, Texture* t);
+    SceneObject(Mesh* m, Shader* s, Material* mat);
 };

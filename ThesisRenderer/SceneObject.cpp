@@ -1,8 +1,8 @@
 #include "SceneObject.h"
 
-SceneObject::SceneObject(Mesh* m, Shader* s, Texture* t)
+SceneObject::SceneObject(Mesh* m, Shader* s, Material* mat)
 {
     mesh = m;
     shader = s;
-    texture = t;
+    material = mat;
 }

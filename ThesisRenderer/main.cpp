@@ -226,12 +226,14 @@ int main()
         -0.5f, 0.5f, 0.5f, 0,1,0, 0,0,
         -0.5f, 0.5f,-0.5f, 0,1,0, 0,1
     };
-    
     Texture containerTexture("container.jpg");
+
+    Material cubeMaterial(&containerTexture);
     Mesh cube(vertices, sizeof(vertices));
-    SceneObject cube1(&cube, &shader, &containerTexture);
-    SceneObject cube2(&cube, &shader, &containerTexture);
-    SceneObject cube3(&cube, &shader, &containerTexture);
+    SceneObject cube1(&cube, &shader, &cubeMaterial);
+    SceneObject cube2(&cube, &shader, &cubeMaterial);
+    SceneObject cube3(&cube, &shader, &cubeMaterial);
+    
     cube1.transform.position = glm::vec3(0.0f, 0.0f, 0.0f);
     cube2.transform.position = glm::vec3(2.0f, 0.0f, 0.0f);
     cube3.transform.position = glm::vec3(-2.0f, 0.0f, 0.0f);

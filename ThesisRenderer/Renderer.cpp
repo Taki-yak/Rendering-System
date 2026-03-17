@@ -9,8 +9,8 @@ void Renderer::DrawObject(SceneObject* object)
 
     object->shader->setMat4("model", glm::value_ptr(model));
 
-    if (object->texture)
-        object->texture->Bind();
+    if (object->material)
+        object->material->Bind();
 
     object->mesh->Draw();
 }

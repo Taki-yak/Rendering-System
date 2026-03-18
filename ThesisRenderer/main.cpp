@@ -77,7 +77,9 @@ void main()
 
 )";
 const char* fragmentShaderSource = R"(
+
 #version 330 core
+#define MAX_LIGHTS 3
 
 out vec4 FragColor;
 
@@ -85,9 +87,10 @@ in vec3 FragPos;
 in vec3 Normal;
 in vec2 TexCoord;
 
-uniform vec3 lightPos;
 uniform vec3 viewPos;
-uniform vec3 lightColor;
+
+uniform vec3 lightPositions[MAX_LIGHTS];
+uniform vec3 lightColors[MAX_LIGHTS];
 
 uniform sampler2D texture1;
 
@@ -98,25 +101,30 @@ void main()
 {
     vec3 textureColor = texture(texture1, TexCoord).rgb;
 
-    vec3 ambient = 0.2 * textureColor;
-
     vec3 norm = normalize(Normal);
-    vec3 lightDir = normalize(lightPos - FragPos);
-
-    float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = diff * textureColor;
-
     vec3 viewDir = normalize(viewPos - FragPos);
-    vec3 reflectDir = reflect(-lightDir, norm);
 
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), materialShininess);
-    vec3 specular = materialSpecular * spec;
+    vec3 result = vec3(0.0);
 
-    vec3 result = (ambient + diffuse + specular) * lightColor;
+    for(int i = 0; i < MAX_LIGHTS; i++)
+    {
+        vec3 lightDir = normalize(lightPositions[i] - FragPos);
+
+        float diff = max(dot(norm, lightDir), 0.0);
+        vec3 diffuse = diff * textureColor * lightColors[i];
+
+        vec3 reflectDir = reflect(-lightDir, norm);
+        float spec = pow(max(dot(viewDir, reflectDir), 0.0), materialShininess);
+        vec3 specular = materialSpecular * spec * lightColors[i];
+
+        vec3 ambient = 0.1 * textureColor;
+
+        result += ambient + diffuse + specular;
+    }
 
     FragColor = vec4(result, 1.0);
 }
-)"; 
+)";
 const char* lightVertexSource = R"(
 #version 330 core
 layout (location = 0) in vec3 aPos;
@@ -132,13 +140,15 @@ void main()
 )";
 
 const char* lightFragmentSource = R"(
+
 #version 330 core
 out vec4 FragColor;
 
 void main()
 {
-    FragColor = vec4(1.0); 
+    FragColor = vec4(1.0);
 }
+
 )";
 
 // ================= MAIN =================
@@ -176,6 +186,17 @@ int main()
     // ================= SHADER CLASS =================
 
     Shader shader(vertexShaderSource, fragmentShaderSource);
+    glm::vec3 lightPositions[] = {
+    glm::vec3(2.0f, 2.0f, 2.0f),
+    glm::vec3(-2.0f, 2.0f, 2.0f),
+    glm::vec3(0.0f, 3.0f, -3.0f)
+    };
+
+    glm::vec3 lightColors[] = {
+        glm::vec3(1.0f),
+        glm::vec3(1.0f, 0.8f, 0.6f),
+        glm::vec3(0.6f, 0.6f, 1.0f)
+    };
     Renderer renderer;
     Scene scene;
     Model myModel("model.obj");
@@ -324,14 +345,18 @@ int main()
       
         // ===== DRAW MAIN CUBE =====
         shader.use();
-
+        for (int i = 0; i < 3; i++)
+        {
+            shader.setVec3("lightPositions[" + std::to_string(i) + "]", lightPositions[i]);
+            shader.setVec3("lightColors[" + std::to_string(i) + "]", lightColors[i]);
+        }
         shader.setMat4("model", glm::value_ptr(model));
         shader.setMat4("view", glm::value_ptr(view));
         shader.setMat4("projection", glm::value_ptr(projection));
 
-        shader.setVec3("lightPos", glm::vec3(2.0f, 2.0f, 2.0f));
+      
         shader.setVec3("viewPos", camera.Position);
-        shader.setVec3("lightColor", glm::vec3(1.0f));
+     
 
         shader.setVec3("materialSpecular", glm::vec3(0.5f));
         glUniform1f(glGetUniformLocation(shader.ID, "materialShininess"), 32.0f);

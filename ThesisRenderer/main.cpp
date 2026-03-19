@@ -87,13 +87,15 @@ in vec3 FragPos;
 in vec3 Normal;
 in vec2 TexCoord;
 
+uniform sampler2D texture1;
+
 uniform vec3 viewPos;
 
 uniform vec3 lightPositions[MAX_LIGHTS];
 uniform vec3 lightColors[MAX_LIGHTS];
 
-uniform sampler2D texture1;
-
+uniform vec3 materialAmbient;
+uniform vec3 materialDiffuse;
 uniform vec3 materialSpecular;
 uniform float materialShininess;
 
@@ -111,19 +113,20 @@ void main()
         vec3 lightDir = normalize(lightPositions[i] - FragPos);
 
         float diff = max(dot(norm, lightDir), 0.0);
-        vec3 diffuse = diff * textureColor * lightColors[i];
+        vec3 diffuse = diff * materialDiffuse * textureColor * lightColors[i];
 
         vec3 reflectDir = reflect(-lightDir, norm);
         float spec = pow(max(dot(viewDir, reflectDir), 0.0), materialShininess);
         vec3 specular = materialSpecular * spec * lightColors[i];
 
-        vec3 ambient = 0.1 * textureColor;
+        vec3 ambient = materialAmbient * textureColor;
 
         result += ambient + diffuse + specular;
     }
 
     FragColor = vec4(result, 1.0);
 }
+
 )";
 const char* lightVertexSource = R"(
 #version 330 core
@@ -250,6 +253,8 @@ int main()
     Texture containerTexture("container.jpg");
 
     Material cubeMaterial(&containerTexture);
+    cubeMaterial.specular = glm::vec3(1.0f);
+    cubeMaterial.shininess = 64.0f;
     Mesh cube(vertices, sizeof(vertices));
     SceneObject cube1(&cube, &shader, &cubeMaterial);
     SceneObject cube2(&cube, &shader, &cubeMaterial);

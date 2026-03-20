@@ -6,3 +6,8 @@ SceneObject::SceneObject(Mesh* m, Shader* s, Material* mat)
     shader = s;
     material = mat;
 }
+void SceneObject::AddChild(SceneObject* child)
+{
+    child->parent = this;
+    children.push_back(child);
+}

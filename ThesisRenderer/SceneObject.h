@@ -1,5 +1,5 @@
 #pragma once
-
+#include <vector>
 #include "Mesh.h"
 #include "Shader.h"
 #include "Material.h"
@@ -15,5 +15,11 @@ public:
 
     Transform transform;
 
+    SceneObject* parent;
+
+    std::vector<SceneObject*> children;
+
     SceneObject(Mesh* m, Shader* s, Material* mat);
+
+    void AddChild(SceneObject* child);
 };

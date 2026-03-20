@@ -7,8 +7,8 @@ void Scene::AddObject(SceneObject* object)
 
 void Scene::Render(Renderer& renderer)
 {
-    for (SceneObject* object : objects)
+    for (SceneObject* obj : objects)
     {
-        renderer.DrawObject(object);
+        renderer.DrawSceneObject(obj, glm::mat4(1.0f));
     }
 }

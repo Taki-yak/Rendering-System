@@ -10,4 +10,5 @@ public:
 
     void DrawMesh(Mesh& mesh, Shader& shader, glm::mat4 model);
     void DrawObject(SceneObject* object);
+    void DrawSceneObject(SceneObject* object, glm::mat4 parentMatrix);
 };

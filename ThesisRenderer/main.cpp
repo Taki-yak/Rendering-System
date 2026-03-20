@@ -312,7 +312,8 @@ int main()
     };
   
     // ================= RENDER LOOP =================
-
+    cube1.AddChild(&cube2);
+    cube2.AddChild(&cube3);
     while (!glfwWindowShouldClose(window))
     {
         float currentFrame = glfwGetTime();

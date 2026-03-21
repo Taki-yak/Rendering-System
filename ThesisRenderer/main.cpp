@@ -153,6 +153,40 @@ void main()
 }
 
 )";
+const char* skyboxVertex = R"(
+
+#version 330 core
+layout (location = 0) in vec3 aPos;
+
+out vec3 TexCoords;
+
+uniform mat4 view;
+uniform mat4 projection;
+
+void main()
+{
+    TexCoords = aPos;
+
+    vec4 pos = projection * view * vec4(aPos, 1.0);
+    gl_Position = pos.xyww;
+}
+
+)";
+const char* skyboxFragment = R"(
+
+#version 330 core
+out vec4 FragColor;
+
+in vec3 TexCoords;
+
+uniform samplerCube skybox;
+
+void main()
+{
+    FragColor = texture(skybox, TexCoords);
+}
+
+)";
 
 // ================= MAIN =================
 
@@ -203,6 +237,8 @@ int main()
     Renderer renderer;
     Scene scene;
     Model myModel("model.obj");
+
+    Shader skyboxShader(skyboxVertex, skyboxFragment);
     // ================= CUBE DATA =================
 
     float vertices[] = {
@@ -250,6 +286,65 @@ int main()
         -0.5f, 0.5f, 0.5f, 0,1,0, 0,0,
         -0.5f, 0.5f,-0.5f, 0,1,0, 0,1
     };
+
+    float skyboxVertices[] = {
+
+-1.0f,  1.0f, -1.0f,
+-1.0f, -1.0f, -1.0f,
+ 1.0f, -1.0f, -1.0f,
+ 1.0f, -1.0f, -1.0f,
+ 1.0f,  1.0f, -1.0f,
+-1.0f,  1.0f, -1.0f,
+
+-1.0f, -1.0f,  1.0f,
+-1.0f, -1.0f, -1.0f,
+-1.0f,  1.0f, -1.0f,
+-1.0f,  1.0f, -1.0f,
+-1.0f,  1.0f,  1.0f,
+-1.0f, -1.0f,  1.0f,
+
+ 1.0f, -1.0f, -1.0f,
+ 1.0f, -1.0f,  1.0f,
+ 1.0f,  1.0f,  1.0f,
+ 1.0f,  1.0f,  1.0f,
+ 1.0f,  1.0f, -1.0f,
+ 1.0f, -1.0f, -1.0f,
+
+-1.0f, -1.0f,  1.0f,
+-1.0f,  1.0f,  1.0f,
+ 1.0f,  1.0f,  1.0f,
+ 1.0f,  1.0f,  1.0f,
+ 1.0f, -1.0f,  1.0f,
+-1.0f, -1.0f,  1.0f,
+
+-1.0f,  1.0f, -1.0f,
+ 1.0f,  1.0f, -1.0f,
+ 1.0f,  1.0f,  1.0f,
+ 1.0f,  1.0f,  1.0f,
+-1.0f,  1.0f,  1.0f,
+-1.0f,  1.0f, -1.0f,
+
+-1.0f, -1.0f, -1.0f,
+-1.0f, -1.0f,  1.0f,
+ 1.0f, -1.0f, -1.0f,
+ 1.0f, -1.0f, -1.0f,
+-1.0f, -1.0f,  1.0f,
+ 1.0f, -1.0f,  1.0f
+    };
+    unsigned int skyboxVAO, skyboxVBO;
+
+    glGenVertexArrays(1, &skyboxVAO);
+    glGenBuffers(1, &skyboxVBO);
+
+    glBindVertexArray(skyboxVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), skyboxVertices, GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+
+    glBindVertexArray(0);
     Texture containerTexture("container.jpg");
 
     Material cubeMaterial(&containerTexture);
@@ -388,6 +483,19 @@ int main()
         scene.Render(renderer);
     
         glfwSwapBuffers(window);
+        glDepthFunc(GL_LEQUAL);
+
+        skyboxShader.use();
+
+        glm::mat4 viewSky = glm::mat4(glm::mat3(camera.GetViewMatrix()));
+
+        skyboxShader.setMat4("view", glm::value_ptr(viewSky));
+        skyboxShader.setMat4("projection", glm::value_ptr(projection));
+
+        glBindVertexArray(skyboxVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+
+        glDepthFunc(GL_LESS);
      
     }
 

@@ -12,6 +12,7 @@
 #include "Texture.h"
 #include "Model.h"
 #include "Camera.h"
+#include "Cubemap.h"
 // ================= CAMERA VARIABLES =================
 //glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 //glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -175,6 +176,7 @@ void main()
 const char* skyboxFragment = R"(
 
 #version 330 core
+
 out vec4 FragColor;
 
 in vec3 TexCoords;
@@ -187,6 +189,15 @@ void main()
 }
 
 )";
+std::vector<std::string> faces =
+{
+    "textures/skybox/right.jpg",
+    "textures/skybox/left.jpg",
+    "textures/skybox/top.jpg",
+    "textures/skybox/bottom.jpg",
+    "textures/skybox/front.jpg",
+    "textures/skybox/back.jpg"
+};
 
 // ================= MAIN =================
 
@@ -216,6 +227,8 @@ int main()
         std::cout << "Failed to initialize GLAD\n";
         return -1;
     }
+
+    Cubemap skybox(faces);
 
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
@@ -354,7 +367,7 @@ int main()
     SceneObject cube1(&cube, &shader, &cubeMaterial);
     SceneObject cube2(&cube, &shader, &cubeMaterial);
     SceneObject cube3(&cube, &shader, &cubeMaterial);
-    
+
     cube1.transform.position = glm::vec3(0.0f, 0.0f, 0.0f);
     cube2.transform.position = glm::vec3(2.0f, 0.0f, 0.0f);
     cube3.transform.position = glm::vec3(-2.0f, 0.0f, 0.0f);
@@ -376,7 +389,7 @@ int main()
 
     // ================= TEXTURE =================
 
-   unsigned int texture;
+    unsigned int texture;
     //glGenTextures(1, &texture);
    //glBindTexture(GL_TEXTURE_2D, texture);
    //Texture containerTexture("D:\\taki\\POLAND\\POLAND\\ThesisRenderer\\ThesisRenderer\\container.jpg");
@@ -386,10 +399,10 @@ int main()
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);*/
 
     int width, height, nrChannels;
-   // unsigned char* data = stbi_load("D:\\taki\\POLAND\\POLAND\\ThesisRenderer\\ThesisRenderer\\container.jpg", &width, &height, &nrChannels, 0);
+    // unsigned char* data = stbi_load("D:\\taki\\POLAND\\POLAND\\ThesisRenderer\\ThesisRenderer\\container.jpg", &width, &height, &nrChannels, 0);
     Shader lightShader(lightVertexSource, lightFragmentSource);
     shader.setVec3("lightPos", glm::vec3(1.2f, 1.0f, 2.0f));
-   shader.setVec3("viewPos", camera.Position);
+    shader.setVec3("viewPos", camera.Position);
     shader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
     shader.setVec3("objectColor", glm::vec3(1.0f, 1.0f, 1.0f));
 
@@ -405,7 +418,7 @@ int main()
     glm::vec3(1.5f,  0.2f, -1.5f),
     glm::vec3(-1.3f,  1.0f, -1.5f)
     };
-  
+
     // ================= RENDER LOOP =================
     cube1.AddChild(&cube2);
     cube2.AddChild(&cube3);
@@ -443,7 +456,25 @@ int main()
             800.0f / 600.0f,
             0.1f,
             100.0f);
-      
+
+        glDepthFunc(GL_LEQUAL);
+        glDepthMask(GL_FALSE);
+
+        skyboxShader.use();
+        skyboxShader.setInt("skybox", 0);
+
+        glm::mat4 skyboxView = glm::mat4(glm::mat3(camera.GetViewMatrix()));
+        skyboxShader.setMat4("view", glm::value_ptr(skyboxView));
+        skyboxShader.setMat4("projection", glm::value_ptr(projection));
+
+        glBindVertexArray(skyboxVAO);
+        glActiveTexture(GL_TEXTURE0);
+        skybox.Bind();
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+
+        glDepthMask(GL_TRUE);
+        glDepthFunc(GL_LESS);
+
         // ===== DRAW MAIN CUBE =====
         shader.use();
         for (int i = 0; i < 3; i++)
@@ -455,9 +486,9 @@ int main()
         shader.setMat4("view", glm::value_ptr(view));
         shader.setMat4("projection", glm::value_ptr(projection));
 
-      
+
         shader.setVec3("viewPos", camera.Position);
-     
+
 
         shader.setVec3("materialSpecular", glm::vec3(0.5f));
         glUniform1f(glGetUniformLocation(shader.ID, "materialShininess"), 32.0f);
@@ -465,8 +496,8 @@ int main()
         shader.setInt("texture1", 0);
 
         myModel.Draw();
-        
- 
+
+
 
         // ===== DRAW LIGHT CUBE =====
         lightShader.use();
@@ -481,22 +512,8 @@ int main()
         lightShader.setMat4("projection", glm::value_ptr(projection));
 
         scene.Render(renderer);
-    
+
         glfwSwapBuffers(window);
-        glDepthFunc(GL_LEQUAL);
-
-        skyboxShader.use();
-
-        glm::mat4 viewSky = glm::mat4(glm::mat3(camera.GetViewMatrix()));
-
-        skyboxShader.setMat4("view", glm::value_ptr(viewSky));
-        skyboxShader.setMat4("projection", glm::value_ptr(projection));
-
-        glBindVertexArray(skyboxVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-
-        glDepthFunc(GL_LESS);
-     
     }
 
     glfwTerminate();

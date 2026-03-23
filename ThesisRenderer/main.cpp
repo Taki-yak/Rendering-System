@@ -250,7 +250,7 @@ int main()
     Renderer renderer;
     Scene scene;
     Model myModel("model.obj");
-
+    Model treeModel("tree.obj");
     Shader skyboxShader(skyboxVertex, skyboxFragment);
     // ================= CUBE DATA =================
 
@@ -495,7 +495,15 @@ int main()
 
         shader.setInt("texture1", 0);
 
+        glm::mat4 model1 = glm::mat4(1.0f);
+        model1 = glm::translate(model1, glm::vec3(0.0f, 0.0f, -3.0f));
+        shader.setMat4("model", glm::value_ptr(model1));
         myModel.Draw();
+
+        glm::mat4 model2 = glm::mat4(1.0f);
+        model2 = glm::translate(model2, glm::vec3(3.0f, 0.0f, -5.0f));
+        shader.setMat4("model", glm::value_ptr(model2));
+        treeModel.Draw();
 
 
 

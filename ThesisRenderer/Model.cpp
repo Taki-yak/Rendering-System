@@ -9,12 +9,15 @@ void Model::Draw()
 {
     if (!loadedTextures.empty())
     {
+        glActiveTexture(GL_TEXTURE0);
         loadedTextures[0].Bind();
     }
 
     for (unsigned int i = 0; i < meshes.size(); i++)
+    {
         meshes[i].Draw();
-}
+    }
+}           
 
 void Model::LoadModel(std::string path)
 {
@@ -22,7 +25,10 @@ void Model::LoadModel(std::string path)
 
     const aiScene* scene = importer.ReadFile(
         path,
-        aiProcess_Triangulate | aiProcess_FlipUVs
+        aiProcess_Triangulate |
+        aiProcess_FlipUVs |
+        aiProcess_GenNormals |
+        aiProcess_CalcTangentSpace
     );
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
@@ -102,7 +108,15 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
         {
             std::string filename = std::string(str.C_Str());
 
+            size_t slash = filename.find_last_of("/\\");
+            if (slash != std::string::npos)
+            {
+                filename = filename.substr(slash + 1);
+            }
+
             std::string fullPath = directory + "/" + filename;
+
+            std::cout << "Full texture path: " << fullPath << std::endl;
 
             std::replace(fullPath.begin(), fullPath.end(), '\\', '/');
             std::cout << "Trying to load texture: " << fullPath << std::endl;

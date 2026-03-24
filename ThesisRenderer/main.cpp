@@ -13,6 +13,7 @@
 #include "Model.h"
 #include "Camera.h"
 #include "Cubemap.h"
+#include "Frustum.h"
 // ================= CAMERA VARIABLES =================
 //glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 //glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -28,7 +29,7 @@ void TestAssimp();
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 Camera camera;
-
+Frustum frustum;
 // ================= MOUSE CALLBACK =================
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
@@ -250,7 +251,7 @@ int main()
     Renderer renderer;
     Scene scene;
     Model myModel("model.obj");
-    Model treeModel("tree.obj");
+    Model treeModel("Lowpoly_tree_sample.obj");
     Shader skyboxShader(skyboxVertex, skyboxFragment);
     // ================= CUBE DATA =================
 
@@ -466,7 +467,8 @@ int main()
         glm::mat4 skyboxView = glm::mat4(glm::mat3(camera.GetViewMatrix()));
         skyboxShader.setMat4("view", glm::value_ptr(skyboxView));
         skyboxShader.setMat4("projection", glm::value_ptr(projection));
-
+        glm::mat4 vp = projection * view;
+        frustum.Update(vp);
         glBindVertexArray(skyboxVAO);
         glActiveTexture(GL_TEXTURE0);
         skybox.Bind();
@@ -511,7 +513,7 @@ int main()
         lightShader.use();
         glm::mat4 lightModel = glm::mat4(1.0f);
         lightModel = glm::translate(lightModel, glm::vec3(2.0f, 2.0f, 2.0f));
-        lightModel = glm::scale(lightModel, glm::vec3(0.2f));
+        lightModel = glm::scale(lightModel, glm::vec3(0.1f));
 
         renderer.DrawMesh(cube, lightShader, lightModel);
 

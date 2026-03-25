@@ -20,7 +20,8 @@
 //glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 //float yaw = -90.0f;
 //float pitch = 0.0f;
-
+double previousTime = glfwGetTime();
+int frameCount = 0;
 float lastX = 400;
 float lastY = 300;
 
@@ -476,7 +477,19 @@ int main()
 
         glDepthMask(GL_TRUE);
         glDepthFunc(GL_LESS);
+        double currentTime = glfwGetTime();
+        frameCount++;
 
+        if (currentTime - previousTime >= 1.0)
+        {
+            double fps = double(frameCount) / (currentTime - previousTime);
+
+            std::string title = "ThesisRenderer - FPS: " + std::to_string((int)fps);
+            glfwSetWindowTitle(window, title.c_str());
+
+            frameCount = 0;
+            previousTime = currentTime;
+        }
         // ===== DRAW MAIN CUBE =====
         shader.use();
         for (int i = 0; i < 3; i++)

@@ -380,8 +380,6 @@ int main()
 
     scene.AddObject(&cube1);
 
-    cube1.AddChild(&cube2);
-    cube2.AddChild(&cube3);
     /*glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
@@ -466,12 +464,13 @@ int main()
             100.0f);
 
         glDepthFunc(GL_LEQUAL);
-        glDepthMask(GL_FALSE);
+        glDepthMask(GL_FALSE); 
         cube1.transform.rotation.y += 50.0f * deltaTime;
        // cube2.transform.rotation.x += 30.0f * deltaTime;
        // cube3.transform.rotation.z += 70.0f * deltaTime;
        
-
+        glm::mat4 identity = glm::mat4(1.0f);
+        cube1.Draw(renderer, identity);
 
         skyboxShader.use();
         skyboxShader.setInt("skybox", 0);
@@ -545,7 +544,7 @@ int main()
         lightShader.setMat4("view", glm::value_ptr(view));
         lightShader.setMat4("projection", glm::value_ptr(projection));
 
-        scene.Render(renderer);
+       
 
         glfwSwapBuffers(window);
     }

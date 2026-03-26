@@ -5,7 +5,7 @@
 #include "Shader.h"
 #include "Material.h"
 #include "Transform.h"
-#include "Renderer.h"
+class Renderer;
 
 class SceneObject
 {
@@ -15,7 +15,9 @@ public:
     Transform transform;
 
     void AddChild(SceneObject* child);
-   // void Draw(Renderer& renderer, glm::mat4 parentTransform);
+
+    
+    void Draw(Renderer& renderer, glm::mat4 parentTransform);
 
 public:
     Mesh* mesh;

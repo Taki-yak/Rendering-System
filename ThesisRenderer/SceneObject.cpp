@@ -1,6 +1,7 @@
 #include "SceneObject.h"
-#include <glm/gtc/type_ptr.hpp>
 #include "Renderer.h"
+#include <glm/gtc/type_ptr.hpp>
+
 SceneObject::SceneObject(Mesh* m, Shader* s, Material* mat)
 {
     mesh = m;
@@ -21,9 +22,17 @@ void SceneObject::Draw(Renderer& renderer, glm::mat4 parentTransform)
     shader->use();
     shader->setMat4("model", glm::value_ptr(model));
 
-    renderer.DrawMesh(*mesh, *shader, model);
+    if (material && material->diffuse)
+        material->diffuse->Bind();
 
-    for (auto child : children)
+    shader->setVec3("materialAmbient", material->ambient);
+    shader->setVec3("materialDiffuse", material->diffuseColor);
+    shader->setVec3("materialSpecular", material->specular);
+    shader->setFloat("materialShininess", material->shininess);
+
+    mesh->Draw();
+
+    for (SceneObject* child : children)
     {
         child->Draw(renderer, model);
     }

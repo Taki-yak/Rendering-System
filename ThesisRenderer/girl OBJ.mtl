@@ -10,7 +10,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd -s 5.000000 5.000000 5.000000 tEXTURE\\bot color.jpg
+map_Kd -s 5.000000 5.000000 5.000000 a.jpg
 
 newmtl BOdy_Skin
 Ns 225.000000
@@ -21,7 +21,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd tEXTURE\\BOdy Skin Base Color.png
+map_Kd b.png
 
 newmtl FACE
 Ns 225.000000
@@ -32,7 +32,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd tEXTURE\\FACE Base Color.png
+map_Kd c.png
 
 newmtl Hair
 Ns 225.000000
@@ -43,7 +43,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd tEXTURE\\COLORS.jpg
+map_Kd d.jpg
 
 newmtl Head
 Ns 225.000000
@@ -54,7 +54,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd tEXTURE\\BOdy Skin Base Color.png
+map_Kd e.png
 
 newmtl Scarf
 Ns 78.564058
@@ -65,7 +65,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd tEXTURE\\COLORS.jpg
+map_Kd f.jpg
 
 newmtl Top
 Ns 81.000006
@@ -76,5 +76,5 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 2
-map_Bump -bm 0.500000 tEXTURE\\top normal.png
+map_Bump -bm 0.500000 g.png
 map_Kd -s 5.000000 5.000000 5.000000 tEXTURE\\top color.png

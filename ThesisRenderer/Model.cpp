@@ -1,8 +1,9 @@
 #include "Model.h"
 #include <iostream>
-
-Model::Model(const std::string& path)
+#include <algorithm>
+Model::Model(const std::string& path, const std::string& textureFolder)
 {
+    textureDirectory = textureFolder;
     LoadModel(path);
 }
 void Model::Draw()
@@ -95,7 +96,9 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
                 vertices.push_back(0.0f);
                 vertices.push_back(0.0f);
             }
+
         }
+
     }
 
 
@@ -114,7 +117,17 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
                 filename = filename.substr(slash + 1);
             }
 
-            std::string fullPath = directory + "/" + filename;
+            std::string fullPath;
+
+            if (!textureDirectory.empty())
+            {
+                fullPath = textureDirectory + filename;
+            }
+            else
+            {
+                fullPath = directory + "/" + filename;
+            }
+            std::cout << "Loading texture from: " << fullPath << std::endl;
 
             std::cout << "Full texture path: " << fullPath << std::endl;
 
@@ -124,6 +137,7 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
             Texture texture(fullPath.c_str());
 
             loadedTextures.push_back(texture);
+        
         }
     }
 

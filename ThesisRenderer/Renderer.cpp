@@ -1,4 +1,5 @@
 #include "Renderer.h"
+#include "SceneObject.h"
 #include <glm/gtc/type_ptr.hpp>
 
 void Renderer::DrawObject(SceneObject* object)
@@ -26,6 +27,7 @@ void Renderer::DrawMesh(Mesh& mesh, Shader& shader, glm::mat4 model)
 {
     shader.use();
     shader.setMat4("model", glm::value_ptr(model));
+
     mesh.Draw();
 }
 void Renderer::DrawSceneObject(SceneObject* object, glm::mat4 parentMatrix)

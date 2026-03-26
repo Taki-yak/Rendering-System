@@ -3,7 +3,6 @@
 #include "Mesh.h"
 #include "Shader.h"
 #include "SceneObject.h"
-
 class Renderer
 {
 public:

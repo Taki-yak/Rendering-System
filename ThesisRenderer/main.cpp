@@ -251,11 +251,10 @@ int main()
     };
     Renderer renderer;
     Scene scene;
-    Model myModel("model.obj");
+    Model myModel("model.obj", "1.jpg");
     Model treeModel("Lowpoly_tree_sample.obj");
     Shader skyboxShader(skyboxVertex, skyboxFragment);
     // ================= CUBE DATA =================
-
     float vertices[] = {
         // positions          // normals           // texcoords
 
@@ -265,6 +264,7 @@ int main()
          0.5f, 0.5f,-0.5f, 0,0,-1, 1,1,
         -0.5f, 0.5f,-0.5f, 0,0,-1, 0,1,
         -0.5f,-0.5f,-0.5f, 0,0,-1, 0,0,
+
 
         -0.5f,-0.5f, 0.5f, 0,0,1, 0,0,
          0.5f,-0.5f, 0.5f, 0,0,1, 1,0,
@@ -370,12 +370,18 @@ int main()
     SceneObject cube2(&cube, &shader, &cubeMaterial);
     SceneObject cube3(&cube, &shader, &cubeMaterial);
 
+
+
     cube1.transform.position = glm::vec3(0.0f, 0.0f, 0.0f);
     cube2.transform.position = glm::vec3(2.0f, 0.0f, 0.0f);
     cube3.transform.position = glm::vec3(-2.0f, 0.0f, 0.0f);
+    cube2.transform.scale = glm::vec3(1.5f);
+    cube3.transform.scale = glm::vec3(0.5f);
+
     scene.AddObject(&cube1);
-    scene.AddObject(&cube2);
-    scene.AddObject(&cube3);
+
+    cube1.AddChild(&cube2);
+    cube2.AddChild(&cube3);
     /*glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
@@ -461,6 +467,11 @@ int main()
 
         glDepthFunc(GL_LEQUAL);
         glDepthMask(GL_FALSE);
+        cube1.transform.rotation.y += 50.0f * deltaTime;
+       // cube2.transform.rotation.x += 30.0f * deltaTime;
+       // cube3.transform.rotation.z += 70.0f * deltaTime;
+       
+
 
         skyboxShader.use();
         skyboxShader.setInt("skybox", 0);

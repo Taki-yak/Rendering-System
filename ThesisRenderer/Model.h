@@ -10,19 +10,19 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-
 class Model
 {
-
 public:
+    Model(const std::string& path, const std::string& textureFolder = "");
 
-    Model(const std::string& path);
     void Draw();
 
 private:
     std::vector<Mesh> meshes;
     std::vector<Texture> loadedTextures;
+
     std::string directory;
+    std::string textureDirectory;
 
     void LoadModel(std::string path);
     void ProcessNode(aiNode* node, const aiScene* scene);

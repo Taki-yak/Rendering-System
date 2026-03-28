@@ -104,7 +104,7 @@ uniform float materialShininess;
 
 void main()
 {
-    vec3 textureColor = texture(texture1, TexCoord).rgb;
+    vec3 textureColor = texture(texture1, TexCoord).rgb; 
 
     vec3 norm = normalize(Normal);
     vec3 viewDir = normalize(viewPos - FragPos);
@@ -202,7 +202,7 @@ std::vector<std::string> faces =
 };
 
 // ================= MAIN =================
-
+glm::vec3 rotationAxis = glm::vec3(0.0f, 1.0f, 0.0f);
 int main()
 {
 
@@ -405,6 +405,7 @@ int main()
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);*/
 
     int width, height, nrChannels;
+
     // unsigned char* data = stbi_load("D:\\taki\\POLAND\\POLAND\\ThesisRenderer\\ThesisRenderer\\container.jpg", &width, &height, &nrChannels, 0);
     Shader lightShader(lightVertexSource, lightFragmentSource);
     shader.setVec3("lightPos", glm::vec3(1.2f, 1.0f, 2.0f));
@@ -449,7 +450,14 @@ int main()
 
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
             camera.Position += glm::normalize(glm::cross(camera.Front, camera.Up)) * cameraSpeed;
+        if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
+            rotationAxis = glm::vec3(1.0f, 0.0f, 0.0f);
 
+        if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS)
+            rotationAxis = glm::vec3(0.0f, 1.0f, 0.0f);
+
+        if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
+            rotationAxis = glm::vec3(0.0f, 0.0f, 1.0f);
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -465,12 +473,6 @@ int main()
 
         glDepthFunc(GL_LEQUAL);
         glDepthMask(GL_FALSE); 
-        cube1.transform.rotation.y += 50.0f * deltaTime;
-       // cube2.transform.rotation.x += 30.0f * deltaTime;
-       // cube3.transform.rotation.z += 70.0f * deltaTime;
-       
-        glm::mat4 identity = glm::mat4(1.0f);
-        cube1.Draw(renderer, identity);
 
         skyboxShader.use();
         skyboxShader.setInt("skybox", 0);
@@ -487,9 +489,39 @@ int main()
 
         glDepthMask(GL_TRUE);
         glDepthFunc(GL_LESS);
+      
+        // ===== DRAW SCENE GRAPH CUBES =====
+        shader.use();
+
+        for (int i = 0; i < 3; i++)
+        {
+            shader.setVec3("lightPositions[" + std::to_string(i) + "]", lightPositions[i]);
+            shader.setVec3("lightColors[" + std::to_string(i) + "]", lightColors[i]);
+        }
+
+        shader.setMat4("view", glm::value_ptr(view));
+        shader.setMat4("projection", glm::value_ptr(projection));
+        shader.setVec3("viewPos", camera.Position);
+
+        shader.setVec3("materialAmbient", glm::vec3(0.3f));
+        shader.setVec3("materialDiffuse", glm::vec3(1.0f));
+        shader.setVec3("materialSpecular", glm::vec3(0.5f));
+        shader.setFloat("materialShininess", 32.0f);
+
+        // FIX BLACK CUBES
+        containerTexture.Bind();
+        shader.setInt("texture1", 0);
+
+        cube1.transform.rotation += rotationAxis * 50.0f * deltaTime;
+        cube1.transform.position = glm::vec3(0.0f, 0.0f, -3.0f);
+
+        glm::mat4 identity = glm::mat4(1.0f);
+        cube1.Draw(renderer, identity);
+        containerTexture.Bind();
+        shader.setInt("texture1", 0);
         double currentTime = glfwGetTime();
         frameCount++;
-
+      
         if (currentTime - previousTime >= 1.0)
         {
             double fps = double(frameCount) / (currentTime - previousTime);
@@ -507,7 +539,7 @@ int main()
             shader.setVec3("lightPositions[" + std::to_string(i) + "]", lightPositions[i]);
             shader.setVec3("lightColors[" + std::to_string(i) + "]", lightColors[i]);
         }
-        shader.setMat4("model", glm::value_ptr(model));
+       // shader.setMat4("model", glm::value_ptr(model));
         shader.setMat4("view", glm::value_ptr(view));
         shader.setMat4("projection", glm::value_ptr(projection));
 

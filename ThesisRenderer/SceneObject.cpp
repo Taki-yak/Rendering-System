@@ -23,7 +23,7 @@ void SceneObject::Draw(Renderer& renderer, glm::mat4 parentTransform)
     shader->setMat4("model", glm::value_ptr(model));
 
     if (material && material->diffuse)
-        material->diffuse->Bind();
+       // material->diffuse->Bind();
 
     shader->setVec3("materialAmbient", material->ambient);
     shader->setVec3("materialDiffuse", material->diffuseColor);

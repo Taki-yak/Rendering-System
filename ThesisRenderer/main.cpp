@@ -516,7 +516,12 @@ int main()
         cube1.transform.position = glm::vec3(0.0f, 0.0f, -3.0f);
 
         glm::mat4 identity = glm::mat4(1.0f);
-        cube1.Draw(renderer, identity);
+        glm::vec3 worldPos = cube1.transform.position;
+
+        if (frustum.IsSphereVisible(worldPos, cube1.boundingRadius))
+        {
+            cube1.Draw(renderer, identity);
+        }
         containerTexture.Bind();
         shader.setInt("texture1", 0);
         double currentTime = glfwGetTime();

@@ -23,7 +23,7 @@ public:
     Mesh* mesh;
     Shader* shader;
     Material* material;
-
+    float boundingRadius = 1.0f;
     SceneObject* parent = nullptr;
     std::vector<SceneObject*> children;
 };

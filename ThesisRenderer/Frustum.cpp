@@ -47,4 +47,5 @@ bool Frustum::CheckPoint(const glm::vec3& point)
     }
 
     return true;
+
 }

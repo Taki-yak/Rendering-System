@@ -24,11 +24,12 @@ double previousTime = glfwGetTime();
 int frameCount = 0;
 float lastX = 400;
 float lastY = 300;
-
 bool firstMouse = true;
 void TestAssimp();
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
+bool useCulling = true;
+bool cKeyPressed = false;
 Camera camera;
 Frustum frustum;
 // ================= MOUSE CALLBACK =================
@@ -458,6 +459,21 @@ int main()
 
         if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
             rotationAxis = glm::vec3(0.0f, 0.0f, 1.0f);
+            if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS && !cKeyPressed)
+            {
+                useCulling = !useCulling;
+                cKeyPressed = true;
+
+                if (useCulling)
+                    std::cout << "Culling ON\n";
+                else
+                    std::cout << "Culling OFF\n";
+            }
+
+        if (glfwGetKey(window, GLFW_KEY_C) == GLFW_RELEASE)
+        {
+            cKeyPressed = false;
+        }
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -520,7 +536,12 @@ int main()
 
         if (frustum.IsSphereVisible(worldPos, cube1.boundingRadius))
         {
-            cube1.Draw(renderer, identity);
+            glm::vec3 worldPos = cube1.transform.position;
+
+            if (!useCulling || frustum.IsSphereVisible(worldPos, cube1.boundingRadius))
+            {
+                cube1.Draw(renderer, identity);
+            }
         }
         containerTexture.Bind();
         shader.setInt("texture1", 0);
@@ -531,8 +552,15 @@ int main()
         {
             double fps = double(frameCount) / (currentTime - previousTime);
 
-            std::string title = "ThesisRenderer - FPS: " + std::to_string((int)fps);
+            std::string title = "ThesisRenderer | FPS: " + std::to_string((int)fps);
+
+            if (useCulling)
+                title += " | CULLING: ON";
+            else
+                title += " | CULLING: OFF";
+
             glfwSetWindowTitle(window, title.c_str());
+           
 
             frameCount = 0;
             previousTime = currentTime;

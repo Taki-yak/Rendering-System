@@ -547,20 +547,13 @@ int main()
         shader.setInt("texture1", 0);
         double currentTime = glfwGetTime();
         frameCount++;
-      
+
         if (currentTime - previousTime >= 1.0)
         {
-            double fps = double(frameCount) / (currentTime - previousTime);
+            double fps = frameCount / (currentTime - previousTime);
 
             std::string title = "ThesisRenderer | FPS: " + std::to_string((int)fps);
-
-            if (useCulling)
-                title += " | CULLING: ON";
-            else
-                title += " | CULLING: OFF";
-
             glfwSetWindowTitle(window, title.c_str());
-           
 
             frameCount = 0;
             previousTime = currentTime;

@@ -379,7 +379,21 @@ int main()
     cube2.transform.scale = glm::vec3(1.5f);
     cube3.transform.scale = glm::vec3(0.5f);
 
-    scene.AddObject(&cube1);
+    std::vector<SceneObject*> manyCubes;
+
+    for (int i = 0; i < 100; i++)
+    {
+        SceneObject* obj = new SceneObject(&cube, &shader, &cubeMaterial);
+
+        float x = (rand() % 50 - 25);
+        float y = (rand() % 10 - 5);
+        float z = -(rand() % 50);
+
+        obj->transform.position = glm::vec3(x, y, z);
+
+        scene.AddObject(obj);
+        manyCubes.push_back(obj);
+    }
 
     /*glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -430,6 +444,7 @@ int main()
     // ================= RENDER LOOP =================
     cube1.AddChild(&cube2);
     cube2.AddChild(&cube3);
+    renderer.Render(scene, camera);
     while (!glfwWindowShouldClose(window))
     {
         float currentFrame = glfwGetTime();
@@ -437,7 +452,7 @@ int main()
         lastFrame = currentFrame;
 
         float cameraSpeed = 2.5f * deltaTime;
-
+        
         glfwPollEvents();
 
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)

@@ -1,4 +1,4 @@
-#include <glad/glad.h>
+﻿#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include "stb_image.h"
@@ -252,8 +252,8 @@ int main()
     };
     Renderer renderer;
     Scene scene;
-    Model myModel("model.obj", "1.jpg");
-    Model treeModel("Lowpoly_tree_sample.obj");
+    Model myModel("character-human.obj");
+    Model treeModel("character-a.obj");
     Shader skyboxShader(skyboxVertex, skyboxFragment);
     // ================= CUBE DATA =================
     float vertices[] = {
@@ -451,7 +451,7 @@ int main()
         lastFrame = currentFrame;
 
         float cameraSpeed = 2.5f * deltaTime;
-        
+
         glfwPollEvents();
 
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
@@ -473,16 +473,16 @@ int main()
 
         if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
             rotationAxis = glm::vec3(0.0f, 0.0f, 1.0f);
-            if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS && !cKeyPressed)
-            {
-                useCulling = !useCulling;
-                cKeyPressed = true;
+        if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS && !cKeyPressed)
+        {
+            useCulling = !useCulling;
+            cKeyPressed = true;
 
-                if (useCulling)
-                    std::cout << "Culling ON\n";
-                else
-                    std::cout << "Culling OFF\n";
-            }
+            if (useCulling)
+                std::cout << "Culling ON\n";
+            else
+                std::cout << "Culling OFF\n";
+        }
 
         if (glfwGetKey(window, GLFW_KEY_C) == GLFW_RELEASE)
         {
@@ -502,7 +502,7 @@ int main()
             100.0f);
 
         glDepthFunc(GL_LEQUAL);
-        glDepthMask(GL_FALSE); 
+        glDepthMask(GL_FALSE);
 
         skyboxShader.use();
         skyboxShader.setInt("skybox", 0);
@@ -519,79 +519,38 @@ int main()
 
         glDepthMask(GL_TRUE);
         glDepthFunc(GL_LESS);
-      
-        // ===== DRAW SCENE GRAPH CUBES =====
-        shader.use();
 
+        // ===== SHARED SHADER SETUP (once per frame) =====
+        shader.use();
         for (int i = 0; i < 3; i++)
         {
             shader.setVec3("lightPositions[" + std::to_string(i) + "]", lightPositions[i]);
             shader.setVec3("lightColors[" + std::to_string(i) + "]", lightColors[i]);
         }
-
         shader.setMat4("view", glm::value_ptr(view));
         shader.setMat4("projection", glm::value_ptr(projection));
         shader.setVec3("viewPos", camera.Position);
-
         shader.setVec3("materialAmbient", glm::vec3(0.3f));
         shader.setVec3("materialDiffuse", glm::vec3(1.0f));
         shader.setVec3("materialSpecular", glm::vec3(0.5f));
         shader.setFloat("materialShininess", 32.0f);
-
-        // FIX BLACK CUBES
-        containerTexture.Bind();
         shader.setInt("texture1", 0);
+
+        // ===== DRAW CUBES (container.jpg) =====
+        glActiveTexture(GL_TEXTURE0);
+        containerTexture.Bind();
 
         cube1.transform.rotation += rotationAxis * 50.0f * deltaTime;
         cube1.transform.position = glm::vec3(0.0f, 0.0f, -3.0f);
+        cube1.Draw(renderer, glm::mat4(1.0f));
 
-        glm::mat4 identity = glm::mat4(1.0f);
-        glm::vec3 worldPos = cube1.transform.position;
-
-        if (frustum.IsSphereVisible(worldPos, cube1.boundingRadius))
+        for (SceneObject* obj : scene.objects)
         {
-            glm::vec3 worldPos = cube1.transform.position;
-
-            if (!useCulling || frustum.IsSphereVisible(worldPos, cube1.boundingRadius))
-            {
-                cube1.Draw(renderer, identity);
-            }
+            if (!useCulling || frustum.IsSphereVisible(obj->transform.position, obj->boundingRadius))
+                obj->Draw(renderer, glm::mat4(1.0f));
         }
-        containerTexture.Bind();
-        shader.setInt("texture1", 0);
-        double currentTime = glfwGetTime();
-        frameCount++;
 
-        if (currentTime - previousTime >= 1.0)
-        {
-            double fps = frameCount / (currentTime - previousTime);
-
-            std::string title = "ThesisRenderer | FPS: " + std::to_string((int)fps);
-            glfwSetWindowTitle(window, title.c_str());
-
-            frameCount = 0;
-            previousTime = currentTime;
-        }
-        // ===== DRAW MAIN CUBE =====
-        shader.use();
-        for (int i = 0; i < 3; i++)
-        {
-            shader.setVec3("lightPositions[" + std::to_string(i) + "]", lightPositions[i]);
-            shader.setVec3("lightColors[" + std::to_string(i) + "]", lightColors[i]);
-        }
-       // shader.setMat4("model", glm::value_ptr(model));
-        shader.setMat4("view", glm::value_ptr(view));
-        shader.setMat4("projection", glm::value_ptr(projection));
-
-
-        shader.setVec3("viewPos", camera.Position);
-
-
-        shader.setVec3("materialSpecular", glm::vec3(0.5f));
-        glUniform1f(glGetUniformLocation(shader.ID, "materialShininess"), 32.0f);
-
-        shader.setInt("texture1", 0);
-
+        // ===== DRAW MODELS (each binds its own texture) =====
         glm::mat4 model1 = glm::mat4(1.0f);
         model1 = glm::translate(model1, glm::vec3(0.0f, 0.0f, -3.0f));
         shader.setMat4("model", glm::value_ptr(model1));
@@ -601,27 +560,28 @@ int main()
         model2 = glm::translate(model2, glm::vec3(3.0f, 0.0f, -5.0f));
         shader.setMat4("model", glm::value_ptr(model2));
         treeModel.Draw();
-      
 
         // ===== DRAW LIGHT CUBE =====
         lightShader.use();
         glm::mat4 lightModel = glm::mat4(1.0f);
         lightModel = glm::translate(lightModel, glm::vec3(2.0f, 2.0f, 2.0f));
         lightModel = glm::scale(lightModel, glm::vec3(0.1f));
-
-        renderer.DrawMesh(cube, lightShader, lightModel);
-
         lightShader.setMat4("model", glm::value_ptr(lightModel));
         lightShader.setMat4("view", glm::value_ptr(view));
         lightShader.setMat4("projection", glm::value_ptr(projection));
+        renderer.DrawMesh(cube, lightShader, lightModel);
 
-        for (SceneObject* obj : scene.objects)
+        // ===== FPS COUNTER =====
+        double currentTime = glfwGetTime();
+        frameCount++;
+        if (currentTime - previousTime >= 1.0)
         {
-
-            if (!useCulling || frustum.IsSphereVisible(obj->transform.position, obj->boundingRadius))
-                obj->Draw(renderer, glm::mat4(1.0f));
+            double fps = frameCount / (currentTime - previousTime);
+            std::string title = "ThesisRenderer | FPS: " + std::to_string((int)fps);
+            glfwSetWindowTitle(window, title.c_str());
+            frameCount = 0;
+            previousTime = currentTime;
         }
-
 
         glfwSwapBuffers(window);
     }

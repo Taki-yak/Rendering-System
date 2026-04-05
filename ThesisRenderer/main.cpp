@@ -364,8 +364,7 @@ int main()
     Texture containerTexture("container.jpg");
 
     Material cubeMaterial(&containerTexture);
-    cubeMaterial.specular = glm::vec3(1.0f);
-    cubeMaterial.shininess = 64.0f;
+
     Mesh cube(vertices, sizeof(vertices));
     SceneObject cube1(&cube, &shader, &cubeMaterial);
     SceneObject cube2(&cube, &shader, &cubeMaterial);
@@ -602,8 +601,7 @@ int main()
         model2 = glm::translate(model2, glm::vec3(3.0f, 0.0f, -5.0f));
         shader.setMat4("model", glm::value_ptr(model2));
         treeModel.Draw();
-
-
+      
 
         // ===== DRAW LIGHT CUBE =====
         lightShader.use();
@@ -617,7 +615,13 @@ int main()
         lightShader.setMat4("view", glm::value_ptr(view));
         lightShader.setMat4("projection", glm::value_ptr(projection));
 
-       
+        for (SceneObject* obj : scene.objects)
+        {
+
+            if (!useCulling || frustum.IsSphereVisible(obj->transform.position, obj->boundingRadius))
+                obj->Draw(renderer, glm::mat4(1.0f));
+        }
+
 
         glfwSwapBuffers(window);
     }

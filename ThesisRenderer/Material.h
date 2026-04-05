@@ -1,26 +1,27 @@
 #pragma once
-#include <glm/glm.hpp>
 #include "Texture.h"
+#include "Shader.h"
+#include <glm/glm.hpp> 
 
 class Material
 {
 public:
+    Texture* texture;
 
-    Texture* diffuse;
-
-    glm::vec3 ambient;
-    glm::vec3 diffuseColor;
-    glm::vec3 specular;
-
-    float shininess;
+    glm::vec3 ambient = glm::vec3(0.1f);
+    glm::vec3 diffuse = glm::vec3(1.0f);
+    glm::vec3 diffuseColor = glm::vec3(1.0f); 
+    glm::vec3 specular = glm::vec3(0.5f);
+    float shininess = 32.0f;
 
     Material(Texture* tex)
     {
-        diffuse = tex;
+        texture = tex;
+    }
 
-        ambient = glm::vec3(0.2f);
-        diffuseColor = glm::vec3(1.0f);
-        specular = glm::vec3(0.5f);
-        shininess = 32.0f;
+    void Apply(Shader& shader)
+    {
+        texture->Bind();
+        shader.setInt("texture1", 0);
     }
 };

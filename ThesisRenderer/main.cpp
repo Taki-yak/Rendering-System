@@ -552,7 +552,7 @@ int main()
 
         // ===== DRAW MODELS (each binds its own texture) =====
         glm::mat4 model1 = glm::mat4(1.0f);
-        model1 = glm::translate(model1, glm::vec3(0.0f, 0.0f, -3.0f));
+        model1 = glm::translate(model1, glm::vec3(-3.0f, 2.0f, -3.0f));
         shader.setMat4("model", glm::value_ptr(model1));
         myModel.Draw();
 

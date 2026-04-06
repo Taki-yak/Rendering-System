@@ -14,12 +14,16 @@
 #include "Camera.h"
 #include "Cubemap.h"
 #include "Frustum.h"
+#include "Component.h"
+#include "RotatorComponent.h"
+#include "OscillatorComponent.h"
 // ================= CAMERA VARIABLES =================
 //glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 //glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 //glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 //float yaw = -90.0f;
 //float pitch = 0.0f;
+bool useFrustumCulling = true;
 double previousTime = glfwGetTime();
 int frameCount = 0;
 float lastX = 400;
@@ -443,6 +447,12 @@ int main()
     // ================= RENDER LOOP =================
     cube1.AddChild(&cube2);
     cube2.AddChild(&cube3);
+
+    // ===== ATTACH COMPONENTS =====
+    cube1.AddComponent(new RotatorComponent(glm::vec3(0.0f, 1.0f, 0.0f), 50.0f));
+    cube2.AddComponent(new RotatorComponent(glm::vec3(1.0f, 0.0f, 0.0f), 30.0f));
+    cube3.AddComponent(new OscillatorComponent(0.5f, 2.0f));
+
     renderer.Render(scene, camera);
     while (!glfwWindowShouldClose(window))
     {
@@ -540,8 +550,9 @@ int main()
         glActiveTexture(GL_TEXTURE0);
         containerTexture.Bind();
 
-        cube1.transform.rotation += rotationAxis * 50.0f * deltaTime;
+        // Update all components (rotation, oscillation, etc.)
         cube1.transform.position = glm::vec3(0.0f, 0.0f, -3.0f);
+        cube1.UpdateComponents(deltaTime);
         cube1.Draw(renderer, glm::mat4(1.0f));
 
         for (SceneObject* obj : scene.objects)

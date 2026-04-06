@@ -154,12 +154,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="Component.h" />
     <ClInclude Include="Cubemap.h" />
     <ClInclude Include="Frustum.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="mesh.h" />
     <ClInclude Include="Model.h" />
+    <ClInclude Include="Oscillatorcomponent.h" />
     <ClInclude Include="Renderer.h" />
+    <ClInclude Include="Rotatorcomponent.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="SceneObject.h" />
     <ClInclude Include="Shader.h" />

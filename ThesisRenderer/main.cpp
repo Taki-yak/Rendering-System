@@ -555,12 +555,22 @@ int main()
         cube1.UpdateComponents(deltaTime);
         cube1.Draw(renderer, glm::mat4(1.0f));
 
+        int totalObjects = scene.objects.size();
+        int visibleObjects = 0;
+        int culledObjects = 0;
+
         for (SceneObject* obj : scene.objects)
         {
             if (!useCulling || frustum.IsSphereVisible(obj->transform.position, obj->boundingRadius))
+            {
                 obj->Draw(renderer, glm::mat4(1.0f));
+                visibleObjects++;
+            }
+            else
+            {
+                culledObjects++;
+            }
         }
-
         // ===== DRAW MODELS (each binds its own texture) =====
         glm::mat4 model1 = glm::mat4(1.0f);
         model1 = glm::translate(model1, glm::vec3(-3.0f, 2.0f, -3.0f));
@@ -588,7 +598,12 @@ int main()
         if (currentTime - previousTime >= 1.0)
         {
             double fps = frameCount / (currentTime - previousTime);
-            std::string title = "ThesisRenderer | FPS: " + std::to_string((int)fps);
+            std::string title = "FPS: " + std::to_string((int)fps) +
+                " | Visible: " + std::to_string(visibleObjects) +
+                " | Culled: " + std::to_string(culledObjects) +
+                " | Total: " + std::to_string(totalObjects);
+
+            glfwSetWindowTitle(window, title.c_str());
             glfwSetWindowTitle(window, title.c_str());
             frameCount = 0;
             previousTime = currentTime;

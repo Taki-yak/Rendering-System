@@ -24,7 +24,7 @@ public:
     void AddChild(SceneObject* child);
     void Draw(Renderer& renderer, glm::mat4 parentTransform);
 
-   
+    
     void AddComponent(Component* component)
     {
         component->owner = this;

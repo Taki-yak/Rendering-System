@@ -9,6 +9,7 @@ SceneObject::SceneObject(Mesh* m, Shader* s, Material* mat)
     material = mat;
 }
 
+
 void SceneObject::AddChild(SceneObject* child)
 {
     child->parent = this;
@@ -29,7 +30,5 @@ void SceneObject::Draw(Renderer& renderer, glm::mat4 parentTransform)
     mesh->Draw();
 
     for (SceneObject* child : children)
-    {
         child->Draw(renderer, model);
-    }
 }

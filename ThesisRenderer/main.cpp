@@ -34,6 +34,7 @@ float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 bool useCulling = true;
 bool cKeyPressed = false;
+bool nKeyPressed = false;
 Camera camera;
 Frustum frustum;
 // ================= MOUSE CALLBACK =================
@@ -463,7 +464,26 @@ int main()
         float cameraSpeed = 2.5f * deltaTime;
 
         glfwPollEvents();
+        bool nKeyPressed = false;
 
+        if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS && !nKeyPressed)
+        {
+            SceneObject* newCube = new SceneObject(&cube, &shader, &cubeMaterial);
+
+            
+            newCube->transform.position = camera.Position + camera.Front * 3.0f;
+
+            scene.AddObject(newCube);
+
+            std::cout << "New cube added!\n";
+
+            nKeyPressed = true;
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_N) == GLFW_RELEASE)
+        {
+            nKeyPressed = false;
+        }
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
             camera.Position += cameraSpeed * camera.Front;
 

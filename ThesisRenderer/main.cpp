@@ -35,6 +35,7 @@ float lastFrame = 0.0f;
 bool useCulling = true;
 bool cKeyPressed = false;
 bool nKeyPressed = false;
+bool mKeyPressed = false;
 Camera camera;
 Frustum frustum;
 // ================= MOUSE CALLBACK =================
@@ -483,6 +484,26 @@ int main()
         if (glfwGetKey(window, GLFW_KEY_N) == GLFW_RELEASE)
         {
             nKeyPressed = false;
+        }
+        // ===== REMOVE LAST OBJECT =====
+        if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS && !mKeyPressed)
+        {
+            if (!scene.objects.empty())
+            {
+                SceneObject* obj = scene.objects.back();
+                scene.objects.pop_back();
+
+                delete obj;
+
+                std::cout << "Object removed!\n";
+            }
+
+            mKeyPressed = true;
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_M) == GLFW_RELEASE)
+        {
+            mKeyPressed = false;
         }
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
             camera.Position += cameraSpeed * camera.Front;

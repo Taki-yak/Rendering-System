@@ -35,7 +35,9 @@ float lastFrame = 0.0f;
 bool useCulling = true;
 bool cKeyPressed = false;
 bool nKeyPressed = false;
+bool nKeyLastState = false;
 bool mKeyPressed = false;
+SceneObject* selectedObject = nullptr;
 Camera camera;
 Frustum frustum;
 // ================= MOUSE CALLBACK =================
@@ -465,21 +467,22 @@ int main()
         float cameraSpeed = 2.5f * deltaTime;
 
         glfwPollEvents();
-        bool nKeyPressed = false;
+   
 
-        if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS && !nKeyPressed)
+        bool nKeyCurrent = glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS;
+
+        if (nKeyCurrent && !nKeyLastState)
         {
             SceneObject* newCube = new SceneObject(&cube, &shader, &cubeMaterial);
 
-            
             newCube->transform.position = camera.Position + camera.Front * 3.0f;
 
             scene.AddObject(newCube);
-
-            std::cout << "New cube added!\n";
-
-            nKeyPressed = true;
+            selectedObject = newCube;
+            std::cout << "New cube added and selected\n";
         }
+
+        nKeyLastState = nKeyCurrent;
 
         if (glfwGetKey(window, GLFW_KEY_N) == GLFW_RELEASE)
         {
@@ -500,7 +503,29 @@ int main()
 
             mKeyPressed = true;
         }
+       
+        if (selectedObject != nullptr)
+        {
+            float speed = 5.0f * deltaTime;
 
+            if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+                selectedObject->transform.position.z -= speed;
+
+            if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+                selectedObject->transform.position.z += speed;
+
+            if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+                selectedObject->transform.position.x -= speed;
+
+            if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+                selectedObject->transform.position.x += speed;
+
+            if (glfwGetKey(window, GLFW_KEY_PAGE_UP) == GLFW_PRESS)
+                selectedObject->transform.position.y += speed;
+
+            if (glfwGetKey(window, GLFW_KEY_PAGE_DOWN) == GLFW_PRESS)
+                selectedObject->transform.position.y -= speed;
+        }
         if (glfwGetKey(window, GLFW_KEY_M) == GLFW_RELEASE)
         {
             mKeyPressed = false;

@@ -559,11 +559,46 @@ int main()
             else
                 std::cout << "Culling OFF\n";
         }
+        // ===== ROTate
+        if (selectedObject != nullptr)
+        {
+            float rotSpeed = 50.0f * deltaTime;
 
+            if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)
+                selectedObject->transform.rotation.x += rotSpeed;
+
+            if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS)
+                selectedObject->transform.rotation.x -= rotSpeed;
+
+            if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS)
+                selectedObject->transform.rotation.y += rotSpeed;
+
+            if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
+                selectedObject->transform.rotation.y -= rotSpeed;
+
+            if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
+                selectedObject->transform.rotation.z += rotSpeed;
+
+            if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS)
+                selectedObject->transform.rotation.z -= rotSpeed;
+        }
+        // ===== SCALE
+        if (selectedObject != nullptr)
+        {
+            float scaleSpeed = 2.0f * deltaTime;
+
+            if (glfwGetKey(window, GLFW_KEY_EQUAL) == GLFW_PRESS) // +
+                selectedObject->transform.scale += glm::vec3(scaleSpeed);
+
+            if (glfwGetKey(window, GLFW_KEY_MINUS) == GLFW_PRESS) // -
+                selectedObject->transform.scale -= glm::vec3(scaleSpeed);
+        }
+        //selectedObject->transform.scale = glm::max(selectedObject->transform.scale, glm::vec3(0.1f));
         if (glfwGetKey(window, GLFW_KEY_C) == GLFW_RELEASE)
         {
             cKeyPressed = false;
         }
+
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 

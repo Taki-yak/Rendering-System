@@ -23,6 +23,25 @@
 //glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 //float yaw = -90.0f;
 //float pitch = 0.0f;
+
+glm::vec3 GetRayFromMouse(double mouseX, double mouseY, int width, int height,
+    glm::mat4 projection, glm::mat4 view)
+{
+    float x = (2.0f * mouseX) / width - 1.0f;
+    float y = 1.0f - (2.0f * mouseY) / height;
+    float z = 1.0f;
+
+    glm::vec3 ray_nds = glm::vec3(x, y, z);
+    glm::vec4 ray_clip = glm::vec4(ray_nds.x, ray_nds.y, -1.0f, 1.0f);
+
+    glm::vec4 ray_eye = glm::inverse(projection) * ray_clip;
+    ray_eye = glm::vec4(ray_eye.x, ray_eye.y, -1.0f, 0.0f);
+
+    glm::vec3 ray_world = glm::vec3(glm::inverse(view) * ray_eye);
+    ray_world = glm::normalize(ray_world);
+
+    return ray_world;
+}
 bool useFrustumCulling = true;
 double previousTime = glfwGetTime();
 int frameCount = 0;
@@ -37,6 +56,16 @@ bool cKeyPressed = false;
 bool nKeyPressed = false;
 bool nKeyLastState = false;
 bool mKeyPressed = false;
+bool mouseClicked = false;
+
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+    {
+        mouseClicked = true;
+    }
+}
+
 SceneObject* selectedObject = nullptr;
 Camera camera;
 Frustum frustum;
@@ -231,7 +260,7 @@ int main()
     glfwMakeContextCurrent(window);
 
     glfwSetCursorPosCallback(window, mouse_callback);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
@@ -370,6 +399,7 @@ int main()
 
     glBindVertexArray(0);
     Texture containerTexture("container.jpg");
+    
 
     Material cubeMaterial(&containerTexture);
 
@@ -447,6 +477,7 @@ int main()
     glm::vec3(1.5f,  0.2f, -1.5f),
     glm::vec3(-1.3f,  1.0f, -1.5f)
     };
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
 
     // ================= RENDER LOOP =================
     cube1.AddChild(&cube2);
@@ -630,7 +661,48 @@ int main()
 
         glDepthMask(GL_TRUE);
         glDepthFunc(GL_LESS);
+        if (mouseClicked)
+        {
+            double mouseX, mouseY;
+            glfwGetCursorPos(window, &mouseX, &mouseY);
 
+            glm::vec3 rayDir = GetRayFromMouse(mouseX, mouseY, 800, 600, projection, view);
+            glm::vec3 rayOrigin = camera.Position;
+
+            float closestDist = 1000.0f;
+            SceneObject* hitObject = nullptr;
+
+            for (SceneObject* obj : scene.objects)
+            {
+                float radius = obj->boundingRadius;
+                glm::vec3 oc = rayOrigin - obj->transform.position;
+
+                float a = glm::dot(rayDir, rayDir);
+                float b = 2.0f * glm::dot(oc, rayDir);
+                float c = glm::dot(oc, oc) - radius * radius;
+
+                float discriminant = b * b - 4 * a * c;
+
+                if (discriminant > 0)
+                {
+                    float dist = (-b - sqrt(discriminant)) / (2.0f * a);
+
+                    if (dist < closestDist && dist > 0)
+                    {
+                        closestDist = dist;
+                        hitObject = obj;
+                    }
+                }
+            }
+
+            if (hitObject != nullptr)
+            {
+                selectedObject = hitObject;
+                std::cout << "Object selected!\n";
+            }
+
+            mouseClicked = false;
+        }
         // ===== SHARED SHADER SETUP (once per frame) =====
         shader.use();
         for (int i = 0; i < 3; i++)
@@ -662,6 +734,8 @@ int main()
 
         for (SceneObject* obj : scene.objects)
         {
+            obj->UpdateComponents(deltaTime); 
+
             if (!useCulling || frustum.IsSphereVisible(obj->transform.position, obj->boundingRadius))
             {
                 obj->Draw(renderer, glm::mat4(1.0f));
@@ -705,7 +779,7 @@ int main()
                 " | Total: " + std::to_string(totalObjects);
 
             glfwSetWindowTitle(window, title.c_str());
-            glfwSetWindowTitle(window, title.c_str());
+     
             frameCount = 0;
             previousTime = currentTime;
         }

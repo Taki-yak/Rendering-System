@@ -17,6 +17,7 @@
 #include "Component.h"
 #include "RotatorComponent.h"
 #include "OscillatorComponent.h"
+#include "SceneSerializer.h"
 // ================= CAMERA VARIABLES =================
 //glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 //glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -57,7 +58,8 @@ bool nKeyPressed = false;
 bool nKeyLastState = false;
 bool mKeyPressed = false;
 bool mouseClicked = false;
-
+bool pPressed = false;
+bool lPressed = false;
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
@@ -589,6 +591,24 @@ int main()
                 std::cout << "Culling ON\n";
             else
                 std::cout << "Culling OFF\n";
+        }
+        if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS && !pPressed)
+        {
+            SceneSerializer::Save(scene, "scene.txt");
+            pPressed = true;
+        }
+        if (glfwGetKey(window, GLFW_KEY_P) == GLFW_RELEASE)
+        {
+            pPressed = false;
+        }
+        if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS && !lPressed)
+        {
+            SceneSerializer::Load(scene, "scene.txt", &cube, &shader, &cubeMaterial);
+            lPressed = true;
+        }
+        if (glfwGetKey(window, GLFW_KEY_L) == GLFW_RELEASE)
+        {
+            lPressed = false;
         }
         // ===== ROTate
         if (selectedObject != nullptr)

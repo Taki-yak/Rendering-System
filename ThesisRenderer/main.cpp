@@ -594,7 +594,7 @@ int main()
         }
         if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS && !pPressed)
         {
-            SceneSerializer::Save(scene, "scene.txt");
+            SceneSerializer::Save(scene, "D:\\taki\\POLAND\\POLAND\\ThesisRenderer\\ThesisRenderer\\scene.txt");
             pPressed = true;
         }
         if (glfwGetKey(window, GLFW_KEY_P) == GLFW_RELEASE)
@@ -603,7 +603,7 @@ int main()
         }
         if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS && !lPressed)
         {
-            SceneSerializer::Load(scene, "scene.txt", &cube, &shader, &cubeMaterial);
+            SceneSerializer::Load(scene, "D:\\taki\\POLAND\\POLAND\\ThesisRenderer\\ThesisRenderer\\scene.txt", &cube, &shader, &cubeMaterial);
             lPressed = true;
         }
         if (glfwGetKey(window, GLFW_KEY_L) == GLFW_RELEASE)

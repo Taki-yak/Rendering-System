@@ -797,7 +797,34 @@ int main()
                 " | Visible: " + std::to_string(visibleObjects) +
                 " | Culled: " + std::to_string(culledObjects) +
                 " | Total: " + std::to_string(totalObjects);
+            if (selectedObject != nullptr)
+            {
+                glm::vec3 p = selectedObject->transform.position;
 
+                title += " | Selected Pos: (" +
+                    std::to_string((int)p.x) + "," +
+                    std::to_string((int)p.y) + "," +
+                    std::to_string((int)p.z) + ")";
+            }
+            if (selectedObject != nullptr)
+            {
+                glm::vec3 p = selectedObject->transform.position;
+                glm::vec3 r = selectedObject->transform.rotation;
+                glm::vec3 s = selectedObject->transform.scale;
+
+                title += " | Pos(" +
+                    std::to_string((int)p.x) + "," +
+                    std::to_string((int)p.y) + "," +
+                    std::to_string((int)p.z) + ")";
+
+                title += " Rot(" +
+                    std::to_string((int)r.x) + "," +
+                    std::to_string((int)r.y) + "," +
+                    std::to_string((int)r.z) + ")";
+
+                title += " Scale(" +
+                    std::to_string((int)s.x) + ")";
+            }
             glfwSetWindowTitle(window, title.c_str());
      
             frameCount = 0;

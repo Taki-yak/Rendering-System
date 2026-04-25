@@ -269,7 +269,7 @@ int main()
         std::cout << "Failed to initialize GLAD\n";
         return -1;
     }
-
+    
     Cubemap skybox(faces);
 
     glEnable(GL_DEPTH_TEST);
@@ -459,7 +459,17 @@ int main()
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);*/
 
     int width, height, nrChannels;
-
+    std::cout << "==== CONTROLS ====\n";
+    std::cout << "WASD - Move camera\n";
+    std::cout << "Mouse - Look around\n";
+    std::cout << "Left Click - Select object\n";
+    std::cout << "N - Add cube\n";
+    std::cout << "M - Delete object\n";
+    std::cout << "Arrows/PageUp/PageDown - Move object\n";
+    std::cout << "IJKLUO - Rotate object\n";
+    std::cout << "+/- - Scale object\n";
+    std::cout << "C - Toggle frustum culling\n";
+    std::cout << "===================\n";
     // unsigned char* data = stbi_load("D:\\taki\\POLAND\\POLAND\\ThesisRenderer\\ThesisRenderer\\container.jpg", &width, &height, &nrChannels, 0);
     Shader lightShader(lightVertexSource, lightFragmentSource);
     shader.setVec3("lightPos", glm::vec3(1.2f, 1.0f, 2.0f));
@@ -797,6 +807,17 @@ int main()
                 " | Visible: " + std::to_string(visibleObjects) +
                 " | Culled: " + std::to_string(culledObjects) +
                 " | Total: " + std::to_string(totalObjects);
+            if (selectedObject != nullptr)
+            {
+                title += " | Selected Pos: (" +
+                    std::to_string(selectedObject->transform.position.x) + "," +
+                    std::to_string(selectedObject->transform.position.y) + "," +
+                    std::to_string(selectedObject->transform.position.z) + ")";
+            }
+            else
+            {
+                title += " | No Object Selected";
+            }
             if (selectedObject != nullptr)
             {
                 glm::vec3 p = selectedObject->transform.position;

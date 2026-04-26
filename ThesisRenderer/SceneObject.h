@@ -6,7 +6,6 @@
 #include "Material.h"
 #include "Transform.h"
 #include "Component.h"
-
 class Renderer;
 
 class SceneObject
@@ -20,7 +19,7 @@ public:
     }
 
     Transform transform;
-
+    bool isSelected = false;
     void AddChild(SceneObject* child);
     void Draw(Renderer& renderer, glm::mat4 parentTransform);
 

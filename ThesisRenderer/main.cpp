@@ -43,6 +43,8 @@ glm::vec3 GetRayFromMouse(double mouseX, double mouseY, int width, int height,
 
     return ray_world;
 }
+
+bool isSelected;
 bool useFrustumCulling = true;
 double previousTime = glfwGetTime();
 int frameCount = 0;
@@ -60,6 +62,7 @@ bool mKeyPressed = false;
 bool mouseClicked = false;
 bool pPressed = false;
 bool lPressed = false;
+
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
@@ -71,8 +74,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 SceneObject* selectedObject = nullptr;
 Camera camera;
 Frustum frustum;
-// ================= MOUSE CALLBACK =================
-
+// ================= MOUSE CALLBACK ==================
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
     if (firstMouse)
@@ -129,7 +131,7 @@ out vec4 FragColor;
 in vec3 FragPos;
 in vec3 Normal;
 in vec2 TexCoord;
-
+uniform bool isSelected;
 uniform sampler2D texture1;
 
 uniform vec3 viewPos;
@@ -167,7 +169,12 @@ void main()
         result += ambient + diffuse + specular;
     }
 
-    FragColor = vec4(result, 1.0);
+   if(isSelected)
+{
+    result *= 1.5; // brighter
+}
+
+FragColor = vec4(result, 1.0);
 }
 
 )";
@@ -284,6 +291,8 @@ int main()
     glm::vec3(0.0f, 3.0f, -3.0f)
     };
 
+
+    shader.setBool("isSelected", isSelected);
     glm::vec3 lightColors[] = {
         glm::vec3(1.0f),
         glm::vec3(1.0f, 0.8f, 0.6f),
@@ -294,6 +303,7 @@ int main()
     Model myModel("character-human.obj");
     Model treeModel("character-a.obj");
     Shader skyboxShader(skyboxVertex, skyboxFragment);
+
     // ================= CUBE DATA =================
     float vertices[] = {
         // positions          // normals           // texcoords
@@ -727,7 +737,13 @@ int main()
 
             if (hitObject != nullptr)
             {
+                if (selectedObject != nullptr)
+                    selectedObject->isSelected = false;
+
                 selectedObject = hitObject;
+
+                if (selectedObject != nullptr)
+                    selectedObject->isSelected = true;
                 std::cout << "Object selected!\n";
             }
 
@@ -776,6 +792,7 @@ int main()
                 culledObjects++;
             }
         }
+       
         // ===== DRAW MODELS (each binds its own texture) =====
         glm::mat4 model1 = glm::mat4(1.0f);
         model1 = glm::translate(model1, glm::vec3(-3.0f, 2.0f, -3.0f));

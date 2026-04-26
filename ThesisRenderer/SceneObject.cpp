@@ -26,7 +26,7 @@ void SceneObject::Draw(Renderer& renderer, glm::mat4 parentTransform)
     shader->setVec3("materialDiffuse", material->diffuseColor);
     shader->setVec3("materialSpecular", material->specular);
     shader->setFloat("materialShininess", material->shininess);
-
+    shader->setBool("isSelected", isSelected);
     mesh->Draw();
 
     for (SceneObject* child : children)

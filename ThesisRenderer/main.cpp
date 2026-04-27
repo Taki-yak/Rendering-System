@@ -62,6 +62,7 @@ bool mKeyPressed = false;
 bool mouseClicked = false;
 bool pPressed = false;
 bool lPressed = false;
+bool bPressed = false;
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
@@ -629,6 +630,39 @@ int main()
         if (glfwGetKey(window, GLFW_KEY_L) == GLFW_RELEASE)
         {
             lPressed = false;
+        }
+        if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS && !bPressed)
+        {
+            if (selectedObject != nullptr)
+            {
+                SceneObject* copy = new SceneObject(
+                    selectedObject->mesh,
+                    selectedObject->shader,
+                    selectedObject->material
+                );
+
+                
+                copy->transform = selectedObject->transform;
+
+               
+                copy->transform.position += glm::vec3(1.0f, 0.0f, 0.0f);
+
+                scene.AddObject(copy);
+
+              
+                selectedObject->isSelected = false;
+                selectedObject = copy;
+                selectedObject->isSelected = true;
+
+                std::cout << "Object duplicated!\n";
+            }
+
+            bPressed = true;
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_B) == GLFW_RELEASE)
+        {
+            bPressed = false;
         }
         // ===== ROTate
         if (selectedObject != nullptr)

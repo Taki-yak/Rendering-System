@@ -538,24 +538,31 @@ int main()
 
         nKeyLastState = nKeyCurrent;
 
-        if (glfwGetKey(window, GLFW_KEY_N) == GLFW_RELEASE)
-        {
-            nKeyPressed = false;
-        }
-        // ===== REMOVE LAST OBJECT =====
         if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS && !mKeyPressed)
         {
-            if (!scene.objects.empty())
+            if (selectedObject != nullptr)
             {
-                SceneObject* obj = scene.objects.back();
-                scene.objects.pop_back();
+                for (auto it = scene.objects.begin(); it != scene.objects.end(); ++it)
+                {
+                    if (*it == selectedObject)
+                    {
+                        delete* it;
+                        scene.objects.erase(it);
+                        break;
+                    }
+                }
 
-                delete obj;
+                selectedObject = nullptr;
 
-                std::cout << "Object removed!\n";
+                std::cout << "Selected object deleted!\n";
             }
 
             mKeyPressed = true;
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_M) == GLFW_RELEASE)
+        {
+            mKeyPressed = false;
         }
        
         if (selectedObject != nullptr)

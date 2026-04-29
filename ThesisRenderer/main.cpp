@@ -503,6 +503,7 @@ int main()
     glfwSetMouseButtonCallback(window, mouse_button_callback);
 
     // ================= RENDER LOOP =================
+
     cube1.AddChild(&cube2);
     cube2.AddChild(&cube3);
 
@@ -514,6 +515,7 @@ int main()
     renderer.Render(scene, camera);
     while (!glfwWindowShouldClose(window))
     {
+     
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
@@ -537,7 +539,7 @@ int main()
         }
 
         nKeyLastState = nKeyCurrent;
-
+     
         if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS && !mKeyPressed)
         {
             if (selectedObject != nullptr)
@@ -638,6 +640,7 @@ int main()
         {
             lPressed = false;
         }
+
         if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS && !bPressed)
         {
             if (selectedObject != nullptr)
@@ -751,6 +754,7 @@ int main()
             glm::vec3 rayOrigin = camera.Position;
 
             float closestDist = 1000.0f;
+
             SceneObject* hitObject = nullptr;
 
             for (SceneObject* obj : scene.objects)
@@ -790,6 +794,7 @@ int main()
 
             mouseClicked = false;
         }
+
         // ===== SHARED SHADER SETUP (once per frame) =====
         shader.use();
         for (int i = 0; i < 3; i++)
@@ -821,16 +826,22 @@ int main()
 
         for (SceneObject* obj : scene.objects)
         {
-            obj->UpdateComponents(deltaTime); 
+            obj->UpdateComponents(deltaTime);
+
+            // Highlight selected object
+            if (obj == selectedObject)
+            {
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                glLineWidth(3.0f);
+            }
+            else
+            {
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            }
 
             if (!useCulling || frustum.IsSphereVisible(obj->transform.position, obj->boundingRadius))
             {
                 obj->Draw(renderer, glm::mat4(1.0f));
-                visibleObjects++;
-            }
-            else
-            {
-                culledObjects++;
             }
         }
        
@@ -908,6 +919,7 @@ int main()
      
             frameCount = 0;
             previousTime = currentTime;
+
         }
 
         glfwSwapBuffers(window);

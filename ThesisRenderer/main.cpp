@@ -63,12 +63,18 @@ bool mouseClicked = false;
 bool pPressed = false;
 bool lPressed = false;
 bool bPressed = false;
-
+bool isDragging = false;
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
     {
         mouseClicked = true;
+        isDragging = true;
+    }
+
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
+    {
+        isDragging = false;
     }
 }
 
@@ -794,7 +800,26 @@ int main()
 
             mouseClicked = false;
         }
+        if (isDragging && selectedObject != nullptr)
+        {
+            double mouseX, mouseY;
+            glfwGetCursorPos(window, &mouseX, &mouseY);
 
+            glm::vec3 rayDir = GetRayFromMouse(mouseX, mouseY, 800, 600, projection, view);
+            glm::vec3 rayOrigin = camera.Position;
+
+            float planeY = selectedObject->transform.position.y;
+
+            float t = (planeY - rayOrigin.y) / rayDir.y;
+
+            if (t > 0.0f)
+            {
+                glm::vec3 hitPoint = rayOrigin + rayDir * t;
+
+                selectedObject->transform.position.x = hitPoint.x;
+                selectedObject->transform.position.z = hitPoint.z;
+            }
+        }
         // ===== SHARED SHADER SETUP (once per frame) =====
         shader.use();
         for (int i = 0; i < 3; i++)

@@ -24,7 +24,15 @@
 //glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 //float yaw = -90.0f;
 //float pitch = 0.0f;
+enum MoveAxis
+{
+    FREE,
+    X_AXIS,
+    Y_AXIS,
+    Z_AXIS
+};
 
+MoveAxis currentAxis = FREE;
 glm::vec3 GetRayFromMouse(double mouseX, double mouseY, int width, int height,
     glm::mat4 projection, glm::mat4 view)
 {
@@ -703,6 +711,17 @@ int main()
             if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS)
                 selectedObject->transform.rotation.z -= rotSpeed;
         }
+        if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
+            currentAxis = X_AXIS;
+
+        if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS)
+            currentAxis = Y_AXIS;
+
+        if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
+            currentAxis = Z_AXIS;
+
+        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+            currentAxis = FREE; // reset
         // ===== SCALE
         if (selectedObject != nullptr)
         {
@@ -816,8 +835,23 @@ int main()
             {
                 glm::vec3 hitPoint = rayOrigin + rayDir * t;
 
-                selectedObject->transform.position.x = hitPoint.x;
-                selectedObject->transform.position.z = hitPoint.z;
+                if (currentAxis == FREE)
+                {
+                    selectedObject->transform.position.x = hitPoint.x;
+                    selectedObject->transform.position.z = hitPoint.z;
+                }
+                else if (currentAxis == X_AXIS)
+                {
+                    selectedObject->transform.position.x = hitPoint.x;
+                }
+                else if (currentAxis == Z_AXIS)
+                {
+                    selectedObject->transform.position.z = hitPoint.z;
+                }
+                else if (currentAxis == Y_AXIS)
+                {
+                    selectedObject->transform.position.y = hitPoint.y;
+                }
             }
         }
         // ===== SHARED SHADER SETUP (once per frame) =====

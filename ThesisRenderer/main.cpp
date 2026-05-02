@@ -72,6 +72,9 @@ bool pPressed = false;
 bool lPressed = false;
 bool bPressed = false;
 bool isDragging = false;
+bool snapEnabled = false;
+bool gPressed = false;
+float gridSize = 1.0f;
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
@@ -710,6 +713,14 @@ int main()
 
             if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS)
                 selectedObject->transform.rotation.z -= rotSpeed;
+            if (snapEnabled)
+            {
+                glm::vec3& pos = selectedObject->transform.position;
+
+                pos.x = round(pos.x / gridSize) * gridSize;
+                pos.y = round(pos.y / gridSize) * gridSize;
+                pos.z = round(pos.z / gridSize) * gridSize;
+            }
         }
         if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
             currentAxis = X_AXIS;
@@ -721,7 +732,22 @@ int main()
             currentAxis = Z_AXIS;
 
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-            currentAxis = FREE; // reset
+            currentAxis = FREE;// reset
+        if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS && !gPressed)
+        {
+            snapEnabled = !snapEnabled;
+            gPressed = true;
+
+            if (snapEnabled)
+                std::cout << "Grid Snapping ON\n";
+            else
+                std::cout << "Grid Snapping OFF\n";
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_G) == GLFW_RELEASE)
+        {
+            gPressed = false;
+        }
         // ===== SCALE
         if (selectedObject != nullptr)
         {

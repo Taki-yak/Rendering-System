@@ -24,15 +24,17 @@
 //glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 //float yaw = -90.0f;
 //float pitch = 0.0f;
+
 enum MoveAxis
 {
-    FREE,
+    NONE,
     X_AXIS,
-    Y_AXIS,
     Z_AXIS
 };
 
-MoveAxis currentAxis = FREE;
+MoveAxis currentAxis = NONE;
+
+
 glm::vec3 GetRayFromMouse(double mouseX, double mouseY, int width, int height,
     glm::mat4 projection, glm::mat4 view)
 {
@@ -722,17 +724,17 @@ int main()
                 pos.z = round(pos.z / gridSize) * gridSize;
             }
         }
-        if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
-            currentAxis = X_AXIS;
+        //if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
+        //    currentAxis = X_AXIS;
 
-        if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS)
-            currentAxis = Y_AXIS;
+        //if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS)
+        //    currentAxis = Y_AXIS;
 
-        if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
-            currentAxis = Z_AXIS;
+        //if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
+        //    currentAxis = Z_AXIS;
 
-        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-            currentAxis = FREE;// reset
+        //if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+        //    currentAxis = FREE;// reset
         if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS && !gPressed)
         {
             snapEnabled = !snapEnabled;
@@ -743,7 +745,23 @@ int main()
             else
                 std::cout << "Grid Snapping OFF\n";
         }
+        if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
+        {
+            currentAxis = X_AXIS;
+            std::cout << "Move X axis\n";
+        }
 
+        if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
+        {
+            currentAxis = Z_AXIS;
+            std::cout << "Move Z axis\n";
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS)
+        {
+            currentAxis = NONE;
+            std::cout << "Free move\n";
+        }
         if (glfwGetKey(window, GLFW_KEY_G) == GLFW_RELEASE)
         {
             gPressed = false;
@@ -861,12 +879,7 @@ int main()
             {
                 glm::vec3 hitPoint = rayOrigin + rayDir * t;
 
-                if (currentAxis == FREE)
-                {
-                    selectedObject->transform.position.x = hitPoint.x;
-                    selectedObject->transform.position.z = hitPoint.z;
-                }
-                else if (currentAxis == X_AXIS)
+                if (currentAxis == X_AXIS)
                 {
                     selectedObject->transform.position.x = hitPoint.x;
                 }
@@ -874,9 +887,11 @@ int main()
                 {
                     selectedObject->transform.position.z = hitPoint.z;
                 }
-                else if (currentAxis == Y_AXIS)
+                else
                 {
-                    selectedObject->transform.position.y = hitPoint.y;
+                    // free move
+                    selectedObject->transform.position.x = hitPoint.x;
+                    selectedObject->transform.position.z = hitPoint.z;
                 }
             }
         }

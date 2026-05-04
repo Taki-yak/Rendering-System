@@ -112,7 +112,21 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 
     camera.ProcessMouseMovement(xoffset, yoffset);
 }
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    if (selectedObject != nullptr)
+    {
+        float scaleSpeed = 0.2f;
 
+        selectedObject->transform.scale += glm::vec3(yoffset * scaleSpeed);
+
+    
+        selectedObject->transform.scale = glm::max(
+            selectedObject->transform.scale,
+            glm::vec3(0.1f)
+        );
+    }
+}
 
 // ================= SHADERS =================
 const char* vertexShaderSource = R"(
@@ -298,7 +312,9 @@ int main()
     }
     
     Cubemap skybox(faces);
-
+    glfwSetScrollCallback(window, scroll_callback);
+    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
     TestAssimp();
@@ -889,7 +905,7 @@ int main()
                 }
                 else
                 {
-                    // free move
+                  
                     selectedObject->transform.position.x = hitPoint.x;
                     selectedObject->transform.position.z = hitPoint.z;
                 }

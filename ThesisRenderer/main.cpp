@@ -77,6 +77,8 @@ bool isDragging = false;
 bool snapEnabled = false;
 bool gPressed = false;
 float gridSize = 1.0f;
+bool useGridSnap = true;
+float gridSize = 1.0f;
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
@@ -675,6 +677,20 @@ int main()
         {
             lPressed = false;
         }
+        static bool gPressed = false;
+
+        if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS && !gPressed)
+        {
+            useGridSnap = !useGridSnap;
+            gPressed = true;
+
+            std::cout << "Grid Snap: " << (useGridSnap ? "ON\n" : "OFF\n");
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_G) == GLFW_RELEASE)
+        {
+            gPressed = false;
+        }
 
         if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS && !bPressed)
         {
@@ -905,9 +921,17 @@ int main()
                 }
                 else
                 {
-                  
-                    selectedObject->transform.position.x = hitPoint.x;
-                    selectedObject->transform.position.z = hitPoint.z;
+                    float newX = hitPoint.x;
+                    float newZ = hitPoint.z;
+
+                    if (useGridSnap)
+                    {
+                        newX = round(newX / gridSize) * gridSize;
+                        newZ = round(newZ / gridSize) * gridSize;
+                    }
+
+                    selectedObject->transform.position.x = newX;
+                    selectedObject->transform.position.z = newZ;
                 }
             }
         }

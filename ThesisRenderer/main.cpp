@@ -78,6 +78,8 @@ bool snapEnabled = false;
 bool gPressed = false;
 float gridSize = 1.0f;
 bool useGridSnap = true;
+enum MoveAxis { NONE, AXIS_X, AXIS_Y, AXIS_Z };
+MoveAxis currentAxis = NONE;
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
@@ -648,6 +650,17 @@ int main()
 
         if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
             rotationAxis = glm::vec3(0.0f, 0.0f, 1.0f);
+        if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
+            currentAxis = AXIS_X;
+
+        if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS)
+            currentAxis = AXIS_Y;
+
+        if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
+            currentAxis = AXIS_Z;
+
+        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+            currentAxis = NONE;
         if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS && !cKeyPressed)
         {
             useCulling = !useCulling;
@@ -910,27 +923,20 @@ int main()
             {
                 glm::vec3 hitPoint = rayOrigin + rayDir * t;
 
-                if (currentAxis == X_AXIS)
-                {
+                if (currentAxis == AXIS_X)
                     selectedObject->transform.position.x = hitPoint.x;
-                }
-                else if (currentAxis == Z_AXIS)
-                {
+
+                else if (currentAxis == AXIS_Z)
                     selectedObject->transform.position.z = hitPoint.z;
-                }
+
+                else if (currentAxis == AXIS_Y)
+                    selectedObject->transform.position.y = hitPoint.y;
+
                 else
                 {
-                    float newX = hitPoint.x;
-                    float newZ = hitPoint.z;
-
-                    if (useGridSnap)
-                    {
-                        newX = round(newX / gridSize) * gridSize;
-                        newZ = round(newZ / gridSize) * gridSize;
-                    }
-
-                    selectedObject->transform.position.x = newX;
-                    selectedObject->transform.position.z = newZ;
+                   
+                    selectedObject->transform.position.x = hitPoint.x;
+                    selectedObject->transform.position.z = hitPoint.z;
                 }
             }
         }

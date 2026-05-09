@@ -25,14 +25,6 @@
 //float yaw = -90.0f;
 //float pitch = 0.0f;
 
-enum MoveAxis
-{
-    NONE,
-    X_AXIS,
-    Z_AXIS
-};
-
-MoveAxis currentAxis = NONE;
 
 
 glm::vec3 GetRayFromMouse(double mouseX, double mouseY, int width, int height,
@@ -78,7 +70,14 @@ bool snapEnabled = false;
 bool gPressed = false;
 float gridSize = 1.0f;
 bool useGridSnap = true;
-enum MoveAxis { NONE, AXIS_X, AXIS_Y, AXIS_Z };
+enum MoveAxis
+{
+    NONE,
+    AXIS_X,
+    AXIS_Y,
+    AXIS_Z
+};
+
 MoveAxis currentAxis = NONE;
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
@@ -791,16 +790,15 @@ int main()
         }
         if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
         {
-            currentAxis = X_AXIS;
+            currentAxis = AXIS_X;
             std::cout << "Move X axis\n";
         }
 
         if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
         {
-            currentAxis = Z_AXIS;
+            currentAxis = AXIS_Z;
             std::cout << "Move Z axis\n";
         }
-
         if (glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS)
         {
             currentAxis = NONE;

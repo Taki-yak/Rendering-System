@@ -129,7 +129,20 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
         );
     }
 }
+float gizmoVertices[] =
+{
+    // X axis (red)
+    0.0f, 0.0f, 0.0f,
+    2.0f, 0.0f, 0.0f,
 
+    // Y axis (green)
+    0.0f, 0.0f, 0.0f,
+    0.0f, 2.0f, 0.0f,
+
+    // Z axis (blue)
+    0.0f, 0.0f, 0.0f,
+    0.0f, 0.0f, 2.0f
+};
 // ================= SHADERS =================
 const char* vertexShaderSource = R"(
 
@@ -283,7 +296,29 @@ std::vector<std::string> faces =
     "textures/skybox/front.jpg",
     "textures/skybox/back.jpg"
 };
+void DrawGizmo(glm::vec3 position)
+{
+    glLineWidth(4.0f);
 
+    glBegin(GL_LINES);
+
+    // X axis - RED
+    glColor3f(1.0f, 0.0f, 0.0f);
+    glVertex3f(position.x, position.y, position.z);
+    glVertex3f(position.x + 2.0f, position.y, position.z);
+
+    // Y axis - GREEN
+    glColor3f(0.0f, 1.0f, 0.0f);
+    glVertex3f(position.x, position.y, position.z);
+    glVertex3f(position.x, position.y + 2.0f, position.z);
+
+    // Z axis - BLUE
+    glColor3f(0.0f, 0.0f, 1.0f);
+    glVertex3f(position.x, position.y, position.z);
+    glVertex3f(position.x, position.y, position.z + 2.0f);
+
+    glEnd();
+}
 // ================= MAIN =================
 glm::vec3 rotationAxis = glm::vec3(0.0f, 1.0f, 0.0f);
 int main()
@@ -890,7 +925,10 @@ int main()
                     }
                 }
             }
-
+            if (selectedObject != nullptr)
+            {
+                DrawGizmo(selectedObject->transform.position);
+            }
             if (hitObject != nullptr)
             {
                 if (selectedObject != nullptr)

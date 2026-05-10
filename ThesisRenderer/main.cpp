@@ -952,7 +952,6 @@ int main()
                     selectedObject->isSelected = false;
 
                 selectedObject = hitObject;
-
                 if (selectedObject != nullptr)
                     selectedObject->isSelected = true;
                 std::cout << "Object selected!\n";
@@ -1113,38 +1112,39 @@ int main()
                 title += " Scale(" +
                     std::to_string((int)s.x) + ")";
             }
-            if (selectedObject != nullptr)
-            {
-                gizmoShader.use();
-
-                glm::mat4 gizmoModel = glm::translate(glm::mat4(1.0f),
-                    selectedObject->transform.position);
-
-                gizmoShader.setMat4("model", glm::value_ptr(gizmoModel));
-                gizmoShader.setMat4("view", glm::value_ptr(view));
-                gizmoShader.setMat4("projection", glm::value_ptr(projection));
-
-                glBindVertexArray(gizmoVAO);
-
-                // X axis
-                gizmoShader.setVec3("axisColor", glm::vec3(1, 0, 0));
-                glDrawArrays(GL_LINES, 0, 2);
-
-                // Y axis
-                gizmoShader.setVec3("axisColor", glm::vec3(0, 1, 0));
-                glDrawArrays(GL_LINES, 2, 2);
-
-                // Z axis
-                gizmoShader.setVec3("axisColor", glm::vec3(0, 0, 1));
-                glDrawArrays(GL_LINES, 4, 2);
-            }
+      
             glfwSetWindowTitle(window, title.c_str());
      
             frameCount = 0;
             previousTime = currentTime;
 
         }
+        if (selectedObject != nullptr)
+        {
+            glLineWidth(4.0f);
+            gizmoShader.use();
 
+            glm::mat4 gizmoModel = glm::translate(glm::mat4(1.0f),
+                selectedObject->transform.position);
+
+            gizmoShader.setMat4("model", glm::value_ptr(gizmoModel));
+            gizmoShader.setMat4("view", glm::value_ptr(view));
+            gizmoShader.setMat4("projection", glm::value_ptr(projection));
+
+            glBindVertexArray(gizmoVAO);
+
+            // X axis
+            gizmoShader.setVec3("axisColor", glm::vec3(1, 0, 0));
+            glDrawArrays(GL_LINES, 0, 2);
+
+            // Y axis
+            gizmoShader.setVec3("axisColor", glm::vec3(0, 1, 0));
+            glDrawArrays(GL_LINES, 2, 2);
+
+            // Z axis
+            gizmoShader.setVec3("axisColor", glm::vec3(0, 0, 1));
+            glDrawArrays(GL_LINES, 4, 2);
+        }
         glfwSwapBuffers(window);
     }
 

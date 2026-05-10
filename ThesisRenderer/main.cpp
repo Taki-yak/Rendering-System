@@ -287,6 +287,36 @@ void main()
 }
 
 )";
+const char* gizmoVertexShader = R"(
+
+#version 330 core
+
+layout (location = 0) in vec3 aPos;
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
+void main()
+{
+    gl_Position = projection * view * model * vec4(aPos, 1.0);
+}
+
+)";
+const char* gizmoFragmentShader = R"(
+
+#version 330 core
+
+out vec4 FragColor;
+
+uniform vec3 axisColor;
+
+void main()
+{
+    FragColor = vec4(axisColor, 1.0);
+}
+
+)";
 std::vector<std::string> faces =
 {
     "textures/skybox/right.jpg",
@@ -296,29 +326,6 @@ std::vector<std::string> faces =
     "textures/skybox/front.jpg",
     "textures/skybox/back.jpg"
 };
-void DrawGizmo(glm::vec3 position)
-{
-    glLineWidth(4.0f);
-
-    glBegin(GL_LINES);
-
-    // X axis - RED
-    glColor3f(1.0f, 0.0f, 0.0f);
-    glVertex3f(position.x, position.y, position.z);
-    glVertex3f(position.x + 2.0f, position.y, position.z);
-
-    // Y axis - GREEN
-    glColor3f(0.0f, 1.0f, 0.0f);
-    glVertex3f(position.x, position.y, position.z);
-    glVertex3f(position.x, position.y + 2.0f, position.z);
-
-    // Z axis - BLUE
-    glColor3f(0.0f, 0.0f, 1.0f);
-    glVertex3f(position.x, position.y, position.z);
-    glVertex3f(position.x, position.y, position.z + 2.0f);
-
-    glEnd();
-}
 // ================= MAIN =================
 glm::vec3 rotationAxis = glm::vec3(0.0f, 1.0f, 0.0f);
 int main()
@@ -356,7 +363,20 @@ int main()
     glDisable(GL_CULL_FACE);
     TestAssimp();
     // ================= SHADER CLASS =================
+    unsigned int gizmoVAO, gizmoVBO;
 
+    glGenVertexArrays(1, &gizmoVAO);
+    glGenBuffers(1, &gizmoVBO);
+
+    glBindVertexArray(gizmoVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, gizmoVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(gizmoVertices), gizmoVertices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glBindVertexArray(0);
     Shader shader(vertexShaderSource, fragmentShaderSource);
     glm::vec3 lightPositions[] = {
     glm::vec3(2.0f, 2.0f, 2.0f),
@@ -376,7 +396,7 @@ int main()
     Model myModel("character-human.obj");
     Model treeModel("character-a.obj");
     Shader skyboxShader(skyboxVertex, skyboxFragment);
-
+    Shader gizmoShader(gizmoVertexShader, gizmoFragmentShader);
     // ================= CUBE DATA =================
     float vertices[] = {
         // positions          // normals           // texcoords
@@ -925,10 +945,7 @@ int main()
                     }
                 }
             }
-            if (selectedObject != nullptr)
-            {
-                DrawGizmo(selectedObject->transform.position);
-            }
+        
             if (hitObject != nullptr)
             {
                 if (selectedObject != nullptr)
@@ -1095,6 +1112,31 @@ int main()
 
                 title += " Scale(" +
                     std::to_string((int)s.x) + ")";
+            }
+            if (selectedObject != nullptr)
+            {
+                gizmoShader.use();
+
+                glm::mat4 gizmoModel = glm::translate(glm::mat4(1.0f),
+                    selectedObject->transform.position);
+
+                gizmoShader.setMat4("model", glm::value_ptr(gizmoModel));
+                gizmoShader.setMat4("view", glm::value_ptr(view));
+                gizmoShader.setMat4("projection", glm::value_ptr(projection));
+
+                glBindVertexArray(gizmoVAO);
+
+                // X axis
+                gizmoShader.setVec3("axisColor", glm::vec3(1, 0, 0));
+                glDrawArrays(GL_LINES, 0, 2);
+
+                // Y axis
+                gizmoShader.setVec3("axisColor", glm::vec3(0, 1, 0));
+                glDrawArrays(GL_LINES, 2, 2);
+
+                // Z axis
+                gizmoShader.setVec3("axisColor", glm::vec3(0, 0, 1));
+                glDrawArrays(GL_LINES, 4, 2);
             }
             glfwSetWindowTitle(window, title.c_str());
      

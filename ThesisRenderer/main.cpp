@@ -620,7 +620,9 @@ int main()
     renderer.Render(scene, camera);
     while (!glfwWindowShouldClose(window))
     {
-     
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
@@ -1157,10 +1159,36 @@ int main()
             // Z axis
             gizmoShader.setVec3("axisColor", glm::vec3(0, 0, 1));
             glDrawArrays(GL_LINES, 4, 2);
+            ImGui::Begin("Engine Debug");
+
+            ImGui::Text("Thesis Renderer");
+
+            ImGui::Text("FPS: %.1f", 1.0f / deltaTime);
+
+            if (selectedObject != nullptr)
+            {
+                ImGui::Text("Object Selected");
+
+                ImGui::Text("Position: %.2f %.2f %.2f",
+                    selectedObject->transform.position.x,
+                    selectedObject->transform.position.y,
+                    selectedObject->transform.position.z);
+            }
+            else
+            {
+                ImGui::Text("No object selected");
+            }
+
+            ImGui::End();
+            ImGui::Render();
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         }
+
         glfwSwapBuffers(window);
     }
-
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
     glfwTerminate();
 
     return 0;

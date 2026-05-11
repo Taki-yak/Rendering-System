@@ -122,7 +122,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\taki\POLAND\POLAND\ThesisRenderer\ThesisRenderer\glm-master\glm-master;D:\taki\sdl\glad (1)\include;D:\taki\sdl\glm-master\glm-master;D:\taki\sdl\glad\include\KHR;D:\taki\sdl\glfw-3.4.bin.WIN64\glfw-3.4.bin.WIN64\include;D:\taki\sdl\vcpkg\buildtrees\assimp\x64-windows-rel\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\taki\POLAND\POLAND\ThesisRenderer\ThesisRenderer\glm-master\glm-master;D:\taki\sdl\glad (1)\include;D:\taki\sdl\glm-master\glm-master;D:\taki\sdl\glad\include\KHR;D:\taki\sdl\glfw-3.4.bin.WIN64\glfw-3.4.bin.WIN64\include;D:\taki\sdl\vcpkg\buildtrees\assimp\x64-windows-rel\include;D:\taki\sdl\imgui-master\imgui-master;D:\taki\sdl\imgui-master\imgui-master\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAs>CompileAsCpp</CompileAs>
     </ClCompile>
     <Link>
@@ -139,6 +139,13 @@
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CompileAsC</CompileAs>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\taki\sdl\glad (1)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\..\sdl\imgui-master\imgui-master\backends\imgui_impl_glfw.cpp" />
+    <ClCompile Include="..\..\..\..\..\sdl\imgui-master\imgui-master\backends\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="..\..\..\..\..\sdl\imgui-master\imgui-master\imgui.cpp" />
+    <ClCompile Include="..\..\..\..\..\sdl\imgui-master\imgui-master\imgui_demo.cpp" />
+    <ClCompile Include="..\..\..\..\..\sdl\imgui-master\imgui-master\imgui_draw.cpp" />
+    <ClCompile Include="..\..\..\..\..\sdl\imgui-master\imgui-master\imgui_tables.cpp" />
+    <ClCompile Include="..\..\..\..\..\sdl\imgui-master\imgui-master\imgui_widgets.cpp" />
     <ClCompile Include="Cubemap.cpp" />
     <ClCompile Include="Frustum.cpp" />
     <ClCompile Include="main.cpp" />

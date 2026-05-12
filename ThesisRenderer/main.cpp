@@ -1160,7 +1160,27 @@ int main()
             gizmoShader.setVec3("axisColor", glm::vec3(0, 0, 1));
             glDrawArrays(GL_LINES, 4, 2);
             ImGui::Begin("Engine Debug");
+            ImGui::Begin("Hierarchy");
 
+            for (int i = 0; i < scene.objects.size(); i++)
+            {
+                SceneObject* obj = scene.objects[i];
+
+                std::string name = "Object " + std::to_string(i);
+
+                bool isSelectedInUI = (selectedObject == obj);
+
+                if (ImGui::Selectable(name.c_str(), isSelectedInUI))
+                {
+                    if (selectedObject != nullptr)
+                        selectedObject->isSelected = false;
+
+                    selectedObject = obj;
+                    selectedObject->isSelected = true;
+                }
+            }
+
+            ImGui::End();
             ImGui::Text("Thesis Renderer");
 
             ImGui::Text("FPS: %.1f", 1.0f / deltaTime);

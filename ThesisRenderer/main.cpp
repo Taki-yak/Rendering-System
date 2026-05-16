@@ -623,6 +623,27 @@ int main()
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
+        ImGui::Begin("Hierarchy");
+
+        for (int i = 0; i < scene.objects.size(); i++)
+        {
+            SceneObject* obj = scene.objects[i];
+
+            std::string name = "Object " + std::to_string(i);
+
+            bool isSelectedNow = (selectedObject == obj);
+
+            if (ImGui::Selectable(name.c_str(), isSelectedNow))
+            {
+                if (selectedObject != nullptr)
+                    selectedObject->isSelected = false;
+
+                selectedObject = obj;
+                selectedObject->isSelected = true;
+            }
+        }
+
+        ImGui::End();
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;

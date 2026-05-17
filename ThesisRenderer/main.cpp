@@ -1202,6 +1202,36 @@ int main()
             }
 
             ImGui::End();
+            ImGui::Begin("Inspector");
+
+            if (selectedObject != nullptr)
+            {
+                ImGui::Text("Transform");
+
+                ImGui::DragFloat3(
+                    "Position",
+                    glm::value_ptr(selectedObject->transform.position),
+                    0.1f
+                );
+
+                ImGui::DragFloat3(
+                    "Rotation",
+                    glm::value_ptr(selectedObject->transform.rotation),
+                    1.0f
+                );
+
+                ImGui::DragFloat3(
+                    "Scale",
+                    glm::value_ptr(selectedObject->transform.scale),
+                    0.1f
+                );
+            }
+            else
+            {
+                ImGui::Text("No object selected");
+            }
+
+            ImGui::End();
             ImGui::Text("Thesis Renderer");
 
             ImGui::Text("FPS: %.1f", 1.0f / deltaTime);

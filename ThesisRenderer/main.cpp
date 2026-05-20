@@ -526,7 +526,9 @@ int main()
     SceneObject cube2(&cube, &shader, &cubeMaterial);
     SceneObject cube3(&cube, &shader, &cubeMaterial);
 
-
+    cube1.name = "Cube 1";
+    cube2.name = "Cube 2";
+    cube3.name = "Cube 3";
 
     cube1.transform.position = glm::vec3(0.0f, 0.0f, 0.0f);
     cube2.transform.position = glm::vec3(2.0f, 0.0f, 0.0f);
@@ -658,6 +660,7 @@ int main()
         if (nKeyCurrent && !nKeyLastState)
         {
             SceneObject* newCube = new SceneObject(&cube, &shader, &cubeMaterial);
+            newCube->name = "New Cube";
 
             newCube->transform.position = camera.Position + camera.Front * 3.0f;
 
@@ -1180,18 +1183,36 @@ int main()
             // Z axis
             gizmoShader.setVec3("axisColor", glm::vec3(0, 0, 1));
             glDrawArrays(GL_LINES, 4, 2);
-            ImGui::Begin("Engine Debug");
+           /* ImGui::Begin("Engine Debug");
             ImGui::Begin("Hierarchy");
 
             for (int i = 0; i < scene.objects.size(); i++)
             {
                 SceneObject* obj = scene.objects[i];
 
-                std::string name = "Object " + std::to_string(i);
+                ImGui::Begin("Hierarchy");
+
+                for (int i = 0; i < scene.objects.size(); i++)
+                {
+                    SceneObject* obj = scene.objects[i];
+
+                    bool isSelectedNow = (selectedObject == obj);
+
+                    if (ImGui::Selectable(obj->name.c_str(), isSelectedNow))
+                    {
+                        if (selectedObject != nullptr)
+                            selectedObject->isSelected = false;
+
+                        selectedObject = obj;
+                        selectedObject->isSelected = true;
+                    }
+                }
+
+                ImGui::End();
 
                 bool isSelectedInUI = (selectedObject == obj);
 
-                if (ImGui::Selectable(name.c_str(), isSelectedInUI))
+                if (ImGui::Selectable(obj->name.c_str(), isSelectedInUI))
                 {
                     if (selectedObject != nullptr)
                         selectedObject->isSelected = false;
@@ -1202,10 +1223,18 @@ int main()
             }
 
             ImGui::End();
-            ImGui::Begin("Inspector");
+            ImGui::Begin("Inspector");*/
 
             if (selectedObject != nullptr)
             {
+                static char nameBuffer[128];
+
+                strcpy_s(nameBuffer, selectedObject->name.c_str());
+
+                if (ImGui::InputText("Name", nameBuffer, IM_ARRAYSIZE(nameBuffer)))
+                {
+                    selectedObject->name = nameBuffer;
+                }
                 ImGui::Text("Transform");
 
                 ImGui::DragFloat3(

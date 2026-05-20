@@ -6,11 +6,13 @@
 #include "Material.h"
 #include "Transform.h"
 #include "Component.h"
+
 class Renderer;
 
 class SceneObject
 {
 public:
+    std::string name = "GameObject";
     SceneObject(Mesh* m, Shader* s, Material* mat);
     ~SceneObject()
     {

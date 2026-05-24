@@ -148,6 +148,7 @@
     <ClCompile Include="..\..\..\..\..\sdl\imgui-master\imgui-master\imgui_widgets.cpp" />
     <ClCompile Include="Cubemap.cpp" />
     <ClCompile Include="Frustum.cpp" />
+    <ClCompile Include="GridRenderer.cpp" />
     <ClCompile Include="InputManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mesh.cpp" />
@@ -166,6 +167,7 @@
     <ClInclude Include="Component.h" />
     <ClInclude Include="Cubemap.h" />
     <ClInclude Include="Frustum.h" />
+    <ClInclude Include="GridRenderer.h" />
     <ClInclude Include="InputManager.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="mesh.h" />

@@ -22,6 +22,7 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "InputManager.h"
+#include "GridRenderer.h"
 // ================= CAMERA VARIABLES =================
 //glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 //glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -148,6 +149,33 @@ float gizmoVertices[] =
     0.0f, 0.0f, 2.0f
 };
 // ================= SHADERS =================
+const char* gridVertexShader = R"(
+
+#version 330 core
+
+layout (location = 0) in vec3 aPos;
+
+uniform mat4 view;
+uniform mat4 projection;
+
+void main()
+{
+    gl_Position = projection * view * vec4(aPos, 1.0);
+}
+
+)";
+const char* gridFragmentShader = R"(
+
+#version 330 core
+
+out vec4 FragColor;
+
+void main()
+{
+    FragColor = vec4(0.3, 0.3, 0.3, 1.0);
+}
+
+)";
 const char* vertexShaderSource = R"(
 
 #version 330 core
@@ -412,6 +440,9 @@ int main()
     Model treeModel("character-a.obj");
     Shader skyboxShader(skyboxVertex, skyboxFragment);
     Shader gizmoShader(gizmoVertexShader, gizmoFragmentShader);
+    Shader gridShader(gridVertexShader, gridFragmentShader);
+
+    GridRenderer grid;
     // ================= CUBE DATA =================
     float vertices[] = {
         // positions          // normals           // texcoords
@@ -646,6 +677,7 @@ int main()
                 selectedObject->isSelected = true;
             }
         }
+
 
         ImGui::End();
         float currentFrame = glfwGetTime();
@@ -936,7 +968,12 @@ int main()
 
         glDepthFunc(GL_LEQUAL);
         glDepthMask(GL_FALSE);
+        gridShader.use();
 
+        gridShader.setMat4("view", glm::value_ptr(view));
+        gridShader.setMat4("projection", glm::value_ptr(projection));
+
+        grid.Draw(gridShader);
         skyboxShader.use();
         skyboxShader.setInt("skybox", 0);
 

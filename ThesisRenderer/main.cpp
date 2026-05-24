@@ -118,6 +118,12 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     lastY = (float)ypos;
 
     camera.ProcessMouseMovement(xoffset, yoffset);
+    ImGuiIO& io = ImGui::GetIO();
+
+    if (!io.WantCaptureMouse)
+    {
+        camera.ProcessMouseMovement(xoffset, yoffset);
+    }
 }
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
@@ -652,7 +658,7 @@ int main()
     cube2.AddComponent(new RotatorComponent(glm::vec3(1.0f, 0.0f, 0.0f), 30.0f));
     cube3.AddComponent(new OscillatorComponent(0.5f, 2.0f));
 
-    renderer.Render(scene, camera);
+   
     while (!glfwWindowShouldClose(window))
     {
         ImGui_ImplOpenGL3_NewFrame();
@@ -660,11 +666,12 @@ int main()
         ImGui::NewFrame();
         ImGui::Begin("Hierarchy");
 
+
         for (int i = 0; i < scene.objects.size(); i++)
         {
             SceneObject* obj = scene.objects[i];
 
-            std::string name = "Object " + std::to_string(i);
+            std::string name = obj->name;
 
             bool isSelectedNow = (selectedObject == obj);
 
@@ -713,8 +720,10 @@ int main()
                 {
                     if (*it == selectedObject)
                     {
-                        delete* it;
+                        SceneObject* toDelete = *it;
                         scene.objects.erase(it);
+                        delete toDelete;
+                        selectedObject = nullptr;
                         break;
                     }
                 }
@@ -793,6 +802,8 @@ int main()
             useCulling = !useCulling;
             cKeyPressed = true;
 
+
+
             if (useCulling)
                 std::cout << "Culling ON\n";
             else
@@ -818,7 +829,7 @@ int main()
         }
         static bool gPressed = false;
 
-        if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS && !gPressed)
+       /* if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS && !gPressed)
         {
             useGridSnap = !useGridSnap;
             gPressed = true;
@@ -829,7 +840,7 @@ int main()
         if (glfwGetKey(window, GLFW_KEY_G) == GLFW_RELEASE)
         {
             gPressed = false;
-        }
+        }*/
 
         if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS && !bPressed)
         {
@@ -916,6 +927,11 @@ int main()
             else
                 std::cout << "Grid Snapping OFF\n";
         }
+
+        if (glfwGetKey(window, GLFW_KEY_G) == GLFW_RELEASE)
+        {
+            gPressed = false;
+        }
         if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
         {
             currentAxis = AXIS_X;
@@ -932,10 +948,7 @@ int main()
             currentAxis = NONE;
             std::cout << "Free move\n";
         }
-        if (glfwGetKey(window, GLFW_KEY_G) == GLFW_RELEASE)
-        {
-            gPressed = false;
-        }
+     
         // ===== SCALE
         if (selectedObject != nullptr)
         {
@@ -1113,10 +1126,15 @@ int main()
             {
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             }
-
             if (!useCulling || frustum.IsSphereVisible(obj->transform.position, obj->boundingRadius))
             {
+                visibleObjects++;
+
                 obj->Draw(renderer, glm::mat4(1.0f));
+            }
+            else
+            {
+                culledObjects++;
             }
         }
        
@@ -1261,8 +1279,9 @@ int main()
                 }
             }
 
-            ImGui::End();
-            ImGui::Begin("Inspector");*/
+            ImGui::End();*/
+
+            ImGui::Begin("Inspector");
 
             if (selectedObject != nullptr)
             {
@@ -1300,6 +1319,8 @@ int main()
             }
 
             ImGui::End();
+            ImGui::Begin("Debug");
+
             ImGui::Text("Thesis Renderer");
 
             ImGui::Text("FPS: %.1f", 1.0f / deltaTime);
@@ -1319,10 +1340,10 @@ int main()
             }
 
             ImGui::End();
-            ImGui::Render();
-            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        
         }
-
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(window);
     }
     ImGui_ImplOpenGL3_Shutdown();

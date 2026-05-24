@@ -21,6 +21,7 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include "InputManager.h"
 // ================= CAMERA VARIABLES =================
 //glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 //glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -84,7 +85,7 @@ enum MoveAxis
 MoveAxis currentAxis = NONE;
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+    if (InputManager::IsMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT))/////////////////////////////////////////////////////////////////
     {
         mouseClicked = true;
         isDragging = true;
@@ -375,6 +376,7 @@ int main()
     ImGui_ImplOpenGL3_Init("#version 330");
     glDisable(GL_CULL_FACE);
     TestAssimp();
+    InputManager::Init(window);
     // ================= SHADER CLASS =================
     unsigned int gizmoVAO, gizmoVBO;
 
@@ -724,7 +726,7 @@ int main()
         {
             mKeyPressed = false;
         }
-        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        if (InputManager::IsKeyPressed(GLFW_KEY_W))
             camera.Position += cameraSpeed * camera.Front;
 
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)

@@ -23,6 +23,7 @@
 #include "imgui_impl_opengl3.h"
 #include "InputManager.h"
 #include "GridRenderer.h"
+#include "EditorUI.h"
 // ================= CAMERA VARIABLES =================
 //glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 //glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -580,7 +581,7 @@ int main()
     for (int i = 0; i < 100; i++)
     {
         SceneObject* obj = new SceneObject(&cube, &shader, &cubeMaterial);
-
+        obj->name = "Cube_" + std::to_string(i);
         float x = (rand() % 50 - 25);
         float y = (rand() % 10 - 5);
         float z = -(rand() % 50);
@@ -664,29 +665,7 @@ int main()
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-        ImGui::Begin("Hierarchy");
 
-
-        for (int i = 0; i < scene.objects.size(); i++)
-        {
-            SceneObject* obj = scene.objects[i];
-
-            std::string name = obj->name;
-
-            bool isSelectedNow = (selectedObject == obj);
-
-            if (ImGui::Selectable(name.c_str(), isSelectedNow))
-            {
-                if (selectedObject != nullptr)
-                    selectedObject->isSelected = false;
-
-                selectedObject = obj;
-                selectedObject->isSelected = true;
-            }
-        }
-
-
-        ImGui::End();
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
@@ -767,8 +746,26 @@ int main()
         {
             mKeyPressed = false;
         }
-        if (InputManager::IsKeyPressed(GLFW_KEY_W))
-            camera.Position += cameraSpeed * camera.Front;
+        ImGuiIO& io = ImGui::GetIO();
+
+        if (!io.WantCaptureKeyboard)
+        {
+            if (InputManager::IsKeyPressed(GLFW_KEY_W))
+                camera.Position += cameraSpeed * camera.Front;
+
+            if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+                camera.Position -= cameraSpeed * camera.Front;
+
+            if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+                camera.Position -=
+                glm::normalize(glm::cross(camera.Front, camera.Up))
+                * cameraSpeed;
+
+            if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+                camera.Position +=
+                glm::normalize(glm::cross(camera.Front, camera.Up))
+                * cameraSpeed;
+        }
 
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
             camera.Position -= cameraSpeed * camera.Front;
@@ -959,7 +956,13 @@ int main()
 
             if (glfwGetKey(window, GLFW_KEY_MINUS) == GLFW_PRESS) // -
                 selectedObject->transform.scale -= glm::vec3(scaleSpeed);
+            selectedObject->transform.scale =
+                glm::max(
+                    selectedObject->transform.scale,
+                    glm::vec3(0.1f)
+                );
         }
+
         //selectedObject->transform.scale = glm::max(selectedObject->transform.scale, glm::vec3(0.1f));
         if (glfwGetKey(window, GLFW_KEY_C) == GLFW_RELEASE)
         {
@@ -1218,10 +1221,12 @@ int main()
         if (selectedObject != nullptr)
         {
             glLineWidth(4.0f);
+
             gizmoShader.use();
 
-            glm::mat4 gizmoModel = glm::translate(glm::mat4(1.0f),
-                selectedObject->transform.position);
+            glm::mat4 gizmoModel =
+                glm::translate(glm::mat4(1.0f),
+                    selectedObject->transform.position);
 
             gizmoShader.setMat4("model", glm::value_ptr(gizmoModel));
             gizmoShader.setMat4("view", glm::value_ptr(view));
@@ -1240,108 +1245,28 @@ int main()
             // Z axis
             gizmoShader.setVec3("axisColor", glm::vec3(0, 0, 1));
             glDrawArrays(GL_LINES, 4, 2);
-           /* ImGui::Begin("Engine Debug");
-            ImGui::Begin("Hierarchy");
 
-            for (int i = 0; i < scene.objects.size(); i++)
-            {
-                SceneObject* obj = scene.objects[i];
+            glBindVertexArray(0);
 
-                ImGui::Begin("Hierarchy");
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            EditorUI::DrawHierarchy(
+                scene,
+                selectedObject
+            );
 
-                for (int i = 0; i < scene.objects.size(); i++)
-                {
-                    SceneObject* obj = scene.objects[i];
+            EditorUI::DrawInspector(
+                selectedObject
+            );
 
-                    bool isSelectedNow = (selectedObject == obj);
-
-                    if (ImGui::Selectable(obj->name.c_str(), isSelectedNow))
-                    {
-                        if (selectedObject != nullptr)
-                            selectedObject->isSelected = false;
-
-                        selectedObject = obj;
-                        selectedObject->isSelected = true;
-                    }
-                }
-
-                ImGui::End();
-
-                bool isSelectedInUI = (selectedObject == obj);
-
-                if (ImGui::Selectable(obj->name.c_str(), isSelectedInUI))
-                {
-                    if (selectedObject != nullptr)
-                        selectedObject->isSelected = false;
-
-                    selectedObject = obj;
-                    selectedObject->isSelected = true;
-                }
-            }
-
-            ImGui::End();*/
-
-            ImGui::Begin("Inspector");
-
-            if (selectedObject != nullptr)
-            {
-                static char nameBuffer[128];
-
-                strcpy_s(nameBuffer, selectedObject->name.c_str());
-
-                if (ImGui::InputText("Name", nameBuffer, IM_ARRAYSIZE(nameBuffer)))
-                {
-                    selectedObject->name = nameBuffer;
-                }
-                ImGui::Text("Transform");
-
-                ImGui::DragFloat3(
-                    "Position",
-                    glm::value_ptr(selectedObject->transform.position),
-                    0.1f
-                );
-
-                ImGui::DragFloat3(
-                    "Rotation",
-                    glm::value_ptr(selectedObject->transform.rotation),
-                    1.0f
-                );
-
-                ImGui::DragFloat3(
-                    "Scale",
-                    glm::value_ptr(selectedObject->transform.scale),
-                    0.1f
-                );
-            }
-            else
-            {
-                ImGui::Text("No object selected");
-            }
-
-            ImGui::End();
-            ImGui::Begin("Debug");
-
-            ImGui::Text("Thesis Renderer");
-
-            ImGui::Text("FPS: %.1f", 1.0f / deltaTime);
-
-            if (selectedObject != nullptr)
-            {
-                ImGui::Text("Object Selected");
-
-                ImGui::Text("Position: %.2f %.2f %.2f",
-                    selectedObject->transform.position.x,
-                    selectedObject->transform.position.y,
-                    selectedObject->transform.position.z);
-            }
-            else
-            {
-                ImGui::Text("No object selected");
-            }
-
-            ImGui::End();
-        
+            EditorUI::DrawDebug(
+                deltaTime,
+                totalObjects,
+                visibleObjects,
+                culledObjects,
+                selectedObject
+            );
         }
+       
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(window);

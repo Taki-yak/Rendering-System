@@ -83,8 +83,14 @@ enum MoveAxis
     AXIS_Y,
     AXIS_Z
 };
-
+enum GizmoMode
+{
+    TRANSLATE,
+    ROTATE,
+    SCALE
+};
 MoveAxis currentAxis = NONE;
+GizmoMode currentGizmoMode = TRANSLATE;
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
     if (InputManager::IsMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT))/////////////////////////////////////////////////////////////////
@@ -785,6 +791,25 @@ int main()
             rotationAxis = glm::vec3(0.0f, 0.0f, 1.0f);
         if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
             currentAxis = AXIS_X;
+      
+
+        if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS)
+        {
+            currentGizmoMode = TRANSLATE;
+            std::cout << "Translate Mode\n";
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+        {
+            currentGizmoMode = ROTATE;
+            std::cout << "Rotate Mode\n";
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS)
+        {
+            currentGizmoMode = SCALE;
+            std::cout << "Scale Mode\n";
+        }
 
         if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS)
             currentAxis = AXIS_Y;
@@ -1058,35 +1083,65 @@ int main()
             double mouseX, mouseY;
             glfwGetCursorPos(window, &mouseX, &mouseY);
 
-            glm::vec3 rayDir = GetRayFromMouse(mouseX, mouseY, 800, 600, projection, view);
-            glm::vec3 rayOrigin = camera.Position;
-
-            float planeY = selectedObject->transform.position.y;
-
-            float t = (planeY - rayOrigin.y) / rayDir.y;
-
-            if (t > 0.0f)
+            // ================= TRANSLATE MODE =================
+            if (currentGizmoMode == TRANSLATE)
             {
-                glm::vec3 hitPoint = rayOrigin + rayDir * t;
+                glm::vec3 rayDir = GetRayFromMouse(mouseX, mouseY, 800, 600, projection, view);
+                glm::vec3 rayOrigin = camera.Position;
 
-                if (currentAxis == AXIS_X)
-                    selectedObject->transform.position.x = hitPoint.x;
+                float planeY = selectedObject->transform.position.y;
 
-                else if (currentAxis == AXIS_Z)
-                    selectedObject->transform.position.z = hitPoint.z;
+                float t = (planeY - rayOrigin.y) / rayDir.y;
 
-                else if (currentAxis == AXIS_Y)
-                    selectedObject->transform.position.y = hitPoint.y;
-
-                else
+                if (t > 0.0f)
                 {
-                   
-                    selectedObject->transform.position.x = hitPoint.x;
-                    selectedObject->transform.position.z = hitPoint.z;
+                    glm::vec3 hitPoint = rayOrigin + rayDir * t;
+
+                    if (currentAxis == AXIS_X)
+                        selectedObject->transform.position.x = hitPoint.x;
+
+                    else if (currentAxis == AXIS_Z)
+                        selectedObject->transform.position.z = hitPoint.z;
+
+                    else if (currentAxis == AXIS_Y)
+                        selectedObject->transform.position.y = hitPoint.y;
+
+                    else
+                    {
+                        selectedObject->transform.position.x = hitPoint.x;
+                        selectedObject->transform.position.z = hitPoint.z;
+                    }
                 }
             }
+
+         
+            else if (currentGizmoMode == ROTATE)
+            {
+                float rotationSpeed = 0.2f;
+
+                selectedObject->transform.rotation.y +=
+                    (float)(mouseX - lastX) * rotationSpeed;
+            }
+
+        
+            else if (currentGizmoMode == SCALE)
+            {
+                float scaleSpeed = 0.01f;
+
+                float scaleAmount =
+                    (float)(mouseX - lastX) * scaleSpeed;
+
+                selectedObject->transform.scale +=
+                    glm::vec3(scaleAmount);
+
+                selectedObject->transform.scale =
+                    glm::max(
+                        selectedObject->transform.scale,
+                        glm::vec3(0.1f)
+                    );
+            }
         }
-        // ===== SHARED SHADER SETUP (once per frame) =====
+      
         shader.use();
         for (int i = 0; i < 3; i++)
         {
@@ -1211,7 +1266,15 @@ int main()
                 title += " Scale(" +
                     std::to_string((int)s.x) + ")";
             }
-      
+            std::string modeText = "Translate";
+
+            if (currentGizmoMode == ROTATE)
+                modeText = "Rotate";
+
+            if (currentGizmoMode == SCALE)
+                modeText = "Scale";
+
+            title += " | Mode: " + modeText;
             glfwSetWindowTitle(window, title.c_str());
      
             frameCount = 0;

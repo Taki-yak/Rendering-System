@@ -1,28 +1,46 @@
 #include "EditorUI.h"
 
 #include <glm/gtc/type_ptr.hpp>
+void DrawHierarchyNode(SceneObject* obj, SceneObject*& selectedObject)
+{
+    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
 
+    if (obj == selectedObject)
+        flags |= ImGuiTreeNodeFlags_Selected;
+
+    bool opened = ImGui::TreeNodeEx(
+        obj->name.c_str(),
+        flags
+    );
+
+    
+    if (ImGui::IsItemClicked())
+    {
+        selectedObject = obj;
+    }
+
+    if (opened)
+    {
+        for (SceneObject* child : obj->children)
+        {
+            DrawHierarchyNode(child, selectedObject);
+        }
+
+        ImGui::TreePop();
+    }
+}
 void EditorUI::DrawHierarchy(
     Scene& scene,
     SceneObject*& selectedObject
 )
 {
     ImGui::Begin("Hierarchy");
-
     for (SceneObject* obj : scene.objects)
     {
-        bool isSelected =
-            (selectedObject == obj);
-
-        if (ImGui::Selectable(
-            obj->name.c_str(),
-            isSelected))
+     
+        if (obj->parent == nullptr)
         {
-            if (selectedObject != nullptr)
-                selectedObject->isSelected = false;
-
-            selectedObject = obj;
-            selectedObject->isSelected = true;
+            DrawHierarchyNode(obj, selectedObject);
         }
     }
 

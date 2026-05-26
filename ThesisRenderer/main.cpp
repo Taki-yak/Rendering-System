@@ -1030,7 +1030,7 @@ int main()
 
         glDepthMask(GL_TRUE);
         glDepthFunc(GL_LESS);
-        if (mouseClicked)
+        if (mouseClicked && !ImGui::GetIO().WantCaptureMouse)
         {
             double mouseX, mouseY;
             glfwGetCursorPos(window, &mouseX, &mouseY);

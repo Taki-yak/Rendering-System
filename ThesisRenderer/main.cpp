@@ -127,7 +127,8 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     camera.ProcessMouseMovement(xoffset, yoffset);
     ImGuiIO& io = ImGui::GetIO();
 
-    if (!io.WantCaptureMouse)
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS
+        && !io.WantCaptureMouse)
     {
         camera.ProcessMouseMovement(xoffset, yoffset);
     }
@@ -680,7 +681,16 @@ int main()
 
         glfwPollEvents();
    
+      
 
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
+        {
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        }
+        else
+        {
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        }
         bool nKeyCurrent = glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS;
 
         if (nKeyCurrent && !nKeyLastState)

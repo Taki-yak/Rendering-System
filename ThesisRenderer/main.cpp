@@ -1322,6 +1322,13 @@ int main()
             glBindVertexArray(0);
 
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            EditorUI::DrawToolbar(
+                scene,
+                selectedObject,
+                &cube,
+                &shader,
+                &cubeMaterial
+            );
             EditorUI::DrawHierarchy(
                 scene,
                 selectedObject

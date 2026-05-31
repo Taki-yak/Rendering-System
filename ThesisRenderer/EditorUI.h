@@ -23,4 +23,11 @@ public:
         int culledObjects,
         SceneObject* selectedObject
     );
+    static void DrawToolbar(
+        Scene& scene,
+        SceneObject*& selectedObject,
+        Mesh* cubeMesh,
+        Shader* shader,
+        Material* material
+    );
 };

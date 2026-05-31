@@ -1,6 +1,7 @@
 #include "EditorUI.h"
 
 #include <glm/gtc/type_ptr.hpp>
+
 void DrawHierarchyNode(SceneObject* obj, SceneObject*& selectedObject)
 {
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
@@ -14,11 +15,10 @@ void DrawHierarchyNode(SceneObject* obj, SceneObject*& selectedObject)
     );
 
     
-    if (ImGui::IsItemClicked())
+    if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
     {
         selectedObject = obj;
     }
-
     if (opened)
     {
         for (SceneObject* child : obj->children)
@@ -153,6 +153,106 @@ void EditorUI::DrawDebug(
             p.y,
             p.z
         );
+
+    }
+
+    ImGui::End();
+}
+void EditorUI::DrawToolbar(
+    Scene& scene,
+    SceneObject*& selectedObject,
+    Mesh* cubeMesh,
+    Shader* shader,
+    Material* material)
+{
+    ImGui::Begin("Toolbar");
+
+    if (ImGui::Button("Save"))
+    {
+        SceneSerializer::Save(
+            scene,
+            "scene.txt"
+        );
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Load"))
+    {
+
+     SceneSerializer::Load(
+            scene,
+            "scene.txt",
+            cubeMesh,
+            shader,
+            material
+        );
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Add Cube"))
+    {
+        SceneObject* obj =
+            new SceneObject(
+                cubeMesh,
+                shader,
+                material
+            );
+
+        obj->name = "New Cube";
+
+        scene.AddObject(obj);
+
+        selectedObject = obj;
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Duplicate"))
+    {
+        if (selectedObject)
+        {
+            SceneObject* copy =
+                new SceneObject(
+                    selectedObject->mesh,
+                    selectedObject->shader,
+                    selectedObject->material
+                );
+
+            copy->transform =
+                selectedObject->transform;
+
+            copy->transform.position.x += 1.0f;
+
+            scene.AddObject(copy);
+
+            selectedObject = copy;
+        }
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Delete"))
+    {
+        if (selectedObject)
+        {
+            for (auto it = scene.objects.begin();
+                it != scene.objects.end();
+                ++it)
+            {
+                if (*it == selectedObject)
+                {
+                    delete* it;
+
+                    scene.objects.erase(it);
+
+                    selectedObject = nullptr;
+
+                    break;
+                }
+            }
+        }
     }
 
     ImGui::End();

@@ -93,7 +93,14 @@ MoveAxis currentAxis = NONE;
 GizmoMode currentGizmoMode = TRANSLATE;
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
-    if (InputManager::IsMouseButtonPressed(GLFW_MOUSE_BUTTON_LEFT))/////////////////////////////////////////////////////////////////
+    ImGuiIO& io = ImGui::GetIO();
+
+    if (io.WantCaptureMouse)
+    {
+        return;
+    }
+    if (button == GLFW_MOUSE_BUTTON_LEFT &&
+        action == GLFW_PRESS)
     {
         mouseClicked = true;
         isDragging = true;
@@ -124,7 +131,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     lastX = (float)xpos;
     lastY = (float)ypos;
 
-    camera.ProcessMouseMovement(xoffset, yoffset);
+    //camera.ProcessMouseMovement(xoffset, yoffset);
     ImGuiIO& io = ImGui::GetIO();
 
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS
@@ -683,13 +690,28 @@ int main()
    
       
 
-        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
+        ImGuiIO& io = ImGui::GetIO();
+
+        if (
+            glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT)
+            == GLFW_PRESS
+            &&
+            !io.WantCaptureMouse
+            )
         {
-            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            glfwSetInputMode(
+                window,
+                GLFW_CURSOR,
+                GLFW_CURSOR_DISABLED
+            );
         }
         else
         {
-            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            glfwSetInputMode(
+                window,
+                GLFW_CURSOR,
+                GLFW_CURSOR_NORMAL
+            );
         }
         bool nKeyCurrent = glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS;
 
@@ -762,7 +784,7 @@ int main()
         {
             mKeyPressed = false;
         }
-        ImGuiIO& io = ImGui::GetIO();
+       // ImGuiIO& io = ImGui::GetIO();
 
         if (!io.WantCaptureKeyboard)
         {
@@ -1298,8 +1320,10 @@ int main()
             gizmoShader.use();
 
             glm::mat4 gizmoModel =
-                glm::translate(glm::mat4(1.0f),
-                    selectedObject->transform.position);
+                glm::translate(
+                    glm::mat4(1.0f),
+                    selectedObject->transform.position
+                );
 
             gizmoShader.setMat4("model", glm::value_ptr(gizmoModel));
             gizmoShader.setMat4("view", glm::value_ptr(view));
@@ -1307,21 +1331,16 @@ int main()
 
             glBindVertexArray(gizmoVAO);
 
-            // X axis
             gizmoShader.setVec3("axisColor", glm::vec3(1, 0, 0));
             glDrawArrays(GL_LINES, 0, 2);
 
-            // Y axis
             gizmoShader.setVec3("axisColor", glm::vec3(0, 1, 0));
             glDrawArrays(GL_LINES, 2, 2);
 
-            // Z axis
             gizmoShader.setVec3("axisColor", glm::vec3(0, 0, 1));
             glDrawArrays(GL_LINES, 4, 2);
 
             glBindVertexArray(0);
-
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             EditorUI::DrawToolbar(
                 scene,
                 selectedObject,
@@ -1329,6 +1348,7 @@ int main()
                 &shader,
                 &cubeMaterial
             );
+
             EditorUI::DrawHierarchy(
                 scene,
                 selectedObject

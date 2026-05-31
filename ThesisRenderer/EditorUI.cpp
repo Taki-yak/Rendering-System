@@ -1,7 +1,7 @@
 #include "EditorUI.h"
 
 #include <glm/gtc/type_ptr.hpp>
-
+#include "SceneSerializer.h"
 void DrawHierarchyNode(SceneObject* obj, SceneObject*& selectedObject)
 {
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;

@@ -171,6 +171,7 @@
     <ClInclude Include="Frustum.h" />
     <ClInclude Include="GridRenderer.h" />
     <ClInclude Include="InputManager.h" />
+    <ClInclude Include="Light.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="mesh.h" />
     <ClInclude Include="Model.h" />

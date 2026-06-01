@@ -42,6 +42,15 @@ void EditorUI::DrawHierarchy(
         {
             DrawHierarchyNode(obj, selectedObject);
         }
+        ImGui::Separator();
+
+        for (Light* light : scene.lights)
+        {
+            ImGui::BulletText(
+                "%s",
+                light->name.c_str()
+            );
+        }
     }
 
     ImGui::End();

@@ -457,6 +457,18 @@ int main()
     };
     Renderer renderer;
     Scene scene;
+    Light* testLight = new Light();
+
+    testLight->name = "Light 1";
+
+    testLight->position =
+        glm::vec3(
+            0.0f,
+            3.0f,
+            0.0f
+        );
+
+    scene.AddLight(testLight);
     Model myModel("character-human.obj");
     Model treeModel("character-a.obj");
     Shader skyboxShader(skyboxVertex, skyboxFragment);

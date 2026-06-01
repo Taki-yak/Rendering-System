@@ -449,6 +449,7 @@ int main()
     };
 
 
+
     shader.setBool("isSelected", isSelected);
     glm::vec3 lightColors[] = {
         glm::vec3(1.0f),
@@ -458,6 +459,18 @@ int main()
     Renderer renderer;
     Scene scene;
     Light* testLight = new Light();
+
+    testLight->name = "Light 1";
+
+    testLight->position =
+        glm::vec3(
+            0.0f,
+            3.0f,
+            0.0f
+        );
+
+    scene.AddLight(testLight);
+   testLight = new Light();
 
     testLight->name = "Light 1";
 

@@ -52,7 +52,15 @@ void EditorUI::DrawHierarchy(
             );
         }
     }
+    ImGui::Separator();
 
+    for (Light* light : scene.lights)
+    {
+        ImGui::BulletText(
+            "%s",
+            light->name.c_str()
+        );
+    }
     ImGui::End();
 }
 

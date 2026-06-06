@@ -9,8 +9,12 @@ void DrawHierarchyNode(SceneObject* obj, SceneObject*& selectedObject)
     if (obj == selectedObject)
         flags |= ImGuiTreeNodeFlags_Selected;
 
+    std::string id =
+        obj->name + "##" +
+        std::to_string((size_t)obj);
+
     bool opened = ImGui::TreeNodeEx(
-        obj->name.c_str(),
+        id.c_str(),
         flags
     );
 
@@ -34,6 +38,8 @@ void EditorUI::DrawHierarchy(
     SceneObject*& selectedObject
 )
 {
+    ImGui::SetNextWindowPos(ImVec2(0, 20), ImGuiCond_Once);
+    ImGui::SetNextWindowSize(ImVec2(250, 500), ImGuiCond_Once);
     ImGui::Begin("Hierarchy");
     for (SceneObject* obj : scene.objects)
     {
@@ -68,6 +74,8 @@ void EditorUI::DrawInspector(
     SceneObject* selectedObject
 )
 {
+    ImGui::SetNextWindowPos(ImVec2(550, 20), ImGuiCond_Once);
+    ImGui::SetNextWindowSize(ImVec2(250, 500), ImGuiCond_Once);
     ImGui::Begin("Inspector");
 
     if (selectedObject != nullptr)
@@ -129,6 +137,8 @@ void EditorUI::DrawDebug(
     SceneObject* selectedObject
 )
 {
+    ImGui::SetNextWindowPos(ImVec2(260, 20), ImGuiCond_Once);
+    ImGui::SetNextWindowSize(ImVec2(280, 200), ImGuiCond_Once);
     ImGui::Begin("Debug");
 
     ImGui::Text(
@@ -182,6 +192,15 @@ void EditorUI::DrawToolbar(
     Shader* shader,
     Material* material)
 {
+    ImGui::SetNextWindowPos(
+        ImVec2(0, 0),
+        ImGuiCond_Always
+    );
+
+    ImGui::SetNextWindowSize(
+        ImVec2(800, 40),
+        ImGuiCond_Always
+    );
     ImGui::Begin("Toolbar");
 
     if (ImGui::Button("Save"))
@@ -208,7 +227,7 @@ void EditorUI::DrawToolbar(
 
     ImGui::SameLine();
 
-    if (ImGui::Button("Add Cube"))
+    if (ImGui::Button("Add Cube##Toolbar"))
     {
         SceneObject* obj =
             new SceneObject(
@@ -226,7 +245,7 @@ void EditorUI::DrawToolbar(
 
     ImGui::SameLine();
 
-    if (ImGui::Button("Duplicate"))
+    if (ImGui::Button("Duplicate##Toolbar"))
     {
         if (selectedObject)
         {
@@ -250,7 +269,7 @@ void EditorUI::DrawToolbar(
 
     ImGui::SameLine();
 
-    if (ImGui::Button("Delete"))
+    if (ImGui::Button("Delete##Toolbar"))
     {
         if (selectedObject)
         {

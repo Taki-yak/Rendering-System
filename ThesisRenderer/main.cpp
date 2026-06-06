@@ -93,7 +93,7 @@ MoveAxis currentAxis = NONE;
 GizmoMode currentGizmoMode = TRANSLATE;
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
-//ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
+   ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
 
     if (ImGui::GetIO().WantCaptureMouse)
         return;
@@ -458,7 +458,11 @@ int main()
     Scene scene;
     Light* testLight = new Light();
 
-    testLight->name = "Light 1";
+    static int lightCounter = 1;
+
+    testLight->name =
+        "Light_" +
+        std::to_string(lightCounter++);
 
     testLight->position =
         glm::vec3(

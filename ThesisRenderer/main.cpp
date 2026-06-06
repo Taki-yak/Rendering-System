@@ -93,14 +93,12 @@ MoveAxis currentAxis = NONE;
 GizmoMode currentGizmoMode = TRANSLATE;
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
-    ImGuiIO& io = ImGui::GetIO();
+//ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
 
-    if (io.WantCaptureMouse)
-    {
+    if (ImGui::GetIO().WantCaptureMouse)
         return;
-    }
-    if (button == GLFW_MOUSE_BUTTON_LEFT &&
-        action == GLFW_PRESS)
+
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
     {
         mouseClicked = true;
         isDragging = true;
@@ -421,7 +419,7 @@ int main()
 
     ImGui::StyleColorsDark();
 
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplGlfw_InitForOpenGL(window, false);
     ImGui_ImplOpenGL3_Init("#version 330");
     glDisable(GL_CULL_FACE);
     TestAssimp();
@@ -686,7 +684,7 @@ int main()
     glm::vec3(1.5f,  0.2f, -1.5f),
     glm::vec3(-1.3f,  1.0f, -1.5f)
     };
-    glfwSetMouseButtonCallback(window, mouse_button_callback);
+  
 
     // ================= RENDER LOOP =================
 
@@ -1366,6 +1364,14 @@ int main()
             glDrawArrays(GL_LINES, 4, 2);
 
             glBindVertexArray(0);
+            EditorUI::DrawToolbar(
+                scene,
+                selectedObject,
+                &cube,
+                &shader,
+                &cubeMaterial
+            );
+
             EditorUI::DrawToolbar(
                 scene,
                 selectedObject,

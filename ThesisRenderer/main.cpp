@@ -1400,6 +1400,12 @@ int main()
                 culledObjects,
                 selectedObject
             );
+            EditorUI::DrawStatistics(
+                scene,
+                camera,
+                selectedObject,
+                deltaTime
+            );
         }
        
         ImGui::Render();

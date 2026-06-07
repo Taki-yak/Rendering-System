@@ -293,3 +293,70 @@ void EditorUI::DrawToolbar(
 
     ImGui::End();
 }
+void EditorUI::DrawStatistics(
+    Scene& scene,
+    Camera& camera,
+    SceneObject* selectedObject,
+    float deltaTime
+)
+{
+    ImGui::Begin("Statistics");
+
+    ImGui::Text(
+        "Objects : %d",
+        (int)scene.objects.size()
+    );
+
+    ImGui::Text(
+        "Lights : %d",
+        (int)scene.lights.size()
+    );
+
+    ImGui::Separator();
+
+    ImGui::Text(
+        "FPS : %.1f",
+        1.0f / deltaTime
+    );
+
+    ImGui::Separator();
+
+    ImGui::Text("Camera");
+
+    ImGui::Text(
+        "X : %.2f",
+        camera.Position.x
+    );
+
+    ImGui::Text(
+        "Y : %.2f",
+        camera.Position.y
+    );
+
+    ImGui::Text(
+        "Z : %.2f",
+        camera.Position.z
+    );
+
+    ImGui::Separator();
+
+    if (selectedObject)
+    {
+        ImGui::Text(
+            "Selected:"
+        );
+
+        ImGui::Text(
+            "%s",
+            selectedObject->name.c_str()
+        );
+    }
+    else
+    {
+        ImGui::Text(
+            "Selected: None"
+        );
+    }
+
+    ImGui::End();
+}

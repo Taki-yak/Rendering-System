@@ -2,7 +2,7 @@
 
 #include "imgui.h"
 #include "Scene.h"
-
+#include "Camera.h"
 class EditorUI
 {
 public:
@@ -29,5 +29,11 @@ public:
         Mesh* cubeMesh,
         Shader* shader,
         Material* material
+    );
+    static void DrawStatistics(
+        Scene& scene,
+        Camera& camera,
+        SceneObject* selectedObject,
+        float deltaTime
     );
 };

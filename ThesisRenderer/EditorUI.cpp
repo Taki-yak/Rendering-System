@@ -1,5 +1,6 @@
 #include "EditorUI.h"
-
+#include "EditorUI.h"
+#include "Light.h"
 #include <glm/gtc/type_ptr.hpp>
 #include "SceneSerializer.h"
 void DrawHierarchyNode(SceneObject* obj, SceneObject*& selectedObject)
@@ -190,7 +191,9 @@ void EditorUI::DrawToolbar(
     SceneObject*& selectedObject,
     Mesh* cubeMesh,
     Shader* shader,
-    Material* material)
+    Material* material,
+    int& lightCounter
+)
 {
     ImGui::SetNextWindowPos(
         ImVec2(0, 0),
@@ -243,6 +246,25 @@ void EditorUI::DrawToolbar(
         selectedObject = obj;
     }
 
+    ImGui::SameLine();
+
+    if (ImGui::Button("Add Light"))
+    {
+        Light* newLight = new Light();
+
+        newLight->name =
+            "Light_" +
+            std::to_string(lightCounter++);
+
+        newLight->position =
+            glm::vec3(
+                0.0f,
+                3.0f,
+                0.0f
+            );
+
+        scene.AddLight(newLight);
+    }
     ImGui::SameLine();
 
     if (ImGui::Button("Duplicate##Toolbar"))

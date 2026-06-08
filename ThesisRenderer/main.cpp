@@ -1373,7 +1373,8 @@ int main()
                 selectedObject,
                 &cube,
                 &shader,
-                &cubeMaterial
+                &cubeMaterial,
+                lightCounter
             );
 
             EditorUI::DrawToolbar(
@@ -1381,7 +1382,8 @@ int main()
                 selectedObject,
                 &cube,
                 &shader,
-                &cubeMaterial
+                &cubeMaterial,
+                lightCounter
             );
 
             EditorUI::DrawHierarchy(

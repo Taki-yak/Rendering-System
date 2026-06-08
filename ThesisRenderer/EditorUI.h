@@ -28,7 +28,8 @@ public:
         SceneObject*& selectedObject,
         Mesh* cubeMesh,
         Shader* shader,
-        Material* material
+        Material* material,
+        int& lightCounter
     );
     static void DrawStatistics(
         Scene& scene,

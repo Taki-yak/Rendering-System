@@ -109,7 +109,14 @@ void EditorUI::DrawHierarchy(
             "##" +
             std::to_string((size_t)light);
 
-        ImGui::Selectable(id.c_str());
+        bool selected =
+            (selectedLight == light);
+
+        if (ImGui::Selectable(id.c_str(), selected))
+        {
+            selectedLight = light;
+            selectedObject = nullptr;
+        }
     }
     for (Light* light : scene.lights)
     {

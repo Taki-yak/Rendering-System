@@ -91,23 +91,25 @@ void EditorUI::DrawHierarchy(
     ImGui::Begin("Hierarchy");
     for (SceneObject* obj : scene.objects)
     {
-     
         if (obj->parent == nullptr)
         {
             DrawHierarchyNode(obj, selectedObject);
         }
-        ImGui::Separator();
-
-        for (Light* light : scene.lights)
-        {
-            ImGui::BulletText(
-                "%s",
-                light->name.c_str()
-            );
-        }
     }
+
     ImGui::Separator();
 
+    ImGui::Text("Lights");
+
+    for (Light* light : scene.lights)
+    {
+        std::string id =
+            light->name +
+            "##" +
+            std::to_string((size_t)light);
+
+        ImGui::Selectable(id.c_str());
+    }
     for (Light* light : scene.lights)
     {
         ImGui::BulletText(
@@ -407,25 +409,23 @@ void EditorUI::DrawStatistics(
         camera.Position.z
     );
 
-    ImGui::Separator();
+    /*
+ ImGui::Separator();
 
-    if (selectedObject)
-    {
-        ImGui::Text(
-            "Selected:"
-        );
+ if (selectedObject)
+ {
+     ImGui::Text("Selected:");
 
-        ImGui::Text(
-            "%s",
-            selectedObject->name.c_str()
-        );
-    }
-    else
-    {
-        ImGui::Text(
-            "Selected: None"
-        );
-    }
+     ImGui::Text(
+         "%s",
+         selectedObject->name.c_str()
+     );
+ }
+ else
+ {
+     ImGui::Text("Selected: None");
+ }
+ */
 
     ImGui::End();
 }

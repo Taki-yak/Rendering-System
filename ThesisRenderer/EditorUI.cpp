@@ -34,6 +34,53 @@ void DrawHierarchyNode(SceneObject* obj, SceneObject*& selectedObject)
         ImGui::TreePop();
     }
 }
+void EditorUI::DrawLightInspector(
+    Light* selectedLight
+)
+{
+    ImGui::Begin("Light Inspector");
+
+    if (selectedLight)
+    {
+        static char buffer[128];
+
+        strcpy_s(
+            buffer,
+            selectedLight->name.c_str()
+        );
+
+        if (ImGui::InputText(
+            "Name",
+            buffer,
+            IM_ARRAYSIZE(buffer)))
+        {
+            selectedLight->name = buffer;
+        }
+
+        ImGui::DragFloat3(
+            "Position",
+            glm::value_ptr(
+                selectedLight->position
+            ),
+            0.1f
+        );
+
+        ImGui::ColorEdit3(
+            "Color",
+            glm::value_ptr(
+                selectedLight->color
+            )
+        );
+    }
+    else
+    {
+        ImGui::Text(
+            "No light selected"
+        );
+    }
+
+    ImGui::End();
+}
 void EditorUI::DrawHierarchy(
     Scene& scene,
     SceneObject*& selectedObject

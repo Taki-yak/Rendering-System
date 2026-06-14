@@ -3,6 +3,7 @@
 #include "imgui.h"
 #include "Scene.h"
 #include "Camera.h"
+#include "Light.h"
 class EditorUI
 {
 public:
@@ -36,5 +37,8 @@ public:
         Camera& camera,
         SceneObject* selectedObject,
         float deltaTime
+    );
+    static void DrawLightInspector(
+        Light* selectedLight
     );
 };

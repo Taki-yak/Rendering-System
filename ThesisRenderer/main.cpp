@@ -1394,7 +1394,12 @@ int main()
             EditorUI::DrawInspector(
                 selectedObject
             );
-
+            if (!scene.lights.empty())
+            {
+                EditorUI::DrawLightInspector(
+                    scene.lights[0]
+                );
+            }
             EditorUI::DrawDebug(
                 deltaTime,
                 totalObjects,
@@ -1402,6 +1407,7 @@ int main()
                 culledObjects,
                 selectedObject
             );
+
             EditorUI::DrawStatistics(
                 scene,
                 camera,

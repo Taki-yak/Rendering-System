@@ -111,6 +111,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 }
 
 SceneObject* selectedObject = nullptr;
+Light* selectedLight = nullptr;
 Camera camera;
 Frustum frustum;
 // ================= MOUSE CALLBACK ==================
@@ -1388,9 +1389,12 @@ int main()
 
             EditorUI::DrawHierarchy(
                 scene,
-                selectedObject
+                selectedObject,
+                selectedLight
             );
-
+            EditorUI::DrawLightInspector(
+                selectedLight
+            );
             EditorUI::DrawInspector(
                 selectedObject
             );

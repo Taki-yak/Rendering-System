@@ -83,7 +83,8 @@ void EditorUI::DrawLightInspector(
 }
 void EditorUI::DrawHierarchy(
     Scene& scene,
-    SceneObject*& selectedObject
+    SceneObject*& selectedObject,
+    Light*& selectedLight
 )
 {
     ImGui::SetNextWindowPos(ImVec2(0, 20), ImGuiCond_Once);

@@ -10,7 +10,8 @@ public:
 
     static void DrawHierarchy(
         Scene& scene,
-        SceneObject*& selectedObject
+        SceneObject*& selectedObject,
+        Light*& selectedLight
     );
 
     static void DrawInspector(

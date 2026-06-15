@@ -24,6 +24,7 @@
 #include "InputManager.h"
 #include "GridRenderer.h"
 #include "EditorUI.h"
+#include "RotateComponent.h"
 // ================= CAMERA VARIABLES =================
 //glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 //glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -704,6 +705,10 @@ int main()
    
     while (!glfwWindowShouldClose(window))
     {
+        for (SceneObject* obj : scene.objects)
+        {
+            obj->UpdateComponents(deltaTime);
+        }
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
@@ -747,12 +752,16 @@ int main()
         {
             SceneObject* newCube = new SceneObject(&cube, &shader, &cubeMaterial);
             newCube->name = "New Cube";
+            newCube->AddComponent(
+                new RotateComponent()
+            );
 
             newCube->transform.position = camera.Position + camera.Front * 3.0f;
 
             scene.AddObject(newCube);
             selectedObject = newCube;
             std::cout << "New cube added and selected\n";
+           
             
         }
 

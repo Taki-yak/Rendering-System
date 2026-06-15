@@ -156,6 +156,7 @@
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="ModelLoaderTest.cpp" />
     <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="RotateComponent.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="SceneObject.cpp" />
     <ClCompile Include="SceneSerializer.cpp" />
@@ -177,6 +178,7 @@
     <ClInclude Include="Model.h" />
     <ClInclude Include="Oscillatorcomponent.h" />
     <ClInclude Include="Renderer.h" />
+    <ClInclude Include="RotateComponent.h" />
     <ClInclude Include="Rotatorcomponent.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="SceneObject.h" />

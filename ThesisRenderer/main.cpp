@@ -753,6 +753,7 @@ int main()
             scene.AddObject(newCube);
             selectedObject = newCube;
             std::cout << "New cube added and selected\n";
+            
         }
 
         nKeyLastState = nKeyCurrent;
@@ -1225,7 +1226,7 @@ int main()
         cube1.transform.position = glm::vec3(0.0f, 0.0f, -3.0f);
         cube1.UpdateComponents(deltaTime);
         cube1.Draw(renderer, glm::mat4(1.0f));
-
+        scene.objects[0]->AddChild(scene.objects[1]);
         int totalObjects = scene.objects.size();
         int visibleObjects = 0;
         int culledObjects = 0;

@@ -51,7 +51,7 @@ public:
         for (SceneObject* child : children)
             child->UpdateComponents(deltaTime);
     }
-
+   
 public:
     Mesh* mesh;
     Shader* shader;
@@ -60,4 +60,5 @@ public:
     SceneObject* parent = nullptr;
     std::vector<SceneObject*> children;
     std::vector<Component*> components;
+  
 };

@@ -10,8 +10,14 @@ void DrawHierarchyNode(SceneObject* obj, SceneObject*& selectedObject)
     if (obj == selectedObject)
         flags |= ImGuiTreeNodeFlags_Selected;
 
+    std::string displayName =
+        obj->visible ?
+        obj->name :
+        obj->name + " (Hidden)";
+
     std::string id =
-        obj->name + "##" +
+        displayName +
+        "##" +
         std::to_string((size_t)obj);
 
     bool opened = ImGui::TreeNodeEx(
@@ -19,7 +25,7 @@ void DrawHierarchyNode(SceneObject* obj, SceneObject*& selectedObject)
         flags
     );
 
-    
+
     if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
     {
         selectedObject = obj;
@@ -56,7 +62,7 @@ void EditorUI::DrawLightInspector(
         {
             selectedLight->name = buffer;
         }
-
+    
         ImGui::DragFloat3(
             "Position",
             glm::value_ptr(
@@ -152,8 +158,13 @@ void EditorUI::DrawInspector(
         {
             selectedObject->name = nameBuffer;
         }
+        ImGui::Checkbox(
+            "Visible",
+            &selectedObject->visible
+        );
 
         ImGui::Separator();
+      
 
         ImGui::DragFloat3(
             "Position",
@@ -276,7 +287,7 @@ void EditorUI::DrawToolbar(
     if (ImGui::Button("Load"))
     {
 
-     SceneSerializer::Load(
+        SceneSerializer::Load(
             scene,
             "scene.txt",
             cubeMesh,

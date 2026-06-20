@@ -21,6 +21,7 @@ public:
     }
 
     Transform transform;
+    bool visible = true;
     bool isSelected = false;
     void AddChild(SceneObject* child);
     void Draw(Renderer& renderer, glm::mat4 parentTransform);

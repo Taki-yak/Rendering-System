@@ -94,7 +94,7 @@ MoveAxis currentAxis = NONE;
 GizmoMode currentGizmoMode = TRANSLATE;
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
-   ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
+    ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
 
     if (ImGui::GetIO().WantCaptureMouse)
         return;
@@ -148,7 +148,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 
         selectedObject->transform.scale += glm::vec3(yoffset * scaleSpeed);
 
-    
+
         selectedObject->transform.scale = glm::max(
             selectedObject->transform.scale,
             glm::vec3(0.1f)
@@ -407,7 +407,7 @@ int main()
         std::cout << "Failed to initialize GLAD\n";
         return -1;
     }
-    
+
     Cubemap skybox(faces);
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
@@ -474,7 +474,7 @@ int main()
         );
 
     scene.AddLight(testLight);
-   testLight = new Light();
+    testLight = new Light();
 
     testLight->name = "Light 1";
 
@@ -600,7 +600,7 @@ int main()
 
     glBindVertexArray(0);
     Texture containerTexture("container.jpg");
-    
+
 
     Material cubeMaterial(&containerTexture);
 
@@ -690,7 +690,7 @@ int main()
     glm::vec3(1.5f,  0.2f, -1.5f),
     glm::vec3(-1.3f,  1.0f, -1.5f)
     };
-  
+
 
     // ================= RENDER LOOP =================
 
@@ -702,7 +702,7 @@ int main()
     cube2.AddComponent(new RotatorComponent(glm::vec3(1.0f, 0.0f, 0.0f), 30.0f));
     cube3.AddComponent(new OscillatorComponent(0.5f, 2.0f));
 
-   
+
     while (!glfwWindowShouldClose(window))
     {
         for (SceneObject* obj : scene.objects)
@@ -720,8 +720,8 @@ int main()
         float cameraSpeed = 2.5f * deltaTime;
 
         glfwPollEvents();
-   
-      
+
+
 
         ImGuiIO& io = ImGui::GetIO();
 
@@ -761,12 +761,12 @@ int main()
             scene.AddObject(newCube);
             selectedObject = newCube;
             std::cout << "New cube added and selected\n";
-           
-            
+
+
         }
 
         nKeyLastState = nKeyCurrent;
-     
+
         if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS && !mKeyPressed)
         {
             if (selectedObject != nullptr)
@@ -795,7 +795,7 @@ int main()
         {
             mKeyPressed = false;
         }
-       
+
         if (selectedObject != nullptr)
         {
             float speed = 5.0f * deltaTime;
@@ -822,7 +822,7 @@ int main()
         {
             mKeyPressed = false;
         }
-       // ImGuiIO& io = ImGui::GetIO();
+        // ImGuiIO& io = ImGui::GetIO();
 
         if (!io.WantCaptureKeyboard)
         {
@@ -861,7 +861,7 @@ int main()
             rotationAxis = glm::vec3(0.0f, 0.0f, 1.0f);
         if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
             currentAxis = AXIS_X;
-      
+
 
         if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS)
         {
@@ -921,18 +921,18 @@ int main()
         }
         static bool gPressed = false;
 
-       /* if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS && !gPressed)
-        {
-            useGridSnap = !useGridSnap;
-            gPressed = true;
+        /* if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS && !gPressed)
+         {
+             useGridSnap = !useGridSnap;
+             gPressed = true;
 
-            std::cout << "Grid Snap: " << (useGridSnap ? "ON\n" : "OFF\n");
-        }
+             std::cout << "Grid Snap: " << (useGridSnap ? "ON\n" : "OFF\n");
+         }
 
-        if (glfwGetKey(window, GLFW_KEY_G) == GLFW_RELEASE)
-        {
-            gPressed = false;
-        }*/
+         if (glfwGetKey(window, GLFW_KEY_G) == GLFW_RELEASE)
+         {
+             gPressed = false;
+         }*/
 
         if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS && !bPressed)
         {
@@ -944,15 +944,15 @@ int main()
                     selectedObject->material
                 );
 
-                
+
                 copy->transform = selectedObject->transform;
 
-               
+
                 copy->transform.position += glm::vec3(1.0f, 0.0f, 0.0f);
 
                 scene.AddObject(copy);
 
-              
+
                 selectedObject->isSelected = false;
                 selectedObject = copy;
                 selectedObject->isSelected = true;
@@ -1040,7 +1040,7 @@ int main()
             currentAxis = NONE;
             std::cout << "Free move\n";
         }
-     
+
         // ===== SCALE
         if (selectedObject != nullptr)
         {
@@ -1134,7 +1134,7 @@ int main()
                     }
                 }
             }
-        
+
             if (hitObject != nullptr)
             {
                 if (selectedObject != nullptr)
@@ -1184,7 +1184,7 @@ int main()
                 }
             }
 
-         
+
             else if (currentGizmoMode == ROTATE)
             {
                 float rotationSpeed = 0.2f;
@@ -1193,7 +1193,7 @@ int main()
                     (float)(mouseX - lastX) * rotationSpeed;
             }
 
-        
+
             else if (currentGizmoMode == SCALE)
             {
                 float scaleSpeed = 0.01f;
@@ -1211,7 +1211,7 @@ int main()
                     );
             }
         }
-      
+
         shader.use();
         for (int i = 0; i < 3; i++)
         {
@@ -1265,7 +1265,7 @@ int main()
                 culledObjects++;
             }
         }
-       
+
         // ===== DRAW MODELS (each binds its own texture) =====
         glm::mat4 model1 = glm::mat4(1.0f);
         model1 = glm::translate(model1, glm::vec3(-3.0f, 2.0f, -3.0f));
@@ -1346,7 +1346,7 @@ int main()
 
             title += " | Mode: " + modeText;
             glfwSetWindowTitle(window, title.c_str());
-     
+
             frameCount = 0;
             previousTime = currentTime;
 
@@ -1429,7 +1429,7 @@ int main()
                 deltaTime
             );
         }
-       
+
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(window);

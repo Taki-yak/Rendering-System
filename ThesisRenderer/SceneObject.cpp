@@ -17,7 +17,9 @@ void SceneObject::AddChild(SceneObject* child)
 }
 
 void SceneObject::Draw(Renderer& renderer, glm::mat4 parentTransform)
-{
+{    
+    if (!visible)
+        return;
     glm::mat4 model = parentTransform * transform.GetModelMatrix();
 
     shader->use();

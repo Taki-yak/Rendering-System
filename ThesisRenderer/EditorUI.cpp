@@ -3,89 +3,118 @@
 #include "Light.h"
 #include <glm/gtc/type_ptr.hpp>
 #include "SceneSerializer.h"
-void DrawHierarchyNode(SceneObject* obj, SceneObject*& selectedObject)
+#include <algorithm>
+void DrawHierarchyNode(
+    SceneObject* obj,
+    SceneObject*& selectedObject
+)
 {
-    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
+    ImGuiTreeNodeFlags flags =
+        ImGuiTreeNodeFlags_OpenOnArrow;
 
     if (obj == selectedObject)
         flags |= ImGuiTreeNodeFlags_Selected;
 
-    std::string displayName =
-        obj->visible ?
-        obj->name :
-        obj->name + " (Hidden)";
-
     std::string id =
-        displayName +
+        obj->name +
         "##" +
         std::to_string((size_t)obj);
 
-    bool opened = ImGui::TreeNodeEx(
-        id.c_str(),
-        flags
-    );
+    bool opened =
+        ImGui::TreeNodeEx(
+            id.c_str(),
+            flags
+        );
 
-
-    if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
+    if (
+        ImGui::IsItemClicked() &&
+        !ImGui::IsItemToggledOpen()
+        )
     {
         selectedObject = obj;
     }
+
+    // ===============
+    // DRAG SOURCE
+    // =======
+
+    if (ImGui::BeginDragDropSource())
+    {
+        ImGui::SetDragDropPayload(
+            "SCENE_OBJECT",
+            &obj,
+            sizeof(SceneObject*)
+        );
+
+        ImGui::Text(
+            "%s",
+            obj->name.c_str()
+        );
+
+        ImGui::EndDragDropSource();
+    }
+
+    // ======================
+    // DRAG TARGET
+    // ====
+    if (ImGui::BeginDragDropTarget())
+    {
+        if (
+            const ImGuiPayload* payload =
+            ImGui::AcceptDragDropPayload(
+                "SCENE_OBJECT"
+            )
+            )
+        {
+            SceneObject* dragged =
+                *(SceneObject**)payload->Data;
+
+            if (
+                dragged != obj &&
+                dragged->parent != obj
+                )
+            {
+                if (dragged->parent)
+                {
+                    auto& siblings =
+                        dragged->parent->children;
+
+                    siblings.erase(
+                        std::remove(
+                            siblings.begin(),
+                            siblings.end(),
+                            dragged
+                        ),
+                        siblings.end()
+                    );
+                }
+
+                dragged->parent = obj;
+
+                obj->children.push_back(
+                    dragged
+                );
+            }
+        }
+
+        ImGui::EndDragDropTarget();
+    }
+
     if (opened)
     {
-        for (SceneObject* child : obj->children)
+        for (
+            SceneObject* child :
+            obj->children
+            )
         {
-            DrawHierarchyNode(child, selectedObject);
+            DrawHierarchyNode(
+                child,
+                selectedObject
+            );
         }
 
         ImGui::TreePop();
     }
-}
-void EditorUI::DrawLightInspector(
-    Light* selectedLight
-)
-{
-    ImGui::Begin("Light Inspector");
-
-    if (selectedLight)
-    {
-        static char buffer[128];
-
-        strcpy_s(
-            buffer,
-            selectedLight->name.c_str()
-        );
-
-        if (ImGui::InputText(
-            "Name",
-            buffer,
-            IM_ARRAYSIZE(buffer)))
-        {
-            selectedLight->name = buffer;
-        }
-    
-        ImGui::DragFloat3(
-            "Position",
-            glm::value_ptr(
-                selectedLight->position
-            ),
-            0.1f
-        );
-
-        ImGui::ColorEdit3(
-            "Color",
-            glm::value_ptr(
-                selectedLight->color
-            )
-        );
-    }
-    else
-    {
-        ImGui::Text(
-            "No light selected"
-        );
-    }
-
-    ImGui::End();
 }
 void EditorUI::DrawHierarchy(
     Scene& scene,

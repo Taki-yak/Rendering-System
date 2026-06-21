@@ -696,7 +696,7 @@ int main()
 
     cube1.AddChild(&cube2);
     cube2.AddChild(&cube3);
-
+    scene.objects[0]->AddChild(scene.objects[1]);
     // ===== ATTACH COMPONENTS =====
     cube1.AddComponent(new RotatorComponent(glm::vec3(0.0f, 1.0f, 0.0f), 50.0f));
     cube2.AddComponent(new RotatorComponent(glm::vec3(1.0f, 0.0f, 0.0f), 30.0f));
@@ -1235,7 +1235,7 @@ int main()
         cube1.transform.position = glm::vec3(0.0f, 0.0f, -3.0f);
         cube1.UpdateComponents(deltaTime);
         cube1.Draw(renderer, glm::mat4(1.0f));
-        scene.objects[0]->AddChild(scene.objects[1]);
+       
         int totalObjects = scene.objects.size();
         int visibleObjects = 0;
         int culledObjects = 0;
@@ -1356,7 +1356,43 @@ int main()
             glLineWidth(4.0f);
 
             gizmoShader.use();
+            EditorUI::DrawToolbar(
+                scene,
+                selectedObject,
+                &cube,
+                &shader,
+                &cubeMaterial,
+                lightCounter
+            );
 
+            EditorUI::DrawHierarchy(
+                scene,
+                selectedObject,
+                selectedLight
+            );
+
+            EditorUI::DrawLightInspector(
+                selectedLight
+            );
+
+            EditorUI::DrawInspector(
+                selectedObject
+            );
+
+            EditorUI::DrawDebug(
+                deltaTime,
+                totalObjects,
+                visibleObjects,
+                culledObjects,
+                selectedObject
+            );
+
+            EditorUI::DrawStatistics(
+                scene,
+                camera,
+                selectedObject,
+                deltaTime
+            );
             glm::mat4 gizmoModel =
                 glm::translate(
                     glm::mat4(1.0f),
@@ -1379,55 +1415,7 @@ int main()
             glDrawArrays(GL_LINES, 4, 2);
 
             glBindVertexArray(0);
-            EditorUI::DrawToolbar(
-                scene,
-                selectedObject,
-                &cube,
-                &shader,
-                &cubeMaterial,
-                lightCounter
-            );
-
-            EditorUI::DrawToolbar(
-                scene,
-                selectedObject,
-                &cube,
-                &shader,
-                &cubeMaterial,
-                lightCounter
-            );
-
-            EditorUI::DrawHierarchy(
-                scene,
-                selectedObject,
-                selectedLight
-            );
-            EditorUI::DrawLightInspector(
-                selectedLight
-            );
-            EditorUI::DrawInspector(
-                selectedObject
-            );
-            if (!scene.lights.empty())
-            {
-                EditorUI::DrawLightInspector(
-                    scene.lights[0]
-                );
-            }
-            EditorUI::DrawDebug(
-                deltaTime,
-                totalObjects,
-                visibleObjects,
-                culledObjects,
-                selectedObject
-            );
-
-            EditorUI::DrawStatistics(
-                scene,
-                camera,
-                selectedObject,
-                deltaTime
-            );
+            
         }
 
         ImGui::Render();

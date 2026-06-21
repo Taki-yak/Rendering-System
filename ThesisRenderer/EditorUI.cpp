@@ -102,6 +102,9 @@ void EditorUI::DrawHierarchy(
         {
             DrawHierarchyNode(obj, selectedObject);
         }
+
+
+
     }
 
     ImGui::Separator();
@@ -126,10 +129,15 @@ void EditorUI::DrawHierarchy(
     }
     for (Light* light : scene.lights)
     {
-        ImGui::BulletText(
-            "%s",
-            light->name.c_str()
-        );
+        bool selected =
+            (light == selectedLight);
+
+        if (ImGui::Selectable(
+            light->name.c_str(),
+            selected))
+        {
+            selectedLight = light;
+        }
     }
     ImGui::End();
 }
@@ -144,12 +152,19 @@ void EditorUI::DrawInspector(
 
     if (selectedObject != nullptr)
     {
-        static char nameBuffer[128];
+        static char nameBuffer[128] = "";
 
-        strcpy_s(
-            nameBuffer,
-            selectedObject->name.c_str()
-        );
+        static SceneObject* lastSelected = nullptr;
+
+        if (lastSelected != selectedObject)
+        {
+            strcpy_s(
+                nameBuffer,
+                selectedObject->name.c_str()
+            );
+
+            lastSelected = selectedObject;
+        }
 
         if (ImGui::InputText(
             "Name",

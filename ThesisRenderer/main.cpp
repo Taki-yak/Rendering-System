@@ -1357,6 +1357,7 @@ int main()
 
             gizmoShader.use();
             EditorUI::DrawToolbar(
+
                 scene,
                 selectedObject,
                 &cube,
@@ -1364,7 +1365,17 @@ int main()
                 &cubeMaterial,
                 lightCounter
             );
+            if (selectedObject == nullptr)
+            {
+                ImGui::Render();
+                ImGui_ImplOpenGL3_RenderDrawData(
+                    ImGui::GetDrawData()
+                );
 
+                glfwSwapBuffers(window);
+
+                continue;
+            }
             EditorUI::DrawHierarchy(
                 scene,
                 selectedObject,
@@ -1393,6 +1404,7 @@ int main()
                 selectedObject,
                 deltaTime
             );
+            EditorUI::DrawAssetBrowser();
             glm::mat4 gizmoModel =
                 glm::translate(
                     glm::mat4(1.0f),

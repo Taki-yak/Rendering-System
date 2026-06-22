@@ -7,7 +7,7 @@
 class EditorUI
 {
 public:
-
+    static void DrawAssetBrowser();
     static void DrawHierarchy(
         Scene& scene,
         SceneObject*& selectedObject,

@@ -364,6 +364,36 @@ void EditorUI::DrawDebug(
 
     ImGui::End();
 }
+void EditorUI::DrawAssetBrowser()
+{
+    ImGui::SetNextWindowPos(
+        ImVec2(10, 520),
+        ImGuiCond_Once
+    );
+
+    ImGui::SetNextWindowSize(
+        ImVec2(530, 180),
+        ImGuiCond_Once
+    );
+
+    ImGui::Begin("Asset Browser");
+
+    ImGui::Text("Textures");
+    ImGui::BulletText("container.jpg");
+
+    ImGui::Separator();
+
+    ImGui::Text("Models");
+    ImGui::BulletText("character-human.obj");
+    ImGui::BulletText("character-a.obj");
+
+    ImGui::Separator();
+
+    ImGui::Text("Materials");
+    ImGui::BulletText("Default Material");
+
+    ImGui::End();
+}
 void EditorUI::DrawToolbar(
     Scene& scene,
     SceneObject*& selectedObject,

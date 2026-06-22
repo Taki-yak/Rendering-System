@@ -422,6 +422,16 @@ int main()
     ImGui::StyleColorsDark();
 
     ImGui_ImplGlfw_InitForOpenGL(window, false);
+
+    glfwSetCharCallback(
+        window,
+        ImGui_ImplGlfw_CharCallback
+    );
+
+    glfwSetKeyCallback(
+        window,
+        ImGui_ImplGlfw_KeyCallback
+    );
     ImGui_ImplOpenGL3_Init("#version 330");
     glDisable(GL_CULL_FACE);
     TestAssimp();
@@ -712,7 +722,9 @@ int main()
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
+        ImGuiIO& debugIO = ImGui::GetIO();
 
+       
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
@@ -824,7 +836,7 @@ int main()
         }
         // ImGuiIO& io = ImGui::GetIO();
 
-        if (!io.WantCaptureKeyboard)
+        if (debugIO.WantCaptureKeyboard)
         {
             if (InputManager::IsKeyPressed(GLFW_KEY_W))
                 camera.Position += cameraSpeed * camera.Front;
@@ -842,15 +854,6 @@ int main()
                 glm::normalize(glm::cross(camera.Front, camera.Up))
                 * cameraSpeed;
         }
-
-        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-            camera.Position -= cameraSpeed * camera.Front;
-
-        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-            camera.Position -= glm::normalize(glm::cross(camera.Front, camera.Up)) * cameraSpeed;
-
-        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-            camera.Position += glm::normalize(glm::cross(camera.Front, camera.Up)) * cameraSpeed;
         if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
             rotationAxis = glm::vec3(1.0f, 0.0f, 0.0f);
 
@@ -1367,6 +1370,21 @@ int main()
             );
             if (selectedObject == nullptr)
             {
+                ImGuiIO& io = ImGui::GetIO();
+
+                ImGui::Begin("Input Debug");
+
+                ImGui::Text(
+                    "WantCaptureKeyboard: %d",
+                    io.WantCaptureKeyboard
+                );
+
+                ImGui::Text(
+                    "WantTextInput: %d",
+                    io.WantTextInput
+                );
+
+                ImGui::End();
                 ImGui::Render();
                 ImGui_ImplOpenGL3_RenderDrawData(
                     ImGui::GetDrawData()

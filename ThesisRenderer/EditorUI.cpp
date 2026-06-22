@@ -4,6 +4,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "SceneSerializer.h"
 #include <algorithm>
+#include "PrefabManager.h"
 void DrawHierarchyNode(
     SceneObject* obj,
     SceneObject*& selectedObject
@@ -168,6 +169,18 @@ void EditorUI::DrawHierarchy(
             selectedLight = light;
         }
     }
+    ImGui::Separator();
+
+    ImGui::Text("Prefabs");
+
+    for (auto& prefab :
+        PrefabManager::prefabs)
+    {
+        ImGui::BulletText(
+            "%s",
+            prefab.name.c_str()
+        );
+    }
     ImGui::End();
 }
 
@@ -241,7 +254,60 @@ void EditorUI::DrawInspector(
 
     ImGui::End();
 }
+void EditorUI::DrawLightInspector(
+    Light* selectedLight
+)
+{
+    ImGui::Begin("Light Inspector");
 
+    if (selectedLight)
+    {
+        static char buffer[128] = "";
+
+        static Light* lastLight = nullptr;
+
+        if (lastLight != selectedLight)
+        {
+            strcpy_s(
+                buffer,
+                selectedLight->name.c_str()
+            );
+
+            lastLight = selectedLight;
+        }
+
+        if (ImGui::InputText(
+            "Name",
+            buffer,
+            IM_ARRAYSIZE(buffer)
+        ))
+        {
+            selectedLight->name = buffer;
+        }
+
+        ImGui::DragFloat3(
+            "Position",
+            glm::value_ptr(
+                selectedLight->position
+            ),
+            0.1f
+        );
+
+        ImGui::ColorEdit3(
+            "Color",
+            glm::value_ptr(
+                selectedLight->color
+            )
+        );
+    }
+    else
+    {
+        ImGui::Text(
+            "No light selected");
+    }
+
+    ImGui::End();
+}
 void EditorUI::DrawDebug(
     float deltaTime,
     int totalObjects,
@@ -424,7 +490,31 @@ void EditorUI::DrawToolbar(
             }
         }
     }
+    ImGui::SameLine();
 
+    if (ImGui::Button("Save Prefab"))
+    {
+        if (selectedObject)
+        {
+            Prefab prefab;
+
+            prefab.name =
+                selectedObject->name;
+
+            prefab.position =
+                selectedObject->transform.position;
+
+            prefab.rotation =
+                selectedObject->transform.rotation;
+
+            prefab.scale =
+                selectedObject->transform.scale;
+
+            PrefabManager::SavePrefab(
+                prefab
+            );
+        }
+    }
     ImGui::End();
 }
 void EditorUI::DrawStatistics(

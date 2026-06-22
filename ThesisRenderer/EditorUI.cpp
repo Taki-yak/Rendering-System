@@ -118,6 +118,7 @@ void DrawHierarchyNode(
     }
 }
 void EditorUI::DrawHierarchy(
+
     Scene& scene,
     SceneObject*& selectedObject,
     Light*& selectedLight
@@ -126,15 +127,37 @@ void EditorUI::DrawHierarchy(
     ImGui::SetNextWindowPos(ImVec2(0, 20), ImGuiCond_Once);
     ImGui::SetNextWindowSize(ImVec2(250, 500), ImGuiCond_Once);
     ImGui::Begin("Hierarchy");
+    static char searchBuffer[128] = "";
+
+    ImGui::InputText(
+        "Search",
+        searchBuffer,
+        IM_ARRAYSIZE(searchBuffer)
+    );
+
+    ImGui::Separator();
     for (SceneObject* obj : scene.objects)
     {
-        if (obj->parent == nullptr)
+        std::string objectName = obj->name;
+
+        if (strlen(searchBuffer) > 0)
         {
-            DrawHierarchyNode(obj, selectedObject);
+            if (
+                objectName.find(searchBuffer)
+                == std::string::npos
+                )
+            {
+                continue;
+            }
         }
 
-
-
+        if (obj->parent == nullptr)
+        {
+            DrawHierarchyNode(
+                obj,
+                selectedObject
+            );
+        }
     }
 
     ImGui::Separator();
@@ -143,11 +166,12 @@ void EditorUI::DrawHierarchy(
 
     for (Light* light : scene.lights)
     {
+
         std::string id =
             light->name +
             "##" +
             std::to_string((size_t)light);
-
+       
         bool selected =
             (selectedLight == light);
 

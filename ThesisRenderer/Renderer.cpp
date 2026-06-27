@@ -34,7 +34,7 @@ void Renderer::Render(Scene& scene, Camera& camera)
         glm::mat4 model = obj->transform.GetModelMatrix();
         shader->setMat4("model", glm::value_ptr(model));
 
-        obj->material->Apply(*shader);
+    
 
         obj->mesh->Draw();
     }

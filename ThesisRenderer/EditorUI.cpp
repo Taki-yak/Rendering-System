@@ -270,6 +270,42 @@ void EditorUI::DrawInspector(
             ),
             0.1f
         );
+        ImGui::Separator();
+
+        ImGui::Text("Material");
+        Material* mat =
+            selectedObject->material;
+        ImGui::ColorEdit3(
+            "Ambient",
+            glm::value_ptr(
+                mat->ambient
+            )
+        );
+
+        ImGui::ColorEdit3(
+            "Diffuse",
+            glm::value_ptr(
+                mat->diffuse
+            )
+        );
+
+        ImGui::ColorEdit3(
+            "Specular",
+            glm::value_ptr(
+                mat->specular
+            )
+        );
+        ImGui::DragFloat(
+            "Shininess",
+            &mat->shininess,
+            1.0f,
+            1.0f,
+            256.0f
+        );
+        ImGui::Checkbox(
+            "Wireframe",
+            &mat->wireframe
+        );
     }
     else
     {

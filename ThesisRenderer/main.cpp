@@ -1024,7 +1024,20 @@ int main()
             else
                 std::cout << "Grid Snapping OFF\n";
         }
+        if (appMode == AppMode::Play)
+        {
+            if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+                camera.Position += cameraSpeed * camera.Front;
 
+            if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+                camera.Position -= cameraSpeed * camera.Front;
+
+            if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+                camera.Position -= glm::normalize(glm::cross(camera.Front, camera.Up)) * cameraSpeed;
+
+            if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+                camera.Position += glm::normalize(glm::cross(camera.Front, camera.Up)) * cameraSpeed;
+        }
         if (glfwGetKey(window, GLFW_KEY_G) == GLFW_RELEASE)
         {
             gPressed = false;
@@ -1230,10 +1243,6 @@ int main()
         shader.setMat4("view", glm::value_ptr(view));
         shader.setMat4("projection", glm::value_ptr(projection));
         shader.setVec3("viewPos", camera.Position);
-        shader.setVec3("materialAmbient", glm::vec3(0.3f));
-        shader.setVec3("materialDiffuse", glm::vec3(1.0f));
-        shader.setVec3("materialSpecular", glm::vec3(0.5f));
-        shader.setFloat("materialShininess", 32.0f);
         shader.setInt("texture1", 0);
 
         // ===== DRAW CUBES (container.jpg) =====
@@ -1266,7 +1275,39 @@ int main()
             if (!useCulling || frustum.IsSphereVisible(obj->transform.position, obj->boundingRadius))
             {
                 visibleObjects++;
+                shader.setVec3(
+                    "materialAmbient",
+                    obj->material->ambient
+                );
 
+                shader.setVec3(
+                    "materialDiffuse",
+                    obj->material->diffuse
+                );
+
+                shader.setVec3(
+                    "materialSpecular",
+                    obj->material->specular
+                );
+
+                shader.setFloat(
+                    "materialShininess",
+                    obj->material->shininess
+                );
+                if (obj->material->wireframe)
+                {
+                    glPolygonMode(
+                        GL_FRONT_AND_BACK,
+                        GL_LINE
+                    );
+                }
+                else
+                {
+                    glPolygonMode(
+                        GL_FRONT_AND_BACK,
+                        GL_FILL
+                    );
+                }
                 obj->Draw(renderer, glm::mat4(1.0f));
             }
             else
@@ -1414,69 +1455,48 @@ int main()
 
             if (appMode == AppMode::Editor)
             {
-                EditorUI::DrawHierarchy(
-                    scene,
-                    selectedObject,
-                    selectedLight
-                );
-
-                EditorUI::DrawLightInspector(
-                    selectedLight
-                );
-
-                EditorUI::DrawInspector(
-                    selectedObject
-                );
-
-                EditorUI::DrawDebug(
-                    deltaTime,
-                    totalObjects,
-                    visibleObjects,
-                    culledObjects,
-                    selectedObject
-                );
-
-                EditorUI::DrawStatistics(
-                    scene,
-                    camera,
-                    selectedObject,
-                    deltaTime
-                );
-
+                EditorUI::DrawHierarchy(scene, selectedObject, selectedLight);
+                EditorUI::DrawLightInspector(selectedLight);
+                EditorUI::DrawInspector(selectedObject);
+                EditorUI::DrawDebug(deltaTime, totalObjects, visibleObjects, culledObjects, selectedObject);
+                EditorUI::DrawStatistics(scene, camera, selectedObject, deltaTime);
                 EditorUI::DrawAssetBrowser();
-                glm::mat4 gizmoModel =
-                    glm::translate(
-                        glm::mat4(1.0f),
-                        selectedObject->transform.position
-                    );
 
-                gizmoShader.setMat4("model", glm::value_ptr(gizmoModel));
-                gizmoShader.setMat4("view", glm::value_ptr(view));
-                gizmoShader.setMat4("projection", glm::value_ptr(projection));
+                if (selectedObject != nullptr)
+                {
+                    glm::mat4 gizmoModel =
+                        glm::translate(
+                            glm::mat4(1.0f),
+                            selectedObject->transform.position
+                        );
 
-                glBindVertexArray(gizmoVAO);
+                    gizmoShader.setMat4("model", glm::value_ptr(gizmoModel));
+                    gizmoShader.setMat4("view", glm::value_ptr(view));
+                    gizmoShader.setMat4("projection", glm::value_ptr(projection));
 
-                gizmoShader.setVec3("axisColor", glm::vec3(1, 0, 0));
-                glDrawArrays(GL_LINES, 0, 2);
+                    glBindVertexArray(gizmoVAO);
 
-                gizmoShader.setVec3("axisColor", glm::vec3(0, 1, 0));
-                glDrawArrays(GL_LINES, 2, 2);
+                    gizmoShader.setVec3("axisColor", glm::vec3(1, 0, 0));
+                    glDrawArrays(GL_LINES, 0, 2);
 
-                gizmoShader.setVec3("axisColor", glm::vec3(0, 0, 1));
-                glDrawArrays(GL_LINES, 4, 2);
+                    gizmoShader.setVec3("axisColor", glm::vec3(0, 1, 0));
+                    glDrawArrays(GL_LINES, 2, 2);
 
-                glBindVertexArray(0);
+                    gizmoShader.setVec3("axisColor", glm::vec3(0, 0, 1));
+                    glDrawArrays(GL_LINES, 4, 2);
+
+                    glBindVertexArray(0);
+                }
             }
             else
             {
                 ImGui::Begin("Play Mode");
-
                 ImGui::Text("PLAY MODE ACTIVE");
+                ImGui::Text("WASD - Move");
+                ImGui::Text("Right Mouse - Look");
                 ImGui::Text("Press Stop to return to editor.");
-
                 ImGui::End();
             }
-        
             
         }
 

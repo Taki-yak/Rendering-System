@@ -164,5 +164,8 @@
     <ClInclude Include="PrefabManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="AppMode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

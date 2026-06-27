@@ -3,6 +3,7 @@
 #include "imgui.h"
 #include "Scene.h"
 #include "Camera.h"
+#include "AppMode.h"
 #include "Light.h"
 class EditorUI
 {
@@ -31,7 +32,8 @@ public:
         Mesh* cubeMesh,
         Shader* shader,
         Material* material,
-        int& lightCounter
+        int& lightCounter,
+        AppMode& appMode
     );
     static void DrawStatistics(
         Scene& scene,

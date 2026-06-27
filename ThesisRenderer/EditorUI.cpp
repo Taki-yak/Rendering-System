@@ -424,7 +424,8 @@ void EditorUI::DrawToolbar(
     Mesh* cubeMesh,
     Shader* shader,
     Material* material,
-    int& lightCounter
+    int& lightCounter,
+    AppMode& appMode
 )
 {
     ImGui::SetNextWindowPos(
@@ -437,7 +438,23 @@ void EditorUI::DrawToolbar(
         ImGuiCond_Always
     );
     ImGui::Begin("Toolbar");
+    if (appMode == AppMode::Editor)
+    {
+        if (ImGui::Button("Play"))
+        {
+            appMode = AppMode::Play;
+            selectedObject = nullptr;
+        }
+    }
+    else
+    {
+        if (ImGui::Button("Stop"))
+        {
+            appMode = AppMode::Editor;
+        }
+    }
 
+    ImGui::SameLine();
     if (ImGui::Button("Save"))
     {
         SceneSerializer::Save(

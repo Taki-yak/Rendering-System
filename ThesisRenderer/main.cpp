@@ -25,6 +25,7 @@
 #include "GridRenderer.h"
 #include "EditorUI.h"
 #include "RotateComponent.h"
+#include "AppMode.h"
 // ================= CAMERA VARIABLES =================
 //glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 //glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -468,6 +469,7 @@ int main()
     };
     Renderer renderer;
     Scene scene;
+    AppMode appMode = AppMode::Editor;
     Light* testLight = new Light();
 
     static int lightCounter = 1;
@@ -1103,7 +1105,11 @@ int main()
 
         glDepthMask(GL_TRUE);
         glDepthFunc(GL_LESS);
-        if (mouseClicked && !ImGui::GetIO().WantCaptureMouse)
+        if (
+            appMode == AppMode::Editor &&
+            mouseClicked &&
+            !ImGui::GetIO().WantCaptureMouse
+            )
         {
             double mouseX, mouseY;
             glfwGetCursorPos(window, &mouseX, &mouseY);
@@ -1354,19 +1360,21 @@ int main()
             previousTime = currentTime;
 
         }
-        if (selectedObject != nullptr)
+        if (
+            appMode == AppMode::Editor &&
+            selectedObject != nullptr
+            )
         {
             glLineWidth(4.0f);
-
             gizmoShader.use();
             EditorUI::DrawToolbar(
-
                 scene,
                 selectedObject,
                 &cube,
                 &shader,
                 &cubeMaterial,
-                lightCounter
+                lightCounter,
+                appMode
             );
             if (selectedObject == nullptr)
             {
@@ -1394,57 +1402,81 @@ int main()
 
                 continue;
             }
-            EditorUI::DrawHierarchy(
+            EditorUI::DrawToolbar(
                 scene,
                 selectedObject,
-                selectedLight
+                &cube,
+                &shader,
+                &cubeMaterial,
+                lightCounter,
+                appMode
             );
 
-            EditorUI::DrawLightInspector(
-                selectedLight
-            );
-
-            EditorUI::DrawInspector(
-                selectedObject
-            );
-
-            EditorUI::DrawDebug(
-                deltaTime,
-                totalObjects,
-                visibleObjects,
-                culledObjects,
-                selectedObject
-            );
-
-            EditorUI::DrawStatistics(
-                scene,
-                camera,
-                selectedObject,
-                deltaTime
-            );
-            EditorUI::DrawAssetBrowser();
-            glm::mat4 gizmoModel =
-                glm::translate(
-                    glm::mat4(1.0f),
-                    selectedObject->transform.position
+            if (appMode == AppMode::Editor)
+            {
+                EditorUI::DrawHierarchy(
+                    scene,
+                    selectedObject,
+                    selectedLight
                 );
 
-            gizmoShader.setMat4("model", glm::value_ptr(gizmoModel));
-            gizmoShader.setMat4("view", glm::value_ptr(view));
-            gizmoShader.setMat4("projection", glm::value_ptr(projection));
+                EditorUI::DrawLightInspector(
+                    selectedLight
+                );
 
-            glBindVertexArray(gizmoVAO);
+                EditorUI::DrawInspector(
+                    selectedObject
+                );
 
-            gizmoShader.setVec3("axisColor", glm::vec3(1, 0, 0));
-            glDrawArrays(GL_LINES, 0, 2);
+                EditorUI::DrawDebug(
+                    deltaTime,
+                    totalObjects,
+                    visibleObjects,
+                    culledObjects,
+                    selectedObject
+                );
 
-            gizmoShader.setVec3("axisColor", glm::vec3(0, 1, 0));
-            glDrawArrays(GL_LINES, 2, 2);
+                EditorUI::DrawStatistics(
+                    scene,
+                    camera,
+                    selectedObject,
+                    deltaTime
+                );
 
-            gizmoShader.setVec3("axisColor", glm::vec3(0, 0, 1));
-            glDrawArrays(GL_LINES, 4, 2);
+                EditorUI::DrawAssetBrowser();
+                glm::mat4 gizmoModel =
+                    glm::translate(
+                        glm::mat4(1.0f),
+                        selectedObject->transform.position
+                    );
 
-            glBindVertexArray(0);
+                gizmoShader.setMat4("model", glm::value_ptr(gizmoModel));
+                gizmoShader.setMat4("view", glm::value_ptr(view));
+                gizmoShader.setMat4("projection", glm::value_ptr(projection));
+
+                glBindVertexArray(gizmoVAO);
+
+                gizmoShader.setVec3("axisColor", glm::vec3(1, 0, 0));
+                glDrawArrays(GL_LINES, 0, 2);
+
+                gizmoShader.setVec3("axisColor", glm::vec3(0, 1, 0));
+                glDrawArrays(GL_LINES, 2, 2);
+
+                gizmoShader.setVec3("axisColor", glm::vec3(0, 0, 1));
+                glDrawArrays(GL_LINES, 4, 2);
+
+                glBindVertexArray(0);
+            }
+            else
+            {
+                ImGui::Begin("Play Mode");
+
+                ImGui::Text("PLAY MODE ACTIVE");
+                ImGui::Text("Press Stop to return to editor.");
+
+                ImGui::End();
+            }
+        
             
         }
 

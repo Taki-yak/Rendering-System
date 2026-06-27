@@ -18,7 +18,8 @@ public:
 
     glm::vec3 specular =
         glm::vec3(0.5f);
-
+    glm::vec3 tint =
+        glm::vec3(1.0f);
     float shininess = 32.0f;
 
     bool wireframe = false;

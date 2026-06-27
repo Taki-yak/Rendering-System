@@ -234,9 +234,10 @@ out vec4 FragColor;
 in vec3 FragPos;
 in vec3 Normal;
 in vec2 TexCoord;
+
 uniform bool isSelected;
 uniform sampler2D texture1;
-
+uniform vec3 materialTint;
 uniform vec3 viewPos;
 
 uniform vec3 lightPositions[MAX_LIGHTS];
@@ -249,7 +250,9 @@ uniform float materialShininess;
 
 void main()
 {
-    vec3 textureColor = texture(texture1, TexCoord).rgb; 
+    vec3 textureColor =
+        texture(texture1, TexCoord).rgb *
+        materialTint;
 
     vec3 norm = normalize(Normal);
     vec3 viewDir = normalize(viewPos - FragPos);
@@ -272,12 +275,12 @@ void main()
         result += ambient + diffuse + specular;
     }
 
-   if(isSelected)
-{
-    result *= 1.5; // brighter
-}
+    if(isSelected)
+    {
+        result *= 1.5;
+    }
 
-FragColor = vec4(result, 1.0);
+    FragColor = vec4(result, 1.0);
 }
 
 )";
@@ -390,7 +393,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(800, 600, "ThesisRenderer", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(1600, 900, "Orion", NULL, NULL);
     if (!window)
     {
         std::cout << "Failed to create window\n";
@@ -1081,7 +1084,20 @@ int main()
         {
             cKeyPressed = false;
         }
+        int width, height;
 
+        glfwGetFramebufferSize(
+            window,
+            &width,
+            &height
+        );
+
+        glViewport(
+            0,
+            0,
+            width,
+            height
+        );
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -1090,10 +1106,12 @@ int main()
             glm::vec3(0.5f, 1.0f, 0.0f));
         glm::mat4 view = camera.GetViewMatrix();
 
-        glm::mat4 projection = glm::perspective(glm::radians(45.0f),
-            800.0f / 600.0f,
+        glm::mat4 projection = glm::perspective(
+            glm::radians(45.0f),
+            (float)width / (float)height,
             0.1f,
-            100.0f);
+            100.0f
+        );
 
         glDepthFunc(GL_LEQUAL);
         glDepthMask(GL_FALSE);
@@ -1127,7 +1145,14 @@ int main()
             double mouseX, mouseY;
             glfwGetCursorPos(window, &mouseX, &mouseY);
 
-            glm::vec3 rayDir = GetRayFromMouse(mouseX, mouseY, 800, 600, projection, view);
+            glm::vec3 rayDir = GetRayFromMouse(
+                mouseX,
+                mouseY,
+                width,
+                height,
+                projection,
+                view
+            );
             glm::vec3 rayOrigin = camera.Position;
 
             float closestDist = 1000.0f;
@@ -1178,7 +1203,14 @@ int main()
             // ================= TRANSLATE MODE =================
             if (currentGizmoMode == TRANSLATE)
             {
-                glm::vec3 rayDir = GetRayFromMouse(mouseX, mouseY, 800, 600, projection, view);
+                glm::vec3 rayDir = GetRayFromMouse(
+                    mouseX,
+                    mouseY,
+                    width,
+                    height,
+                    projection,
+                    view
+                );
                 glm::vec3 rayOrigin = camera.Position;
 
                 float planeY = selectedObject->transform.position.y;
@@ -1289,7 +1321,10 @@ int main()
                     "materialSpecular",
                     obj->material->specular
                 );
-
+                shader.setVec3(
+                    "materialTint",
+                    obj->material->tint
+                );
                 shader.setFloat(
                     "materialShininess",
                     obj->material->shininess

@@ -306,6 +306,13 @@ void EditorUI::DrawInspector(
             "Wireframe",
             &mat->wireframe
         );
+        ImGui::ColorEdit3(
+            "Tint",
+            glm::value_ptr(
+                mat->tint
+            )
+        );
+
     }
     else
     {

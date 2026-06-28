@@ -483,7 +483,7 @@ void EditorUI::DrawToolbar(
     ImGui::Begin("Toolbar");
     if (appMode == AppMode::Editor)
     {
-        if (ImGui::Button("Play"))
+        if (ImGui::Button("Play##ToolbarPlay"))
         {
             appMode = AppMode::Play;
             selectedObject = nullptr;

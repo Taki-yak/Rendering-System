@@ -158,13 +158,14 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
     {
         float scaleSpeed = 0.2f;
 
-        selectedObject->transform.scale += glm::vec3(yoffset * scaleSpeed);
+        selectedObject->transform.scale +=
+            glm::vec3(yoffset * scaleSpeed);
 
-
-        selectedObject->transform.scale = glm::max(
-            selectedObject->transform.scale,
-            glm::vec3(0.1f)
-        );
+        selectedObject->transform.scale =
+            glm::max(
+                selectedObject->transform.scale,
+                glm::vec3(0.1f)
+            );
     }
 }
 float gizmoVertices[] =

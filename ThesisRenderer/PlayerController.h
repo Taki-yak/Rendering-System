@@ -8,7 +8,8 @@
 class PlayerController
 {
 public:
-    float moveSpeed = 6.0f;
+    float walkSpeed = 6.0f;
+    float runSpeed = 12.0f;
     float jumpForce = 6.5f;
     float gravity = -18.0f;
 
@@ -63,9 +64,23 @@ public:
                 glm::normalize(movement);
         }
 
+        float currentSpeed =
+            walkSpeed;
+
+        if (
+            glfwGetKey(
+                window,
+                GLFW_KEY_LEFT_SHIFT
+            ) == GLFW_PRESS
+            )
+        {
+            currentSpeed =
+                runSpeed;
+        }
+
         camera.Position +=
             movement *
-            moveSpeed *
+            currentSpeed *
             deltaTime;
 
         if (

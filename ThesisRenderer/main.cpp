@@ -241,7 +241,8 @@ const char* fragmentShaderSource = R"(
 #define MAX_LIGHTS 3
 
 out vec4 FragColor;
-
+uniform vec3 sunDirection;
+uniform vec3 sunColor;
 in vec3 FragPos;
 in vec3 Normal;
 in vec2 TexCoord;
@@ -269,6 +270,44 @@ void main()
     vec3 viewDir = normalize(viewPos - FragPos);
 
     vec3 result = vec3(0.0);
+
+// Directional Light
+
+vec3 dirLight =
+normalize(-sunDirection);
+
+float dirDiff =
+max(dot(norm,dirLight),0.0);
+
+vec3 dirDiffuse =
+dirDiff *
+materialDiffuse *
+textureColor *
+sunColor;
+
+vec3 dirReflect =
+reflect(-dirLight,norm);
+
+float dirSpec =
+pow(
+max(dot(viewDir,dirReflect),0.0),
+materialShininess
+);
+
+vec3 dirSpecular =
+materialSpecular *
+dirSpec *
+sunColor;
+
+vec3 dirAmbient =
+materialAmbient *
+textureColor *
+0.5;
+
+result +=
+dirAmbient +
+dirDiffuse +
+dirSpecular;
 
     for(int i = 0; i < MAX_LIGHTS; i++)
     {
@@ -512,6 +551,17 @@ int main()
         );
 
     scene.AddLight(testLight);
+    Light* sun = new Light();
+
+    sun->name = "Sun";
+
+    sun->type = LightType::Directional;
+
+    sun->direction =
+        glm::normalize(
+            glm::vec3(-0.2f, -1.0f, -0.3f));
+
+    scene.AddLight(sun);
     Model myModel("character-human.obj");
     Model treeModel("character-a.obj");
     Shader skyboxShader(skyboxVertex, skyboxFragment);
@@ -1298,6 +1348,13 @@ int main()
         }
 
         shader.use();
+        shader.setVec3(
+            "sunDirection",
+            glm::vec3(-0.2f, -1.0f, -0.3f));
+
+        shader.setVec3(
+            "sunColor",
+            glm::vec3(1.0f));
         for (int i = 0; i < 3; i++)
         {
             shader.setVec3("lightPositions[" + std::to_string(i) + "]", lightPositions[i]);

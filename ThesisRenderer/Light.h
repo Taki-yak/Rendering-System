@@ -3,6 +3,12 @@
 #include <glm/glm.hpp>
 #include <string>
 
+enum class LightType
+{
+    Point,
+    Directional
+};
+
 class Light
 {
 public:
@@ -15,6 +21,11 @@ public:
 
     float intensity;
 
+   
+    LightType type;
+
+    glm::vec3 direction;
+
     Light()
     {
         name = "Light";
@@ -24,5 +35,10 @@ public:
         color = glm::vec3(1.0f);
 
         intensity = 1.0f;
+
+       
+        type = LightType::Point;
+
+        direction = glm::vec3(-0.2f, -1.0f, -0.3f);
     }
 };

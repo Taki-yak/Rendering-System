@@ -1611,7 +1611,14 @@ int main()
                 EditorUI::DrawInspector(selectedObject);
                 EditorUI::DrawDebug(deltaTime, totalObjects, visibleObjects, culledObjects, selectedObject);
                 EditorUI::DrawStatistics(scene, camera, selectedObject, deltaTime);
-                EditorUI::DrawAssetBrowser();
+                EditorUI::DrawAssetBrowser(
+                    scene,
+                    selectedObject,
+                    &cube,
+                    &shader,
+                    &cubeMaterial
+                );
+                
 
                 if (selectedObject != nullptr)
                 {
@@ -1647,12 +1654,21 @@ int main()
                 ImGui::Text("Right Mouse - Look");
                 ImGui::Text("Press Stop to return to editor.");
                 ImGui::End();
+                
             }
             
         }
 
+        if (appMode == AppMode::Play)
+        {
+            EditorUI::DrawCrosshair();
+        }
+
         ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        ImGui_ImplOpenGL3_RenderDrawData(
+            ImGui::GetDrawData()
+        );
+
         glfwSwapBuffers(window);
     }
     ImGui_ImplOpenGL3_Shutdown();

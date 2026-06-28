@@ -8,7 +8,14 @@
 class EditorUI
 {
 public:
-    static void DrawAssetBrowser();
+    static void DrawAssetBrowser(
+        Scene& scene,
+        SceneObject*& selectedObject,
+        Mesh* cubeMesh,
+        Shader* shader,
+        Material* material
+    );
+    static void DrawCrosshair();
     static void DrawHierarchy(
         Scene& scene,
         SceneObject*& selectedObject,

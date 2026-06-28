@@ -5,6 +5,7 @@
 #include "SceneSerializer.h"
 #include <algorithm>
 #include "PrefabManager.h"
+#include <glm/glm.hpp>
 void DrawHierarchyNode(
     SceneObject* obj,
     SceneObject*& selectedObject
@@ -431,7 +432,13 @@ void EditorUI::DrawDebug(
 
     ImGui::End();
 }
-void EditorUI::DrawAssetBrowser()
+void EditorUI::DrawAssetBrowser(
+    Scene& scene,
+    SceneObject*& selectedObject,
+    Mesh* cubeMesh,
+    Shader* shader,
+    Material* material
+)
 {
     ImGui::SetNextWindowPos(
         ImVec2(10, 520),
@@ -445,23 +452,125 @@ void EditorUI::DrawAssetBrowser()
 
     ImGui::Begin("Asset Browser");
 
-    ImGui::Text("Textures");
-    ImGui::BulletText("container.jpg");
+    if (ImGui::TreeNode("Textures"))
+    {
+        ImGui::Selectable("container.jpg");
+        ImGui::TreePop();
+    }
+
+    if (ImGui::TreeNode("Models"))
+    {
+        ImGui::Selectable("character-human.obj");
+        ImGui::Selectable("character-a.obj");
+        ImGui::TreePop();
+    }
+
+    if (ImGui::TreeNode("Materials"))
+    {
+        ImGui::Selectable("Default Material");
+        ImGui::TreePop();
+    }
 
     ImGui::Separator();
 
-    ImGui::Text("Models");
-    ImGui::BulletText("character-human.obj");
-    ImGui::BulletText("character-a.obj");
+    ImGui::Text("Environment Props");
 
-    ImGui::Separator();
+    if (ImGui::Button("Spawn Crate"))
+    {
+        SceneObject* crate =
+            new SceneObject(
+                cubeMesh,
+                shader,
+                material
+            );
 
-    ImGui::Text("Materials");
-    ImGui::BulletText("Default Material");
+        crate->name = "Crate";
+
+        crate->transform.position =
+            glm::vec3(
+                0.0f,
+                0.5f,
+                -5.0f
+            );
+
+        crate->transform.scale =
+            glm::vec3(
+                1.0f,
+                1.0f,
+                1.0f
+            );
+
+        scene.AddObject(crate);
+
+        selectedObject = crate;
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Spawn Wall"))
+    {
+        SceneObject* wall =
+            new SceneObject(
+                cubeMesh,
+                shader,
+                material
+            );
+
+        wall->name = "Wall";
+
+        wall->transform.position =
+            glm::vec3(
+                0.0f,
+                1.5f,
+                -8.0f
+            );
+
+        wall->transform.scale =
+            glm::vec3(
+                6.0f,
+                3.0f,
+                0.3f
+            );
+
+        scene.AddObject(wall);
+
+        selectedObject = wall;
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Spawn Pillar"))
+    {
+        SceneObject* pillar =
+            new SceneObject(
+                cubeMesh,
+                shader,
+                material
+            );
+
+        pillar->name = "Pillar";
+
+        pillar->transform.position =
+            glm::vec3(
+                3.0f,
+                1.5f,
+                -6.0f
+            );
+
+        pillar->transform.scale =
+            glm::vec3(
+                0.7f,
+                3.0f,
+                0.7f
+            );
+
+        scene.AddObject(pillar);
+
+        selectedObject = pillar;
+    }
 
     ImGui::End();
-}
-void EditorUI::DrawToolbar(
+}void EditorUI::DrawToolbar(
     Scene& scene,
     SceneObject*& selectedObject,
     Mesh* cubeMesh,
@@ -630,6 +739,33 @@ void EditorUI::DrawToolbar(
         }
     }
     ImGui::End();
+}
+void EditorUI::DrawCrosshair()
+{
+    ImGuiIO& io =
+        ImGui::GetIO();
+
+    ImDrawList* draw =
+        ImGui::GetForegroundDrawList();
+
+    ImVec2 center(
+        io.DisplaySize.x * 0.5f,
+        io.DisplaySize.y * 0.5f
+    );
+
+    draw->AddLine(
+        ImVec2(center.x - 8, center.y),
+        ImVec2(center.x + 8, center.y),
+        IM_COL32(255, 255, 255, 255),
+        2.0f
+    );
+
+    draw->AddLine(
+        ImVec2(center.x, center.y - 8),
+        ImVec2(center.x, center.y + 8),
+        IM_COL32(255, 255, 255, 255),
+        2.0f
+    );
 }
 void EditorUI::DrawStatistics(
     Scene& scene,

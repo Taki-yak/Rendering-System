@@ -26,6 +26,7 @@
 #include "EditorUI.h"
 #include "RotateComponent.h"
 #include "AppMode.h"
+#include "PlayerController.h"
 // ================= CAMERA VARIABLES =================
 //glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 //glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -116,6 +117,7 @@ SceneObject* selectedObject = nullptr;
 Light* selectedLight = nullptr;
 Camera camera;
 Frustum frustum;
+PlayerController playerController;
 // ================= MOUSE CALLBACK ==================
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
@@ -135,10 +137,19 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     //camera.ProcessMouseMovement(xoffset, yoffset);
     ImGuiIO& io = ImGui::GetIO();
 
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS
-        && !io.WantCaptureMouse)
+    if (
+        glfwGetMouseButton(
+            window,
+            GLFW_MOUSE_BUTTON_RIGHT
+        ) == GLFW_PRESS
+        &&
+        !io.WantCaptureMouse
+        )
     {
-        camera.ProcessMouseMovement(xoffset, yoffset);
+        camera.ProcessMouseMovement(
+            xoffset,
+            yoffset
+        );
     }
 }
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
@@ -812,8 +823,10 @@ int main()
         {
             mKeyPressed = false;
         }
-
-        if (selectedObject != nullptr)
+        if (
+            appMode == AppMode::Editor &&
+            selectedObject != nullptr
+            )
         {
             float speed = 5.0f * deltaTime;
 
@@ -829,35 +842,56 @@ int main()
             if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
                 selectedObject->transform.position.x += speed;
 
+
             if (glfwGetKey(window, GLFW_KEY_PAGE_UP) == GLFW_PRESS)
                 selectedObject->transform.position.y += speed;
 
             if (glfwGetKey(window, GLFW_KEY_PAGE_DOWN) == GLFW_PRESS)
                 selectedObject->transform.position.y -= speed;
         }
+        
         if (glfwGetKey(window, GLFW_KEY_M) == GLFW_RELEASE)
         {
             mKeyPressed = false;
         }
         // ImGuiIO& io = ImGui::GetIO();
 
-        if (debugIO.WantCaptureKeyboard)
+        if (appMode == AppMode::Editor)
         {
-            if (InputManager::IsKeyPressed(GLFW_KEY_W))
-                camera.Position += cameraSpeed * camera.Front;
+            if (!io.WantCaptureKeyboard)
+            {
+                if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+                    camera.Position += cameraSpeed * camera.Front;
 
-            if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-                camera.Position -= cameraSpeed * camera.Front;
+                if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+                    camera.Position -= cameraSpeed * camera.Front;
 
-            if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-                camera.Position -=
-                glm::normalize(glm::cross(camera.Front, camera.Up))
-                * cameraSpeed;
+                if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+                    camera.Position -=
+                    glm::normalize(
+                        glm::cross(
+                            camera.Front,
+                            camera.Up
+                        )
+                    ) * cameraSpeed;
 
-            if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-                camera.Position +=
-                glm::normalize(glm::cross(camera.Front, camera.Up))
-                * cameraSpeed;
+                if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+                    camera.Position +=
+                    glm::normalize(
+                        glm::cross(
+                            camera.Front,
+                            camera.Up
+                        )
+                    ) * cameraSpeed;
+            }
+        }
+        else
+        {
+            playerController.Update(
+                window,
+                camera,
+                deltaTime
+            );
         }
         if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
             rotationAxis = glm::vec3(1.0f, 0.0f, 0.0f);
@@ -976,7 +1010,10 @@ int main()
             bPressed = false;
         }
         // ===== ROTate
-        if (selectedObject != nullptr)
+        if (
+            appMode == AppMode::Editor &&
+            selectedObject != nullptr
+            )
         {
             float rotSpeed = 50.0f * deltaTime;
 
@@ -1027,20 +1064,7 @@ int main()
             else
                 std::cout << "Grid Snapping OFF\n";
         }
-        if (appMode == AppMode::Play)
-        {
-            if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-                camera.Position += cameraSpeed * camera.Front;
-
-            if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-                camera.Position -= cameraSpeed * camera.Front;
-
-            if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-                camera.Position -= glm::normalize(glm::cross(camera.Front, camera.Up)) * cameraSpeed;
-
-            if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-                camera.Position += glm::normalize(glm::cross(camera.Front, camera.Up)) * cameraSpeed;
-        }
+       
         if (glfwGetKey(window, GLFW_KEY_G) == GLFW_RELEASE)
         {
             gPressed = false;
@@ -1063,7 +1087,10 @@ int main()
         }
 
         // ===== SCALE
-        if (selectedObject != nullptr)
+        if (
+            appMode == AppMode::Editor &&
+            selectedObject != nullptr
+            )
         {
             float scaleSpeed = 2.0f * deltaTime;
 
@@ -1195,7 +1222,11 @@ int main()
 
             mouseClicked = false;
         }
-        if (isDragging && selectedObject != nullptr)
+        if (
+            appMode == AppMode::Editor &&
+            isDragging &&
+            selectedObject != nullptr
+            )
         {
             double mouseX, mouseY;
             glfwGetCursorPos(window, &mouseX, &mouseY);

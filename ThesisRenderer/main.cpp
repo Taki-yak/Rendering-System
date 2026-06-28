@@ -680,22 +680,49 @@ int main()
 
 
     Material cubeMaterial(&containerTexture);
-
+    Material groundMaterial(
+        &containerTexture
+    );
     Mesh cube(vertices, sizeof(vertices));
     SceneObject cube1(&cube, &shader, &cubeMaterial);
     SceneObject cube2(&cube, &shader, &cubeMaterial);
     SceneObject cube3(&cube, &shader, &cubeMaterial);
-
+    SceneObject ground(
+        &cube,
+        &shader,
+        &groundMaterial
+    );
     cube1.name = "Cube 1";
     cube2.name = "Cube 2";
     cube3.name = "Cube 3";
-
+    ground.name = "Ground";
     cube1.transform.position = glm::vec3(0.0f, 0.0f, 0.0f);
     cube2.transform.position = glm::vec3(2.0f, 0.0f, 0.0f);
     cube3.transform.position = glm::vec3(-2.0f, 0.0f, 0.0f);
+    ground.transform.position =
+        glm::vec3(
+            0.0f,
+            -0.55f,
+            -10.0f
+        );
+
+    ground.transform.scale =
+        glm::vec3(
+            50.0f,
+            0.1f,
+            50.0f
+        );
+    ground.material->tint =
+        glm::vec3(
+            0.25f,
+            0.6f,
+            0.25f
+        );
     cube2.transform.scale = glm::vec3(1.5f);
     cube3.transform.scale = glm::vec3(0.5f);
-
+    scene.AddObject(
+        &ground
+    );
     std::vector<SceneObject*> manyCubes;
 
     for (int i = 0; i < 100; i++)

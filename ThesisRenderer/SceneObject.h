@@ -6,7 +6,7 @@
 #include "Material.h"
 #include "Transform.h"
 #include "Component.h"
-
+#include "Model.h"
 class Renderer;
 
 class SceneObject
@@ -24,6 +24,7 @@ public:
     bool visible = true;
     bool isSelected = false;
     bool isCollider = false;
+
     void AddChild(SceneObject* child);
     void Draw(Renderer& renderer, glm::mat4 parentTransform);
 
@@ -58,6 +59,9 @@ public:
     Mesh* mesh;
     Shader* shader;
     Material* material;
+    Model* model = nullptr;
+    bool useModel = false;
+    SceneObject(Model* model, Shader* shader);
     float boundingRadius = 1.0f;
     SceneObject* parent = nullptr;
     std::vector<SceneObject*> children;

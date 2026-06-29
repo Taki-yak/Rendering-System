@@ -10,7 +10,7 @@ void AssetDatabase::Initialize()
     assets.push_back(
         {
             "Tree",
-            "Assets/Models/Tree.obj",
+            "Assets/Models/Nature/tree.obj",
             "Model"
         });
 

@@ -567,6 +567,9 @@ int main()
     scene.AddLight(sun);
     Model myModel("character-human.obj");
     Model treeModel("character-a.obj");
+    Model importedTree(
+        "Assets/Models/Nature/tree.obj"
+    );
     Shader skyboxShader(skyboxVertex, skyboxFragment);
     Shader gizmoShader(gizmoVertexShader, gizmoFragmentShader);
     Shader gridShader(gridVertexShader, gridFragmentShader);
@@ -722,9 +725,30 @@ int main()
         );
     cube2.transform.scale = glm::vec3(1.5f);
     cube3.transform.scale = glm::vec3(0.5f);
-    scene.AddObject(
-        &ground
-    );
+    scene.AddObject( &ground  );
+    ground.boundingRadius = 100.0f;
+    SceneObject* treeObject =
+        new SceneObject(
+            &importedTree,
+            &shader
+        );
+
+    treeObject->name = "Imported Tree";
+    treeObject->boundingRadius = 20.0f;
+
+    treeObject->transform.position =
+        glm::vec3(
+            0.0f,
+            0.0f,
+            -6.0f
+        );
+
+    treeObject->transform.scale =
+        glm::vec3(
+            0.1f
+        );
+
+    scene.AddObject(treeObject);
     std::vector<SceneObject*> manyCubes;
 
     for (int i = 0; i < 100; i++)
@@ -1423,43 +1447,60 @@ int main()
             {
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             }
-            if (!useCulling || frustum.IsSphereVisible(obj->transform.position, obj->boundingRadius))
+            if (
+                obj->useModel ||
+                !useCulling ||
+                frustum.IsSphereVisible(obj->transform.position, obj->boundingRadius)
+                )
             {
                 visibleObjects++;
-                shader.setVec3(
-                    "materialAmbient",
-                    obj->material->ambient
-                );
-
-                shader.setVec3(
-                    "materialDiffuse",
-                    obj->material->diffuse
-                );
-
-                shader.setVec3(
-                    "materialSpecular",
-                    obj->material->specular
-                );
-                shader.setVec3(
-                    "materialTint",
-                    obj->material->tint
-                );
-                shader.setFloat(
-                    "materialShininess",
-                    obj->material->shininess
-                );
-                if (obj->material->wireframe)
+                if (obj->material != nullptr)
                 {
-                    glPolygonMode(
-                        GL_FRONT_AND_BACK,
-                        GL_LINE
-                    );
+                    if (obj->material->wireframe)
+                    {
+                        glPolygonMode(
+                            GL_FRONT_AND_BACK,
+                            GL_LINE
+                        );
+                    }
+                    else
+                    {
+                        glPolygonMode(
+                            GL_FRONT_AND_BACK,
+                            GL_FILL
+                        );
+                    }
                 }
                 else
                 {
                     glPolygonMode(
                         GL_FRONT_AND_BACK,
                         GL_FILL
+                    );
+
+                    shader.setVec3(
+                        "materialAmbient",
+                        glm::vec3(0.4f)
+                    );
+
+                    shader.setVec3(
+                        "materialDiffuse",
+                        glm::vec3(0.7f, 0.9f, 0.5f)
+                    );
+
+                    shader.setVec3(
+                        "materialSpecular",
+                        glm::vec3(0.1f)
+                    );
+
+                    shader.setVec3(
+                        "materialTint",
+                        glm::vec3(0.5f, 0.9f, 0.4f)
+                    );
+
+                    shader.setFloat(
+                        "materialShininess",
+                        8.0f
                     );
                 }
                 obj->Draw(renderer, glm::mat4(1.0f));

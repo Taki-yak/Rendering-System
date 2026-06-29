@@ -5,6 +5,7 @@
 #include "SceneSerializer.h"
 #include <algorithm>
 #include "PrefabManager.h"
+#include "AssetDatabase.h"
 #include <glm/glm.hpp>
 void DrawHierarchyNode(
     SceneObject* obj,
@@ -201,10 +202,18 @@ void EditorUI::DrawHierarchy(
     for (auto& prefab :
         PrefabManager::prefabs)
     {
-        ImGui::BulletText(
-            "%s",
-            prefab.name.c_str()
-        );
+        if (ImGui::TreeNode("Models"))
+        {
+            for (auto& asset :
+                AssetDatabase::assets)
+            {
+                ImGui::Selectable(
+                    asset.name.c_str()
+                );
+            }
+
+            ImGui::TreePop();
+        }
     }
     ImGui::End();
 }
@@ -460,11 +469,18 @@ void EditorUI::DrawAssetBrowser(
         ImGui::Selectable("container.jpg");
         ImGui::TreePop();
     }
-
     if (ImGui::TreeNode("Models"))
     {
-        ImGui::Selectable("character-human.obj");
-        ImGui::Selectable("character-a.obj");
+        for (auto& asset : AssetDatabase::assets)
+        {
+            if (asset.type == "Model")
+            {
+                ImGui::Selectable(
+                    asset.name.c_str()
+                );
+            }
+        }
+
         ImGui::TreePop();
     }
 

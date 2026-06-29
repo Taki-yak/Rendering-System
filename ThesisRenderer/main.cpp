@@ -27,6 +27,7 @@
 #include "RotateComponent.h"
 #include "AppMode.h"
 #include "PlayerController.h"
+#include "AssetDatabase.h"
 // ================= CAMERA VARIABLES =================
 //glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 //glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -491,6 +492,7 @@ int main()
     glDisable(GL_CULL_FACE);
     TestAssimp();
     InputManager::Init(window);
+    AssetDatabase::Initialize();
     // ================= SHADER CLASS =================
     unsigned int gizmoVAO, gizmoVBO;
 

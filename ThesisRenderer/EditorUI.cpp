@@ -583,15 +583,8 @@ void EditorUI::DrawAssetBrowser(
     AppMode& appMode
 )
 {
-    ImGui::SetNextWindowPos(
-        ImVec2(0, 0),
-        ImGuiCond_Always
-    );
-
-    ImGui::SetNextWindowSize(
-        ImVec2(800, 40),
-        ImGuiCond_Always
-    );
+    ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(1600, 45), ImGuiCond_Always);
     ImGui::Begin("Toolbar");
     if (appMode == AppMode::Editor)
     {
@@ -603,7 +596,7 @@ void EditorUI::DrawAssetBrowser(
     }
     else
     {
-        if (ImGui::Button("Stop"))
+        if (ImGui::Button("Stop##ToolbarStop"))
         {
             appMode = AppMode::Editor;
         }

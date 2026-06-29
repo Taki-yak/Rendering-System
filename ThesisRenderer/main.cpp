@@ -1489,7 +1489,6 @@ int main()
         lightShader.setMat4("projection", glm::value_ptr(projection));
         renderer.DrawMesh(cube, lightShader, lightModel);
 
-        // ===== FPS COUNTER =====
         double currentTime = glfwGetTime();
         frameCount++;
         if (currentTime - previousTime >= 1.0)
@@ -1553,129 +1552,85 @@ int main()
             previousTime = currentTime;
 
         }
-        if (
-            appMode == AppMode::Editor &&
-            selectedObject != nullptr
-            )
+        EditorUI::DrawToolbar(
+            scene,
+            selectedObject,
+            &cube,
+            &shader,
+            &cubeMaterial,
+            lightCounter,
+            appMode
+        );
+
+        if (appMode == AppMode::Editor)
         {
-            glLineWidth(4.0f);
-            gizmoShader.use();
-            EditorUI::DrawToolbar(
+            EditorUI::DrawHierarchy(scene, selectedObject, selectedLight);
+            EditorUI::DrawLightInspector(selectedLight);
+            EditorUI::DrawInspector(selectedObject);
+            EditorUI::DrawDebug(deltaTime, totalObjects, visibleObjects, culledObjects, selectedObject);
+            EditorUI::DrawStatistics(scene, camera, selectedObject, deltaTime);
+
+            EditorUI::DrawAssetBrowser(
                 scene,
                 selectedObject,
                 &cube,
                 &shader,
-                &cubeMaterial,
-                lightCounter,
-                appMode
-            );
-            if (selectedObject == nullptr)
-            {
-                ImGuiIO& io = ImGui::GetIO();
-
-                ImGui::Begin("Input Debug");
-
-                ImGui::Text(
-                    "WantCaptureKeyboard: %d",
-                    io.WantCaptureKeyboard
-                );
-
-                ImGui::Text(
-                    "WantTextInput: %d",
-                    io.WantTextInput
-                );
-
-                ImGui::End();
-                ImGui::Render();
-                ImGui_ImplOpenGL3_RenderDrawData(
-                    ImGui::GetDrawData()
-                );
-
-                glfwSwapBuffers(window);
-
-                continue;
-            }
-            EditorUI::DrawToolbar(
-                scene,
-                selectedObject,
-                &cube,
-                &shader,
-                &cubeMaterial,
-                lightCounter,
-                appMode
+                &cubeMaterial
             );
 
-            if (appMode == AppMode::Editor)
+            if (selectedObject != nullptr)
             {
-                EditorUI::DrawHierarchy(scene, selectedObject, selectedLight);
-                EditorUI::DrawLightInspector(selectedLight);
-                EditorUI::DrawInspector(selectedObject);
-                EditorUI::DrawDebug(deltaTime, totalObjects, visibleObjects, culledObjects, selectedObject);
-                EditorUI::DrawStatistics(scene, camera, selectedObject, deltaTime);
-                EditorUI::DrawAssetBrowser(
-                    scene,
-                    selectedObject,
-                    &cube,
-                    &shader,
-                    &cubeMaterial
-                );
-                
+                glLineWidth(4.0f);
+                gizmoShader.use();
 
-                if (selectedObject != nullptr)
-                {
-                    glm::mat4 gizmoModel =
-                        glm::translate(
-                            glm::mat4(1.0f),
-                            selectedObject->transform.position
-                        );
+                glm::mat4 gizmoModel =
+                    glm::translate(
+                        glm::mat4(1.0f),
+                        selectedObject->transform.position
+                    );
 
-                    gizmoShader.setMat4("model", glm::value_ptr(gizmoModel));
-                    gizmoShader.setMat4("view", glm::value_ptr(view));
-                    gizmoShader.setMat4("projection", glm::value_ptr(projection));
+                gizmoShader.setMat4("model", glm::value_ptr(gizmoModel));
+                gizmoShader.setMat4("view", glm::value_ptr(view));
+                gizmoShader.setMat4("projection", glm::value_ptr(projection));
 
-                    glBindVertexArray(gizmoVAO);
+                glBindVertexArray(gizmoVAO);
 
-                    gizmoShader.setVec3("axisColor", glm::vec3(1, 0, 0));
-                    glDrawArrays(GL_LINES, 0, 2);
+                gizmoShader.setVec3("axisColor", glm::vec3(1, 0, 0));
+                glDrawArrays(GL_LINES, 0, 2);
 
-                    gizmoShader.setVec3("axisColor", glm::vec3(0, 1, 0));
-                    glDrawArrays(GL_LINES, 2, 2);
+                gizmoShader.setVec3("axisColor", glm::vec3(0, 1, 0));
+                glDrawArrays(GL_LINES, 2, 2);
 
-                    gizmoShader.setVec3("axisColor", glm::vec3(0, 0, 1));
-                    glDrawArrays(GL_LINES, 4, 2);
+                gizmoShader.setVec3("axisColor", glm::vec3(0, 0, 1));
+                glDrawArrays(GL_LINES, 4, 2);
 
-                    glBindVertexArray(0);
-                }
+                glBindVertexArray(0);
             }
-            else
-            {
-                ImGui::Begin("Play Mode");
-                ImGui::Text("PLAY MODE ACTIVE");
-                ImGui::Text("WASD - Move");
-                ImGui::Text("Right Mouse - Look");
-                ImGui::Text("Press Stop to return to editor.");
-                ImGui::End();
-                
-            }
-            
         }
-
-        if (appMode == AppMode::Play)
+        else
         {
             EditorUI::DrawCrosshair();
+
+            ImGui::Begin("Play Mode Info");
+            ImGui::Text("PLAY MODE ACTIVE");
+            ImGui::Text("WASD - Move");
+            ImGui::Text("SHIFT - Run");
+            ImGui::Text("SPACE - Jump");
+            ImGui::Text("Press Stop to return to editor.");
+            ImGui::End();
         }
 
         ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(
-            ImGui::GetDrawData()
-        );
-
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(window);
-    }
+}
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
     glfwTerminate();
 
     return 0;
+
 }
+
+

@@ -23,6 +23,7 @@ public:
     Transform transform;
     bool visible = true;
     bool isSelected = false;
+    bool isCollider = false;
     void AddChild(SceneObject* child);
     void Draw(Renderer& renderer, glm::mat4 parentTransform);
 

@@ -244,7 +244,10 @@ void EditorUI::DrawInspector(
             "Visible",
             &selectedObject->visible
         );
-
+        ImGui::Checkbox(
+            "Collider",
+            &selectedObject->isCollider
+        );
         ImGui::Separator();
       
 
@@ -485,7 +488,7 @@ void EditorUI::DrawAssetBrowser(
             );
 
         crate->name = "Crate";
-
+        crate->isCollider = true;
         crate->transform.position =
             glm::vec3(
                 0.0f,
@@ -517,7 +520,7 @@ void EditorUI::DrawAssetBrowser(
             );
 
         wall->name = "Wall";
-
+        wall->isCollider = true;
         wall->transform.position =
             glm::vec3(
                 0.0f,
@@ -549,7 +552,7 @@ void EditorUI::DrawAssetBrowser(
             );
 
         pillar->name = "Pillar";
-
+        pillar->isCollider = true;
         pillar->transform.position =
             glm::vec3(
                 3.0f,

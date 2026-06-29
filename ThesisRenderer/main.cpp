@@ -968,6 +968,7 @@ int main()
             playerController.Update(
                 window,
                 camera,
+                scene,
                 deltaTime
             );
         }

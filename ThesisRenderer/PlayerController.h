@@ -4,7 +4,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include "Camera.h"
-
+#include "Scene.h"
+#include "SceneObject.h"
 class PlayerController
 {
 public:
@@ -19,13 +20,16 @@ public:
     float groundY = 0.0f;
 
     bool isGrounded = true;
-
     void Update(
         GLFWwindow* window,
         Camera& camera,
+        Scene& scene,
         float deltaTime
     )
     {
+        glm::vec3 oldPosition =
+            camera.Position;
+
         glm::vec3 forward =
             glm::normalize(
                 glm::vec3(
@@ -82,6 +86,55 @@ public:
             movement *
             currentSpeed *
             deltaTime;
+
+
+        float playerRadius = 0.35f;
+
+        for (SceneObject* obj : scene.objects)
+        {
+            if (!obj->isCollider)
+                continue;
+
+            glm::vec3 objPos =
+                obj->transform.position;
+
+            glm::vec3 objScale =
+                obj->transform.scale;
+
+            float minX =
+                objPos.x - objScale.x * 0.5f;
+
+            float maxX =
+                objPos.x + objScale.x * 0.5f;
+
+            float minZ =
+                objPos.z - objScale.z * 0.5f;
+
+            float maxZ =
+                objPos.z + objScale.z * 0.5f;
+
+            bool insideX =
+                camera.Position.x >
+                minX - playerRadius &&
+                camera.Position.x <
+                maxX + playerRadius;
+
+            bool insideZ =
+                camera.Position.z >
+                minZ - playerRadius &&
+                camera.Position.z <
+                maxZ + playerRadius;
+
+            if (insideX && insideZ)
+            {
+                camera.Position.x =
+                    oldPosition.x;
+
+                camera.Position.z =
+                    oldPosition.z;
+            }
+        }
+
 
         if (
             isGrounded &&

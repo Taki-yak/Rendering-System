@@ -179,5 +179,8 @@
     <ClInclude Include="AssetDatabase.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ThirdPersonController.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

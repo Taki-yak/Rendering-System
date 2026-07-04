@@ -28,6 +28,7 @@
 #include "AppMode.h"
 #include "PlayerController.h"
 #include "AssetDatabase.h"
+#include "ThirdPersonController.h"
 // ================= CAMERA VARIABLES =================
 //glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 //glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -119,6 +120,8 @@ Light* selectedLight = nullptr;
 Camera camera;
 Frustum frustum;
 PlayerController playerController;
+ThirdPersonController thirdPersonController;
+SceneObject* playerObject = nullptr;
 // ================= MOUSE CALLBACK ==================
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
@@ -579,7 +582,7 @@ int main()
     Model myModel("character-human.obj");
     Model treeModel("character-a.obj");
    Model importedTree(
-        "Assets/Models/Nature/tree.obj"
+        "Assets/Models/Nature/Tree.obj"
     );
     Model forestEnvironment(
         "Assets/Models/Environment/woodenhouse.obj"
@@ -740,6 +743,29 @@ int main()
     cube2.transform.scale = glm::vec3(1.5f);
     cube3.transform.scale = glm::vec3(0.5f);
     scene.AddObject( &ground  );
+    playerObject =
+        new SceneObject(
+            &myModel,
+            &shader
+        );
+
+    playerObject->name = "Player";
+
+    playerObject->transform.position =
+        glm::vec3(
+            0.0f,
+            0.0f,
+            -3.0f
+        );
+
+    playerObject->transform.scale =
+        glm::vec3(
+            0.6f
+        );
+
+    playerObject->boundingRadius = 3.0f;
+
+    scene.AddObject(playerObject);
     SceneObject* environmentObject =
         new SceneObject(
             &forestEnvironment,
@@ -1032,10 +1058,10 @@ int main()
         }
         else
         {
-            playerController.Update(
+            thirdPersonController.Update(
                 window,
+                playerObject,
                 camera,
-                scene,
                 deltaTime
             );
         }
@@ -1557,10 +1583,10 @@ int main()
         }
 
         // ===== DRAW MODELS (each binds its own texture) =====
-        glm::mat4 model1 = glm::mat4(1.0f);
+  /*      glm::mat4 model1 = glm::mat4(1.0f);
         model1 = glm::translate(model1, glm::vec3(-3.0f, 2.0f, -3.0f));
         shader.setMat4("model", glm::value_ptr(model1));
-        myModel.Draw(shader);
+        myModel.Draw(shader);*/
 
         glm::mat4 model2 = glm::mat4(1.0f);
         model2 = glm::translate(model2, glm::vec3(3.0f, 0.0f, -5.0f));

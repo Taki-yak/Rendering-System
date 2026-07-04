@@ -8,29 +8,52 @@ Model::Model(const std::string& path, const std::string& textureFolder)
 }
 void Model::Draw(Shader& shader)
 {
-    shader.setBool("useTexture", false);
+    bool hasTexture =
+        !loadedTextures.empty();
+
+    shader.setBool(
+        "useTexture",
+        hasTexture
+    );
+
+    if (hasTexture)
+    {
+        glActiveTexture(GL_TEXTURE0);
+        loadedTextures[0].Bind();
+
+        shader.setVec3(
+            "materialTint",
+            glm::vec3(1.0f)
+        );
+    }
 
     for (unsigned int i = 0; i < meshes.size(); i++)
     {
-        if (i < meshDiffuseColors.size())
+        if (!hasTexture)
         {
-            shader.setVec3(
-                "materialTint",
-                meshDiffuseColors[i]
-            );
-        }
-        else
-        {
-            shader.setVec3(
-                "materialTint",
-                glm::vec3(1.0f)
-            );
+            if (i < meshDiffuseColors.size())
+            {
+                shader.setVec3(
+                    "materialTint",
+                    meshDiffuseColors[i]
+                );
+            }
+            else
+            {
+                shader.setVec3(
+                    "materialTint",
+                    glm::vec3(1.0f)
+                );
+            }
         }
 
         meshes[i].Draw();
     }
 
-    shader.setBool("useTexture", true);
+    shader.setBool(
+        "useTexture",
+        true
+    );
 }
 
 void Model::LoadModel(std::string path)

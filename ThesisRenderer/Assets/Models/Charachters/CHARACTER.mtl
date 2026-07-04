@@ -1,0 +1,47 @@
+# Blender 5.0.1 MTL File: 'FINALE SCENE.blend'
+# www.blender.org
+
+newmtl Material
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.300000
+d 1.000000
+illum 2
+Ps 0.000000
+Pc 0.000000
+Pcr 0.030000
+aniso 0.000000
+anisor 0.000000
+map_Kd b_DefaultMaterial_BaseColor.png
+map_Pm b_DefaultMaterial_Metallic.png
+map_Pr b_DefaultMaterial_Roughness.png
+
+newmtl Material.001
+Ks 0.500000 0.500000 0.500000
+Ni 1.200000
+d 1.000000
+illum 2
+Pr 0.763636
+Pm 0.000000
+Ps 0.000000
+Pc 0.000000
+Pcr 0.030000
+aniso 0.000000
+anisor 0.000000
+map_Kd HEAD.png
+map_Ke HEAD.png
+
+newmtl Material.009
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+illum 2
+Pr 0.500000
+Pm 0.000000
+Ps 0.000000
+Pc 0.000000
+Pcr 0.030000
+aniso 0.000000
+anisor 0.000000
+map_Kd HAND.png
+map_d HAND.png

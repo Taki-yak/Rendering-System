@@ -48,7 +48,7 @@ void SceneObject::Draw(Renderer& renderer, glm::mat4 parentTransform)
 
     if (useModel && model != nullptr)
     {
-        model->Draw();
+        model->Draw(*shader);
     }
     else if (mesh != nullptr && material != nullptr)
     {

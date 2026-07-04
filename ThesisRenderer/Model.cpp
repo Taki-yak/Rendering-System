@@ -6,19 +6,32 @@ Model::Model(const std::string& path, const std::string& textureFolder)
     textureDirectory = textureFolder;
     LoadModel(path);
 }
-void Model::Draw()
+void Model::Draw(Shader& shader)
 {
-    if (!loadedTextures.empty())
-    {
-        glActiveTexture(GL_TEXTURE0);
-        loadedTextures[0].Bind();
-    }
+    shader.setBool("useTexture", false);
 
     for (unsigned int i = 0; i < meshes.size(); i++)
     {
+        if (i < meshDiffuseColors.size())
+        {
+            shader.setVec3(
+                "materialTint",
+                meshDiffuseColors[i]
+            );
+        }
+        else
+        {
+            shader.setVec3(
+                "materialTint",
+                glm::vec3(1.0f)
+            );
+        }
+
         meshes[i].Draw();
     }
-}           
+
+    shader.setBool("useTexture", true);
+}
 
 void Model::LoadModel(std::string path)
 {
@@ -105,7 +118,24 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
     if (mesh->mMaterialIndex >= 0)
     {
         aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+        aiColor3D color(1.0f, 1.0f, 1.0f);
 
+        if (material->Get(AI_MATKEY_COLOR_DIFFUSE, color) == AI_SUCCESS)
+        {
+            meshDiffuseColors.push_back(
+                glm::vec3(
+                    color.r,
+                    color.g,
+                    color.b
+                )
+            );
+        }
+        else
+        {
+            meshDiffuseColors.push_back(
+                glm::vec3(1.0f)
+            );
+        }
         aiString str;
         if (material->GetTexture(aiTextureType_DIFFUSE, 0, &str) == AI_SUCCESS)
         {
@@ -139,6 +169,7 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
             loadedTextures.push_back(texture);
         
         }
+
     }
 
     return Mesh(vertices.data(), vertices.size() * sizeof(float));

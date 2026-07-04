@@ -261,12 +261,23 @@ uniform vec3 materialAmbient;
 uniform vec3 materialDiffuse;
 uniform vec3 materialSpecular;
 uniform float materialShininess;
+uniform bool useTexture;
 
 void main()
 {
-    vec3 textureColor =
+    vec3 textureColor;
+
+if (useTexture)
+{
+    textureColor =
         texture(texture1, TexCoord).rgb *
         materialTint;
+}
+else
+{
+    textureColor =
+        materialTint;
+}
 
     vec3 norm = normalize(Normal);
     vec3 viewDir = normalize(viewPos - FragPos);
@@ -567,8 +578,11 @@ int main()
     scene.AddLight(sun);
     Model myModel("character-human.obj");
     Model treeModel("character-a.obj");
-    Model importedTree(
+   Model importedTree(
         "Assets/Models/Nature/tree.obj"
+    );
+    Model forestEnvironment(
+        "Assets/Models/Environment/woodenhouse.obj"
     );
     Shader skyboxShader(skyboxVertex, skyboxFragment);
     Shader gizmoShader(gizmoVertexShader, gizmoFragmentShader);
@@ -726,6 +740,33 @@ int main()
     cube2.transform.scale = glm::vec3(1.5f);
     cube3.transform.scale = glm::vec3(0.5f);
     scene.AddObject( &ground  );
+    SceneObject* environmentObject =
+        new SceneObject(
+            &forestEnvironment,
+            &shader
+        );
+
+    environmentObject->name =
+        "Forest Cabin Environment";
+
+    environmentObject->transform.position =
+        glm::vec3(
+            0.0f,
+            0.0f,
+            -20.0f
+        );
+
+    environmentObject->transform.scale =
+        glm::vec3(
+            1.0f
+        );
+
+    environmentObject->boundingRadius =
+        300.0f;
+
+    scene.AddObject(
+        environmentObject
+    );
     ground.boundingRadius = 100.0f;
     SceneObject* treeObject =
         new SceneObject(
@@ -807,7 +848,7 @@ int main()
     shader.setVec3("viewPos", camera.Position);
     shader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
     shader.setVec3("objectColor", glm::vec3(1.0f, 1.0f, 1.0f));
-
+    shader.setBool("useTexture", true);
     glm::vec3 cubePositions[] = {
     glm::vec3(0.0f,  0.0f,  0.0f),
     glm::vec3(2.0f,  5.0f, -15.0f),
@@ -1450,7 +1491,10 @@ int main()
             if (
                 obj->useModel ||
                 !useCulling ||
-                frustum.IsSphereVisible(obj->transform.position, obj->boundingRadius)
+                frustum.IsSphereVisible(
+                    obj->transform.position,
+                    obj->boundingRadius
+                )
                 )
             {
                 visibleObjects++;
@@ -1485,7 +1529,7 @@ int main()
 
                     shader.setVec3(
                         "materialDiffuse",
-                        glm::vec3(0.7f, 0.9f, 0.5f)
+                        glm::vec3(0.8f)
                     );
 
                     shader.setVec3(
@@ -1495,7 +1539,7 @@ int main()
 
                     shader.setVec3(
                         "materialTint",
-                        glm::vec3(0.5f, 0.9f, 0.4f)
+                        glm::vec3(1.0f)
                     );
 
                     shader.setFloat(
@@ -1504,6 +1548,7 @@ int main()
                     );
                 }
                 obj->Draw(renderer, glm::mat4(1.0f));
+
             }
             else
             {
@@ -1515,12 +1560,12 @@ int main()
         glm::mat4 model1 = glm::mat4(1.0f);
         model1 = glm::translate(model1, glm::vec3(-3.0f, 2.0f, -3.0f));
         shader.setMat4("model", glm::value_ptr(model1));
-        myModel.Draw();
+        myModel.Draw(shader);
 
         glm::mat4 model2 = glm::mat4(1.0f);
         model2 = glm::translate(model2, glm::vec3(3.0f, 0.0f, -5.0f));
         shader.setMat4("model", glm::value_ptr(model2));
-        treeModel.Draw();
+        treeModel.Draw(shader);
 
         // ===== DRAW LIGHT CUBE =====
         lightShader.use();

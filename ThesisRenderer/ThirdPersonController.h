@@ -43,20 +43,36 @@ public:
         {
             currentSpeed = runSpeed;
         }
+        glm::vec3 cameraForward =
+            glm::normalize(
+                glm::vec3(
+                    camera.Front.x,
+                    0.0f,
+                    camera.Front.z
+                )
+            );
+
+        glm::vec3 cameraRight =
+            glm::normalize(
+                glm::cross(
+                    cameraForward,
+                    camera.Up
+                )
+            );
 
         glm::vec3 movement(0.0f);
 
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-            movement.z -= 1.0f;
+            movement += cameraForward;
 
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-            movement.z += 1.0f;
+            movement -= cameraForward;
 
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-            movement.x -= 1.0f;
+            movement -= cameraRight;
 
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-            movement.x += 1.0f;
+            movement += cameraRight;
 
         if (glm::length(movement) > 0.0f)
         {

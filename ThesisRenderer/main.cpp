@@ -579,8 +579,8 @@ int main()
             glm::vec3(-0.2f, -1.0f, -0.3f));
 
     scene.AddLight(sun);
-    Model myModel("character-human.obj");
-    Model treeModel("character-a.obj");
+    Model myModel("character-a.obj");
+    Model treeModel("character-human.obj");
    Model importedTree(
         "Assets/Models/Nature/Tree.obj"
     );
@@ -1526,6 +1526,20 @@ int main()
                 visibleObjects++;
                 if (obj->material != nullptr)
                 {
+                    shader.setBool("useTexture", true);
+
+                    glActiveTexture(GL_TEXTURE0);
+
+                    if (obj->material->texture != nullptr)
+                    {
+                        obj->material->texture->Bind();
+                    }
+                    shader.setBool("useTexture", true);
+                    shader.setVec3("materialAmbient", obj->material->ambient);
+                    shader.setVec3("materialDiffuse", obj->material->diffuse);
+                    shader.setVec3("materialSpecular", obj->material->specular);
+                    shader.setVec3("materialTint", obj->material->tint);
+                    shader.setFloat("materialShininess", obj->material->shininess);
                     if (obj->material->wireframe)
                     {
                         glPolygonMode(

@@ -283,48 +283,50 @@ void EditorUI::DrawInspector(
             ),
             0.1f
         );
-        ImGui::Separator();
+        if (selectedObject->material != nullptr)
+        {
+            ImGui::Separator();
+            ImGui::Text("Material");
 
-        ImGui::Text("Material");
-        Material* mat =
-            selectedObject->material;
-        ImGui::ColorEdit3(
-            "Ambient",
-            glm::value_ptr(
-                mat->ambient
-            )
-        );
+            ImGui::ColorEdit3(
+                "Ambient",
+                glm::value_ptr(selectedObject->material->ambient)
+            );
 
-        ImGui::ColorEdit3(
-            "Diffuse",
-            glm::value_ptr(
-                mat->diffuse
-            )
-        );
+            ImGui::ColorEdit3(
+                "Diffuse",
+                glm::value_ptr(selectedObject->material->diffuse)
+            );
 
-        ImGui::ColorEdit3(
-            "Specular",
-            glm::value_ptr(
-                mat->specular
-            )
-        );
-        ImGui::DragFloat(
-            "Shininess",
-            &mat->shininess,
-            1.0f,
-            1.0f,
-            256.0f
-        );
-        ImGui::Checkbox(
-            "Wireframe",
-            &mat->wireframe
-        );
-        ImGui::ColorEdit3(
-            "Tint",
-            glm::value_ptr(
-                mat->tint
-            )
-        );
+            ImGui::ColorEdit3(
+                "Specular",
+                glm::value_ptr(selectedObject->material->specular)
+            );
+
+            ImGui::DragFloat(
+                "Shininess",
+                &selectedObject->material->shininess,
+                1.0f,
+                1.0f,
+                256.0f
+            );
+
+            ImGui::Checkbox(
+                "Wireframe",
+                &selectedObject->material->wireframe
+            );
+
+            ImGui::ColorEdit3(
+                "Tint",
+                glm::value_ptr(selectedObject->material->tint)
+            );
+        }
+        else
+        {
+            ImGui::Separator();
+            ImGui::Text("Imported Model");
+            ImGui::Text("No editable material yet");
+        }
 
     }
     else

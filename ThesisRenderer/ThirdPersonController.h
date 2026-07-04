@@ -15,7 +15,12 @@ public:
 
     float cameraDistance = 6.0f;
     float cameraHeight = 3.0f;
+    float gravity = -18.0f;
+    float jumpForce = 7.5f;
+    float verticalVelocity = 0.0f;
 
+    float groundY = 0.0f;
+    bool isGrounded = true;
     void Update(
         GLFWwindow* window,
         SceneObject* player,
@@ -59,6 +64,27 @@ public:
 
             player->transform.rotation.y =
                 glm::degrees(angle);
+        }
+        if (
+            isGrounded &&
+            glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS
+            )
+        {
+            verticalVelocity = jumpForce;
+            isGrounded = false;
+        }
+
+        verticalVelocity +=
+            gravity * deltaTime;
+
+        player->transform.position.y +=
+            verticalVelocity * deltaTime;
+
+        if (player->transform.position.y <= groundY)
+        {
+            player->transform.position.y = groundY;
+            verticalVelocity = 0.0f;
+            isGrounded = true;
         }
 
         glm::vec3 playerPos =

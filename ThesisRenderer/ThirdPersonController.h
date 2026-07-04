@@ -18,7 +18,13 @@ public:
     float gravity = -18.0f;
     float jumpForce = 7.5f;
     float verticalVelocity = 0.0f;
+    float yaw = 180.0f;
+    float pitch = 20.0f;
 
+    float mouseSensitivity = 0.15f;
+    float lastMouseX = 0.0f;
+    float lastMouseY = 0.0f;
+    bool firstMouse = true;
     float groundY = 0.0f;
     bool isGrounded = true;
     void Update(
@@ -90,17 +96,83 @@ public:
         glm::vec3 playerPos =
             player->transform.position;
 
+        double mouseX;
+        double mouseY;
+
+        glfwGetCursorPos(
+            window,
+            &mouseX,
+            &mouseY
+        );
+
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
+        {
+            if (firstMouse)
+            {
+                lastMouseX = (float)mouseX;
+                lastMouseY = (float)mouseY;
+                firstMouse = false;
+            }
+
+            float xOffset =
+                ((float)mouseX - lastMouseX) *
+                mouseSensitivity;
+            float yOffset =
+                (lastMouseY - (float)mouseY) *
+                mouseSensitivity;
+
+            lastMouseX = (float)mouseX;
+            lastMouseY = (float)mouseY;
+            yaw -= xOffset;
+            pitch -= yOffset;
+
+            if (pitch > 60.0f)
+                pitch = 60.0f;
+
+            if (pitch < -10.0f)
+                pitch = -10.0f;
+        }
+        else
+        {
+            firstMouse = true;
+        }
+
+        float yawRad =
+            glm::radians(yaw);
+
+        float pitchRad =
+            glm::radians(pitch);
+
+        glm::vec3 offset;
+
+        offset.x =
+            cameraDistance *
+            cos(pitchRad) *
+            sin(yawRad);
+
+        offset.y =
+            cameraDistance *
+            sin(pitchRad);
+
+        offset.z =
+            cameraDistance *
+            cos(pitchRad) *
+            cos(yawRad);
+
         camera.Position =
+            playerPos +
             glm::vec3(
-                playerPos.x,
-                playerPos.y + cameraHeight,
-                playerPos.z + cameraDistance
-            );
+                0.0f,
+                cameraHeight,
+                0.0f
+            ) +
+            offset;
 
         camera.Front =
             glm::normalize(
-                playerPos -
-                camera.Position
+                playerPos +
+                glm::vec3(0.0f, 1.2f, 0.0f)
+                - camera.Position
             );
     }
 };

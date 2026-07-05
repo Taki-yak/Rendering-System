@@ -17,6 +17,9 @@ public:
     float cameraHeight = 3.0f;
     float cameraSmoothSpeed = 8.0f;
     float rotationSmoothSpeed = 10.0f;
+    float currentMoveSpeed = 0.0f;
+    float acceleration = 18.0f;
+    float deceleration = 22.0f;
     float gravity = -18.0f;
     float jumpForce = 7.5f;
     float verticalVelocity = 0.0f;
@@ -45,12 +48,11 @@ public:
                 0.0f,
                 1.0f
             );
-
-        float currentSpeed = moveSpeed;
+        float targetSpeed = moveSpeed;
 
         if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
         {
-            currentSpeed = runSpeed;
+            targetSpeed = runSpeed;
         }
         glm::vec3 cameraForward =
             glm::normalize(
@@ -82,13 +84,30 @@ public:
 
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
             movement += cameraRight;
-
+        if (glm::length(movement) > 0.0f)
+        {
+            currentMoveSpeed =
+                glm::min(
+                    currentMoveSpeed +
+                    acceleration * deltaTime,
+                    targetSpeed
+                );
+        }
+        else
+        {
+            currentMoveSpeed =
+                glm::max(
+                    currentMoveSpeed -
+                    deceleration * deltaTime,
+                    0.0f
+                );
+        }
         if (glm::length(movement) > 0.0f)
         {
             movement = glm::normalize(movement);
 
             player->transform.position +=
-                movement * currentSpeed * deltaTime;
+                movement * currentMoveSpeed * deltaTime;
 
             float targetAngle =
                 glm::degrees(

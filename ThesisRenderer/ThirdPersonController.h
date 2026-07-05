@@ -6,9 +6,17 @@
 #include <glm/common.hpp>
 #include "SceneObject.h"
 #include "Camera.h"
-
+#include <iostream>
+enum class PlayerAnimState
+{
+    Idle,
+    Walk,
+    Run,
+    Jump
+};
 class ThirdPersonController
 {
+    PlayerAnimState animState = PlayerAnimState::Idle;
 public:
     float moveSpeed = 6.0f;
     float runSpeed = 12.0f;
@@ -256,5 +264,46 @@ public:
             );
 
         camera.Front = targetFront;
+        bool isMoving =
+            glm::length(movement) > 0.0f;
+
+        bool isRunning =
+            glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS;
+
+        if (!isGrounded)
+        {
+            animState = PlayerAnimState::Jump;
+        }
+        else if (isMoving && isRunning)
+        {
+            animState = PlayerAnimState::Run;
+        }
+        else if (isMoving)
+        {
+            animState = PlayerAnimState::Walk;
+        }
+        else
+        {
+            animState = PlayerAnimState::Idle;
+        }
+        static PlayerAnimState lastState =
+            PlayerAnimState::Idle;
+
+        if (animState != lastState)
+        {
+            if (animState == PlayerAnimState::Idle)
+                std::cout << "Animation: Idle\n";
+
+            if (animState == PlayerAnimState::Walk)
+                std::cout << "Animation: Walk\n";
+
+            if (animState == PlayerAnimState::Run)
+                std::cout << "Animation: Run\n";
+
+            if (animState == PlayerAnimState::Jump)
+                std::cout << "Animation: Jump\n";
+
+            lastState = animState;
+        }
     }
 };

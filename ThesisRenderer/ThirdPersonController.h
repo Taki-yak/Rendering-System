@@ -40,6 +40,26 @@ public:
     bool firstMouse = true;
     float groundY = 0.0f;
     bool isGrounded = true;
+    const char* GetAnimStateName()
+    {
+        switch (animState)
+        {
+        case PlayerAnimState::Idle:
+            return "Idle";
+
+        case PlayerAnimState::Walk:
+            return "Walk";
+
+        case PlayerAnimState::Run:
+            return "Run";
+
+        case PlayerAnimState::Jump:
+            return "Jump";
+
+        default:
+            return "Unknown";
+        }
+    }
     void Update(
         GLFWwindow* window,
         SceneObject* player,
@@ -47,6 +67,9 @@ public:
         float deltaTime
     )
     {
+
+
+
         if (player == nullptr)
             return;
 

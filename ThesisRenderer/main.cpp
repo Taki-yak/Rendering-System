@@ -1740,11 +1740,36 @@ int main()
             EditorUI::DrawCrosshair();
 
             ImGui::Begin("Play Mode Info");
+
             ImGui::Text("PLAY MODE ACTIVE");
+            ImGui::Separator();
+
+            ImGui::Text("Controls:");
             ImGui::Text("WASD - Move");
             ImGui::Text("SHIFT - Run");
             ImGui::Text("SPACE - Jump");
+            ImGui::Text("Right Mouse - Look Around");
+
+            ImGui::Separator();
+
+            ImGui::Text(
+                "Animation State: %s",
+                thirdPersonController.GetAnimStateName()
+            );
+
+            ImGui::Text(
+                "Grounded: %s",
+                thirdPersonController.isGrounded ? "Yes" : "No"
+            );
+
+            ImGui::Text(
+                "Speed: %.2f",
+                thirdPersonController.currentMoveSpeed
+            );
+
+            ImGui::Separator();
             ImGui::Text("Press Stop to return to editor.");
+
             ImGui::End();
         }
 

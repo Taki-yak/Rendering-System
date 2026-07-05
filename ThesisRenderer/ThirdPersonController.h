@@ -328,63 +328,6 @@ public:
 
             lastState = animState;
         }
-        animTime += deltaTime;
-
-        float baseScale = 0.6f;
-
-        if (animState == PlayerAnimState::Idle)
-        {
-            float breathe =
-                sin(animTime * 2.0f) * 0.03f;
-
-            player->transform.scale =
-                glm::vec3(
-                    baseScale,
-                    baseScale + breathe,
-                    baseScale
-                );
-        }
-
-        else if (animState == PlayerAnimState::Walk)
-        {
-            float bob =
-                abs(sin(animTime * 8.0f)) * 0.12f;
-
-            player->transform.scale =
-                glm::vec3(
-                    baseScale,
-                    baseScale,
-                    baseScale
-                );
-
-            player->transform.position.y =
-                groundY + bob;
-        }
-
-        else if (animState == PlayerAnimState::Run)
-        {
-            float bob =
-                abs(sin(animTime * 14.0f)) * 0.18f;
-
-            player->transform.scale =
-                glm::vec3(
-                    baseScale * 1.05f,
-                    baseScale,
-                    baseScale * 1.05f
-                );
-
-            player->transform.position.y =
-                groundY + bob;
-        }
-
-        else if (animState == PlayerAnimState::Jump)
-        {
-            player->transform.scale =
-                glm::vec3(
-                    baseScale * 0.95f,
-                    baseScale * 1.15f,
-                    baseScale * 0.95f
-                );
-        }
+      
     }
 };

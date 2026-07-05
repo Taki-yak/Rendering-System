@@ -170,9 +170,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AnimatedModel.h" />
+    <ClInclude Include="AnimatedVertex.h" />
     <ClInclude Include="AnimationLibrary.h" />
     <ClInclude Include="AppMode.h" />
     <ClInclude Include="AssetDatabase.h" />
+    <ClInclude Include="BoneInfo.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Component.h" />
     <ClInclude Include="Cubemap.h" />

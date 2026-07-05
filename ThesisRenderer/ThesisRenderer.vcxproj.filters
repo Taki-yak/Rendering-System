@@ -191,5 +191,11 @@
     <ClInclude Include="AnimationLibrary.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="BoneInfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AnimatedVertex.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

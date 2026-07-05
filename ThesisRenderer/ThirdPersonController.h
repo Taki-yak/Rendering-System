@@ -3,7 +3,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
+#include <glm/common.hpp>
 #include "SceneObject.h"
 #include "Camera.h"
 
@@ -15,6 +15,8 @@ public:
 
     float cameraDistance = 6.0f;
     float cameraHeight = 3.0f;
+    float cameraSmoothSpeed = 8.0f;
+    float rotationSmoothSpeed = 10.0f;
     float gravity = -18.0f;
     float jumpForce = 7.5f;
     float verticalVelocity = 0.0f;
@@ -36,6 +38,13 @@ public:
     {
         if (player == nullptr)
             return;
+
+        float smoothT =
+            glm::clamp(
+                cameraSmoothSpeed * deltaTime,
+                0.0f,
+                1.0f
+            );
 
         float currentSpeed = moveSpeed;
 
@@ -81,11 +90,30 @@ public:
             player->transform.position +=
                 movement * currentSpeed * deltaTime;
 
-            float angle =
-                atan2(movement.x, movement.z);
+            float targetAngle =
+                glm::degrees(
+                    atan2(
+                        movement.x,
+                        movement.z
+                    )
+                );
 
-            player->transform.rotation.y =
-                glm::degrees(angle);
+            float currentAngle =
+                player->transform.rotation.y;
+
+            float angleDifference =
+                targetAngle - currentAngle;
+
+            if (angleDifference > 180.0f)
+                angleDifference -= 360.0f;
+
+            if (angleDifference < -180.0f)
+                angleDifference += 360.0f;
+
+            player->transform.rotation.y +=
+                angleDifference *
+                rotationSmoothSpeed *
+                deltaTime;
         }
         if (
             isGrounded &&
@@ -174,8 +202,7 @@ public:
             cameraDistance *
             cos(pitchRad) *
             cos(yawRad);
-
-        camera.Position =
+        glm::vec3 targetCameraPosition =
             playerPos +
             glm::vec3(
                 0.0f,
@@ -184,11 +211,31 @@ public:
             ) +
             offset;
 
-        camera.Front =
+        camera.Position =
+            glm::mix(
+                camera.Position,
+                targetCameraPosition,
+                smoothT
+            );
+
+        glm::vec3 targetFront =
             glm::normalize(
                 playerPos +
-                glm::vec3(0.0f, 1.2f, 0.0f)
+                glm::vec3(
+                    0.0f,
+                    1.2f,
+                    0.0f
+                )
                 - camera.Position
+            );
+
+        camera.Front =
+            glm::normalize(
+                glm::mix(
+                    camera.Front,
+                    targetFront,
+                    smoothT
+                )
             );
     }
 };

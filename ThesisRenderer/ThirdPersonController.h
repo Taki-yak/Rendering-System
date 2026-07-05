@@ -211,12 +211,19 @@ public:
             ) +
             offset;
 
-        camera.Position =
-            glm::mix(
-                camera.Position,
-                targetCameraPosition,
-                smoothT
-            );
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
+        {
+            camera.Position = targetCameraPosition;
+        }
+        else
+        {
+            camera.Position =
+                glm::mix(
+                    camera.Position,
+                    targetCameraPosition,
+                    smoothT
+                );
+        }
 
         glm::vec3 targetFront =
             glm::normalize(
@@ -229,13 +236,6 @@ public:
                 - camera.Position
             );
 
-        camera.Front =
-            glm::normalize(
-                glm::mix(
-                    camera.Front,
-                    targetFront,
-                    smoothT
-                )
-            );
+        camera.Front = targetFront;
     }
 };

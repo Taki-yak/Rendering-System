@@ -29,6 +29,8 @@
 #include "PlayerController.h"
 #include "AssetDatabase.h"
 #include "ThirdPersonController.h"
+#include "AnimationLibrary.h"
+#include "AnimatedModel.h"
 // ================= CAMERA VARIABLES =================
 //glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 //glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -505,7 +507,28 @@ int main()
     ImGui_ImplOpenGL3_Init("#version 330");
     glDisable(GL_CULL_FACE);
     TestAssimp();
+    AnimationLibrary playerAnimations;
     InputManager::Init(window);
+    playerAnimations.LoadAnimation(
+        "Idle",
+        "Assets/Models/Characters/Player/Idle.fbx"
+    );
+
+    playerAnimations.LoadAnimation(
+        "Walk",
+        "Assets/Models/Characters/Player/Walk.fbx"
+    );
+
+    playerAnimations.LoadAnimation(
+        "Run",
+        "Assets/Models/Characters/Player/Run.fbx"
+    );
+
+    playerAnimations.LoadAnimation(
+        "Jump",
+        "Assets/Models/Characters/Player/Jump.fbx"
+    );
+ 
     AssetDatabase::Initialize();
     // ================= SHADER CLASS =================
     unsigned int gizmoVAO, gizmoVBO;
@@ -539,6 +562,9 @@ int main()
     };
     Renderer renderer;
     Scene scene;
+    PlayerController playerController;
+    ThirdPersonController thirdPersonController;
+   
     AppMode appMode = AppMode::Editor;
     Light* testLight = new Light();
 
@@ -580,6 +606,9 @@ int main()
 
     scene.AddLight(sun);
     Model myModel("character-a.obj");
+    AnimatedModel testAnimatedPlayer(
+        "Assets/Models/Characters/Player/Idle.fbx"
+    );
     Model treeModel("character-human.obj");
    Model importedTree(
         "Assets/Models/Nature/Tree.obj"

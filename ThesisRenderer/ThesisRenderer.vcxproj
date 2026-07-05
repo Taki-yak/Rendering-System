@@ -146,6 +146,7 @@
     <ClCompile Include="..\..\..\..\..\sdl\imgui-master\imgui-master\imgui_draw.cpp" />
     <ClCompile Include="..\..\..\..\..\sdl\imgui-master\imgui-master\imgui_tables.cpp" />
     <ClCompile Include="..\..\..\..\..\sdl\imgui-master\imgui-master\imgui_widgets.cpp" />
+    <ClCompile Include="AnimatedModel.cpp" />
     <ClCompile Include="AssetDatabase.cpp" />
     <ClCompile Include="Cubemap.cpp" />
     <ClCompile Include="EditorUI.cpp" />
@@ -168,6 +169,8 @@
     <ClCompile Include="Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AnimatedModel.h" />
+    <ClInclude Include="AnimationLibrary.h" />
     <ClInclude Include="AppMode.h" />
     <ClInclude Include="AssetDatabase.h" />
     <ClInclude Include="Camera.h" />

@@ -7,6 +7,7 @@
 #include "SceneObject.h"
 #include "Camera.h"
 #include <iostream>
+#include "Scene.h"
 enum class PlayerAnimState
 {
     Idle,
@@ -64,6 +65,7 @@ public:
         GLFWwindow* window,
         SceneObject* player,
         Camera& camera,
+        Scene& scene,
         float deltaTime
     )
     {
@@ -72,7 +74,8 @@ public:
 
         if (player == nullptr)
             return;
-
+        glm::vec3 oldPosition =
+            player->transform.position;
         float smoothT =
             glm::clamp(
                 cameraSmoothSpeed * deltaTime,
@@ -139,7 +142,52 @@ public:
 
             player->transform.position +=
                 movement * currentMoveSpeed * deltaTime;
+            // ================= ENVIRONMENT COLLISION =================
 
+            float playerRadius =
+                0.7f;
+
+            for (SceneObject* obj : scene.objects)
+            {
+                if (obj == player)
+                    continue;
+
+                if (!obj->isCollider)
+                    continue;
+
+                glm::vec2 playerXZ =
+                    glm::vec2(
+                        player->transform.position.x,
+                        player->transform.position.z
+                    );
+
+                glm::vec2 objectXZ =
+                    glm::vec2(
+                        obj->transform.position.x,
+                        obj->transform.position.z
+                    );
+
+                float distance =
+                    glm::distance(
+                        playerXZ,
+                        objectXZ
+                    );
+
+                float minDistance =
+                    playerRadius +
+                    obj->colliderRadius;
+
+                if (distance < minDistance)
+                {
+                    player->transform.position.x =
+                        oldPosition.x;
+
+                    player->transform.position.z =
+                        oldPosition.z;
+
+                    break;
+                }
+            }
             float targetAngle =
                 glm::degrees(
                     atan2(

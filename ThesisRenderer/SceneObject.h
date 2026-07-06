@@ -24,7 +24,7 @@ public:
     bool visible = true;
     bool isSelected = false;
     bool isCollider = false;
-
+    float colliderRadius = 1.0f;
     void AddChild(SceneObject* child);
     void Draw(Renderer& renderer, glm::mat4 parentTransform);
 

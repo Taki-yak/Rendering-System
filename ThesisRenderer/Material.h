@@ -23,6 +23,6 @@ public:
     float shininess = 32.0f;
 
     bool wireframe = false;
-
+    bool useTexture = true;
     Material(Texture* tex);
 };

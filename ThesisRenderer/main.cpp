@@ -622,6 +622,10 @@ int main()
     Model forestEnvironment(
         "Assets/Models/Environment/terrain.obj"
     );
+    Model grassTerrainModel(
+        "Assets/Models/Environment/ForestDemo/Mineways2Skfb.obj",
+        "Assets/Models/Environment/ForestDemo/"
+    );
     Model pineTreeModel(
         "Assets/Models/Environment/NaturePack/PineTree_1.obj"
     );
@@ -640,6 +644,9 @@ int main()
 
     Model grassModel(
         "Assets/Models/Environment/NaturePack/Grass.obj"
+    );
+    Model grassPatchModel(
+        "Assets/Models/Environment/NaturePack/Grass_Short.obj"
     );
 
     Model woodLogModel(
@@ -788,18 +795,20 @@ int main()
 
     ground.transform.scale =
         glm::vec3(
-            50.0f,
+            120.0f,
             0.1f,
-            50.0f
+            120.0f
         );
     ground.material->tint =
         glm::vec3(
             0.25f,
-            0.6f,
-            0.25f
+            0.45f,
+            0.20f
         );
     cube2.transform.scale = glm::vec3(1.5f);
     cube3.transform.scale = glm::vec3(0.5f);
+    ground.visible = false;
+    ground.isCollider = false;
     scene.AddObject( &ground  );
    
     auto AddEnvironmentModel =
@@ -828,20 +837,47 @@ int main()
 
             obj->isCollider =
                 collider;
-
+            obj->colliderRadius =
+                glm::max(
+                    scale.x,
+                    scale.z
+                ) * 1.5f;
             scene.AddObject(obj);
 
             return obj;
         };
     // ================= PLAYABLE FOREST ENVIRONMENT =================
+ // ================= REPEATED GRASS TERRAIN =================
 
+    float grassTileSpacing =
+        8.0f;
+
+    for (int x = -6; x <= 6; x++)
+    {
+        for (int z = -6; z <= 6; z++)
+        {
+            AddEnvironmentModel(
+                &grassTerrainModel,
+                "Grass Terrain Tile",
+                glm::vec3(
+                    x * grassTileSpacing,
+                    -0.35f,
+                    z * grassTileSpacing
+                ),
+                glm::vec3(
+                    0.35f
+                ),
+                false
+            );
+        }
+    }
 // Trees
     AddEnvironmentModel(
         &pineTreeModel,
         "Pine Tree 1",
-        glm::vec3(-8.0f, 0.0f, -12.0f),
-        glm::vec3(0.8f),
-        false
+        glm::vec3(-8.0f, 0.05f, -12.0f),
+        glm::vec3(0.35f),
+        true
     );
 
     AddEnvironmentModel(
@@ -849,7 +885,7 @@ int main()
         "Pine Tree 2",
         glm::vec3(7.0f, 0.0f, -14.0f),
         glm::vec3(1.0f),
-        false
+        true
     );
 
     AddEnvironmentModel(
@@ -857,7 +893,7 @@ int main()
         "Common Tree 1",
         glm::vec3(-12.0f, 0.0f, -4.0f),
         glm::vec3(0.9f),
-        false
+        true
     );
 
     AddEnvironmentModel(
@@ -899,7 +935,7 @@ int main()
         "Bush 2",
         glm::vec3(3.0f, 0.0f, -7.0f),
         glm::vec3(0.9f),
-        false
+        true
     );
 
     // Grass patches
@@ -916,7 +952,7 @@ int main()
         "Grass Patch 2",
         glm::vec3(6.0f, 0.0f, -3.0f),
         glm::vec3(1.2f),
-        false
+        true
     );
 
     // Wood log
@@ -927,6 +963,39 @@ int main()
         glm::vec3(1.0f),
         true
     );
+    // ================= GRASS FIELD =================
+
+   /* for (int x = -8; x <= 8; x++)
+    {
+        for (int z = -8; z <= 8; z++)
+        {
+            float worldX =
+                x * 4.0f;
+
+            float worldZ =
+                z * 4.0f;
+
+            float worldY =
+                TerrainGenerator::GetHeight(
+                    worldX,
+                    worldZ
+                );
+
+            AddEnvironmentModel(
+                &grassPatchModel,
+                "Grass Patch",
+                glm::vec3(
+                    worldX,
+                    worldY + 0.05f,
+                    worldZ
+                ),
+                glm::vec3(
+                    0.7f
+                ),
+                false
+            );
+        }
+    }*/
     playerObject =
         new SceneObject(
             &myModel,
@@ -996,7 +1065,7 @@ int main()
         );
 
     scene.AddObject(treeObject);
-    std::vector<SceneObject*> manyCubes;
+   /* std::vector<SceneObject*> manyCubes;
 
     for (int i = 0; i < 100; i++)
     {
@@ -1010,7 +1079,7 @@ int main()
 
         scene.AddObject(obj);
         manyCubes.push_back(obj);
-    }
+    }*/
 
     /*glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -1264,6 +1333,7 @@ int main()
                 window,
                 playerObject,
                 camera,
+                scene,
                 deltaTime
             );
         }

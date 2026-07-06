@@ -124,6 +124,12 @@ Frustum frustum;
 PlayerController playerController;
 ThirdPersonController thirdPersonController;
 SceneObject* playerObject = nullptr;
+glm::vec3 playerSpawnPosition =
+glm::vec3(
+    0.0f,
+    0.0f,
+    -5.0f
+);
 // ================= MOUSE CALLBACK ==================
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
@@ -614,7 +620,30 @@ int main()
         "Assets/Models/Nature/Tree.obj"
     );
     Model forestEnvironment(
-        "Assets/Models/Environment/woodenhouse.obj"
+        "Assets/Models/Environment/terrain.obj"
+    );
+    Model pineTreeModel(
+        "Assets/Models/Environment/NaturePack/PineTree_1.obj"
+    );
+
+    Model commonTreeModel(
+        "Assets/Models/Environment/NaturePack/CommonTree_1.obj"
+    );
+
+    Model rockModel(
+        "Assets/Models/Environment/NaturePack/Rock_1.obj"
+    );
+
+    Model bushModel(
+        "Assets/Models/Environment/NaturePack/Bush_1.obj"
+    );
+
+    Model grassModel(
+        "Assets/Models/Environment/NaturePack/Grass.obj"
+    );
+
+    Model woodLogModel(
+        "Assets/Models/Environment/NaturePack/WoodLog.obj"
     );
     Shader skyboxShader(skyboxVertex, skyboxFragment);
     Shader gizmoShader(gizmoVertexShader, gizmoFragmentShader);
@@ -772,6 +801,132 @@ int main()
     cube2.transform.scale = glm::vec3(1.5f);
     cube3.transform.scale = glm::vec3(0.5f);
     scene.AddObject( &ground  );
+   
+    auto AddEnvironmentModel =
+        [&](Model* model,
+            const std::string& name,
+            glm::vec3 position,
+            glm::vec3 scale,
+            bool collider)
+        {
+            SceneObject* obj =
+                new SceneObject(
+                    model,
+                    &shader
+                );
+
+            obj->name = name;
+
+            obj->transform.position =
+                position;
+
+            obj->transform.scale =
+                scale;
+
+            obj->boundingRadius =
+                50.0f;
+
+            obj->isCollider =
+                collider;
+
+            scene.AddObject(obj);
+
+            return obj;
+        };
+    // ================= PLAYABLE FOREST ENVIRONMENT =================
+
+// Trees
+    AddEnvironmentModel(
+        &pineTreeModel,
+        "Pine Tree 1",
+        glm::vec3(-8.0f, 0.0f, -12.0f),
+        glm::vec3(0.8f),
+        false
+    );
+
+    AddEnvironmentModel(
+        &pineTreeModel,
+        "Pine Tree 2",
+        glm::vec3(7.0f, 0.0f, -14.0f),
+        glm::vec3(1.0f),
+        false
+    );
+
+    AddEnvironmentModel(
+        &commonTreeModel,
+        "Common Tree 1",
+        glm::vec3(-12.0f, 0.0f, -4.0f),
+        glm::vec3(0.9f),
+        false
+    );
+
+    AddEnvironmentModel(
+        &commonTreeModel,
+        "Common Tree 2",
+        glm::vec3(10.0f, 0.0f, -6.0f),
+        glm::vec3(1.1f),
+        false
+    );
+
+    // Rocks
+    AddEnvironmentModel(
+        &rockModel,
+        "Rock 1",
+        glm::vec3(-4.0f, 0.0f, -8.0f),
+        glm::vec3(1.0f),
+        true
+    );
+
+    AddEnvironmentModel(
+        &rockModel,
+        "Rock 2",
+        glm::vec3(5.0f, 0.0f, -10.0f),
+        glm::vec3(0.7f),
+        true
+    );
+
+    // Bushes
+    AddEnvironmentModel(
+        &bushModel,
+        "Bush 1",
+        glm::vec3(-2.0f, 0.0f, -5.0f),
+        glm::vec3(0.8f),
+        false
+    );
+
+    AddEnvironmentModel(
+        &bushModel,
+        "Bush 2",
+        glm::vec3(3.0f, 0.0f, -7.0f),
+        glm::vec3(0.9f),
+        false
+    );
+
+    // Grass patches
+    AddEnvironmentModel(
+        &grassModel,
+        "Grass Patch 1",
+        glm::vec3(0.0f, 0.0f, -6.0f),
+        glm::vec3(1.0f),
+        false
+    );
+
+    AddEnvironmentModel(
+        &grassModel,
+        "Grass Patch 2",
+        glm::vec3(6.0f, 0.0f, -3.0f),
+        glm::vec3(1.2f),
+        false
+    );
+
+    // Wood log
+    AddEnvironmentModel(
+        &woodLogModel,
+        "Wood Log",
+        glm::vec3(-6.0f, 0.0f, -6.0f),
+        glm::vec3(1.0f),
+        true
+    );
     playerObject =
         new SceneObject(
             &myModel,
@@ -779,13 +934,8 @@ int main()
         );
 
     playerObject->name = "Player";
-
     playerObject->transform.position =
-        glm::vec3(
-            0.0f,
-            0.0f,
-            -3.0f
-        );
+        playerSpawnPosition;
 
     playerObject->transform.scale =
         glm::vec3(
@@ -808,7 +958,7 @@ int main()
         glm::vec3(
             0.0f,
             0.0f,
-            -20.0f
+            -10.0f
         );
 
     environmentObject->transform.scale =
@@ -818,10 +968,11 @@ int main()
 
     environmentObject->boundingRadius =
         300.0f;
-
+    environmentObject->isCollider = false;
     scene.AddObject(
         environmentObject
     );
+    
     ground.boundingRadius = 100.0f;
     SceneObject* treeObject =
         new SceneObject(
@@ -928,7 +1079,7 @@ int main()
     cube2.AddComponent(new RotatorComponent(glm::vec3(1.0f, 0.0f, 0.0f), 30.0f));
     cube3.AddComponent(new OscillatorComponent(0.5f, 2.0f));
 
-
+    AppMode previousAppMode = appMode;
     while (!glfwWindowShouldClose(window))
     {
         for (SceneObject* obj : scene.objects)
@@ -939,7 +1090,29 @@ int main()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
         ImGuiIO& debugIO = ImGui::GetIO();
+        if (
+            previousAppMode == AppMode::Editor &&
+            appMode == AppMode::Play
+            )
+        {
+            if (playerObject != nullptr)
+            {
+                playerObject->transform.position =
+                    playerSpawnPosition;
 
+                playerObject->transform.rotation =
+                    glm::vec3(0.0f);
+
+                thirdPersonController.verticalVelocity =
+                    0.0f;
+
+                thirdPersonController.isGrounded =
+                    true;
+            }
+        }
+
+        previousAppMode =
+            appMode;
        
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;

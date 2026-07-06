@@ -326,7 +326,7 @@ sunColor;
 vec3 dirAmbient =
 materialAmbient *
 textureColor *
-0.5;
+0.15;
 
 result +=
 dirAmbient +
@@ -349,10 +349,18 @@ dirSpecular;
         result += ambient + diffuse + specular;
     }
 
-    if(isSelected)
-    {
-        result *= 1.5;
-    }
+if(isSelected)
+{
+    result *= 1.3;
+}
+
+
+result *= 0.45;
+
+
+result = clamp(result, 0.0, 1.0);
+
+FragColor = vec4(result, 1.0);
 
     FragColor = vec4(result, 1.0);
 }
@@ -651,6 +659,53 @@ int main()
 
     Model woodLogModel(
         "Assets/Models/Environment/NaturePack/WoodLog.obj"
+    );
+    Model pineTree2Model(
+        "Assets/Models/Environment/NaturePack/PineTree_2.obj"
+    );
+
+    Model pineTree3Model(
+        "Assets/Models/Environment/NaturePack/PineTree_3.obj"
+    );
+
+    Model birchTreeModel(
+        "Assets/Models/Environment/NaturePack/BirchTree_1.obj"
+    );
+
+    Model birchTree2Model(
+        "Assets/Models/Environment/NaturePack/BirchTree_2.obj"
+    );
+
+    Model commonTree2Model(
+        "Assets/Models/Environment/NaturePack/CommonTree_2.obj"
+    );
+
+    Model rock2Model(
+        "Assets/Models/Environment/NaturePack/Rock_2.obj"
+    );
+
+    Model rock3Model(
+        "Assets/Models/Environment/NaturePack/Rock_3.obj"
+    );
+
+    Model rockMossModel(
+        "Assets/Models/Environment/NaturePack/Rock_Moss_1.obj"
+    );
+
+    Model plantModel(
+        "Assets/Models/Environment/NaturePack/Plant_1.obj"
+    );
+
+    Model plant2Model(
+        "Assets/Models/Environment/NaturePack/Plant_2.obj"
+    );
+
+    Model flowersModel(
+        "Assets/Models/Environment/NaturePack/Flowers.obj"
+    );
+
+    Model treeStumpModel(
+        "Assets/Models/Environment/NaturePack/TreeStump.obj"
     );
     Shader skyboxShader(skyboxVertex, skyboxFragment);
     Shader gizmoShader(gizmoVertexShader, gizmoFragmentShader);
@@ -961,6 +1016,107 @@ int main()
         "Wood Log",
         glm::vec3(-6.0f, 0.0f, -6.0f),
         glm::vec3(1.0f),
+        true
+    );
+    // ================= EXTRA FOREST DECORATION =================
+
+// Trees
+    AddEnvironmentModel(
+        &pineTree2Model,
+        "Pine Tree 3",
+        glm::vec3(-18.0f, 0.05f, -18.0f),
+        glm::vec3(0.35f),
+        false
+    );
+
+    AddEnvironmentModel(
+        &pineTree3Model,
+        "Pine Tree 4",
+        glm::vec3(18.0f, 0.05f, -22.0f),
+        glm::vec3(0.38f),
+        false
+    );
+
+    AddEnvironmentModel(
+        &birchTreeModel,
+        "Birch Tree 1",
+        glm::vec3(-22.0f, 0.05f, 8.0f),
+        glm::vec3(0.35f),
+        false
+    );
+
+    AddEnvironmentModel(
+        &birchTree2Model,
+        "Birch Tree 2",
+        glm::vec3(22.0f, 0.05f, 10.0f),
+        glm::vec3(0.35f),
+        false
+    );
+
+    AddEnvironmentModel(
+        &commonTree2Model,
+        "Common Tree 3",
+        glm::vec3(0.0f, 0.05f, -25.0f),
+        glm::vec3(0.40f),
+        false
+    );
+
+    // Rocks
+    AddEnvironmentModel(
+        &rock2Model,
+        "Rock 3",
+        glm::vec3(-10.0f, 0.05f, 6.0f),
+        glm::vec3(0.35f),
+        true
+    );
+
+    AddEnvironmentModel(
+        &rock3Model,
+        "Rock 4",
+        glm::vec3(12.0f, 0.05f, -4.0f),
+        glm::vec3(0.35f),
+        true
+    );
+
+    AddEnvironmentModel(
+        &rockMossModel,
+        "Moss Rock",
+        glm::vec3(4.0f, 0.05f, 14.0f),
+        glm::vec3(0.40f),
+        true
+    );
+
+    // Plants / flowers
+    AddEnvironmentModel(
+        &plantModel,
+        "Plant 1",
+        glm::vec3(-5.0f, 0.05f, 10.0f),
+        glm::vec3(0.35f),
+        false
+    );
+
+    AddEnvironmentModel(
+        &plant2Model,
+        "Plant 2",
+        glm::vec3(8.0f, 0.05f, 12.0f),
+        glm::vec3(0.35f),
+        false
+    );
+
+    AddEnvironmentModel(
+        &flowersModel,
+        "Flowers",
+        glm::vec3(2.0f, 0.05f, 8.0f),
+        glm::vec3(0.45f),
+        false
+    );
+
+    // Stump
+    AddEnvironmentModel(
+        &treeStumpModel,
+        "Tree Stump",
+        glm::vec3(-14.0f, 0.05f, -2.0f),
+        glm::vec3(0.45f),
         true
     );
     // ================= GRASS FIELD =================

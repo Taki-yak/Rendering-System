@@ -31,6 +31,8 @@
 #include "ThirdPersonController.h"
 #include "AnimationLibrary.h"
 #include "AnimatedModel.h"
+#include <cstdlib>
+#include <ctime>
 // ================= CAMERA VARIABLES =================
 //glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 //glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -660,9 +662,6 @@ int main()
     Model woodLogModel(
         "Assets/Models/Environment/NaturePack/WoodLog.obj"
     );
-    Model pineTree2Model(
-        "Assets/Models/Environment/NaturePack/PineTree_2.obj"
-    );
 
     Model pineTree3Model(
         "Assets/Models/Environment/NaturePack/PineTree_3.obj"
@@ -707,6 +706,15 @@ int main()
     Model treeStumpModel(
         "Assets/Models/Environment/NaturePack/TreeStump.obj"
     );
+    Model pineTree2Model(
+        "Assets/Models/Environment/NaturePack/PineTree_2.obj"
+    );
+
+    Model bush2Model(
+        "Assets/Models/Environment/NaturePack/Bush_2.obj"
+    );
+
+
     Shader skyboxShader(skyboxVertex, skyboxFragment);
     Shader gizmoShader(gizmoVertexShader, gizmoFragmentShader);
     Shader gridShader(gridVertexShader, gridFragmentShader);
@@ -896,7 +904,7 @@ int main()
                 glm::max(
                     scale.x,
                     scale.z
-                ) * 1.5f;
+                ) * 0.4f;
             scene.AddObject(obj);
 
             return obj;
@@ -926,98 +934,98 @@ int main()
             );
         }
     }
-// Trees
-    AddEnvironmentModel(
-        &pineTreeModel,
-        "Pine Tree 1",
-        glm::vec3(-8.0f, 0.05f, -12.0f),
-        glm::vec3(0.35f),
-        true
-    );
-
-    AddEnvironmentModel(
-        &pineTreeModel,
-        "Pine Tree 2",
-        glm::vec3(7.0f, 0.0f, -14.0f),
-        glm::vec3(1.0f),
-        true
-    );
-
-    AddEnvironmentModel(
-        &commonTreeModel,
-        "Common Tree 1",
-        glm::vec3(-12.0f, 0.0f, -4.0f),
-        glm::vec3(0.9f),
-        true
-    );
-
-    AddEnvironmentModel(
-        &commonTreeModel,
-        "Common Tree 2",
-        glm::vec3(10.0f, 0.0f, -6.0f),
-        glm::vec3(1.1f),
-        false
-    );
-
-    // Rocks
-    AddEnvironmentModel(
-        &rockModel,
-        "Rock 1",
-        glm::vec3(-4.0f, 0.0f, -8.0f),
-        glm::vec3(1.0f),
-        true
-    );
-
-    AddEnvironmentModel(
-        &rockModel,
-        "Rock 2",
-        glm::vec3(5.0f, 0.0f, -10.0f),
-        glm::vec3(0.7f),
-        true
-    );
-
-    // Bushes
-    AddEnvironmentModel(
-        &bushModel,
-        "Bush 1",
-        glm::vec3(-2.0f, 0.0f, -5.0f),
-        glm::vec3(0.8f),
-        false
-    );
-
-    AddEnvironmentModel(
-        &bushModel,
-        "Bush 2",
-        glm::vec3(3.0f, 0.0f, -7.0f),
-        glm::vec3(0.9f),
-        true
-    );
-
-    // Grass patches
-    AddEnvironmentModel(
-        &grassModel,
-        "Grass Patch 1",
-        glm::vec3(0.0f, 0.0f, -6.0f),
-        glm::vec3(1.0f),
-        false
-    );
-
-    AddEnvironmentModel(
-        &grassModel,
-        "Grass Patch 2",
-        glm::vec3(6.0f, 0.0f, -3.0f),
-        glm::vec3(1.2f),
-        true
-    );
-
-    // Wood log
-    AddEnvironmentModel(
-        &woodLogModel,
-        "Wood Log",
-        glm::vec3(-6.0f, 0.0f, -6.0f),
-        glm::vec3(1.0f),
-        true
-    );
+//// Trees
+//    AddEnvironmentModel(
+//        &pineTreeModel,
+//        "Pine Tree 1",
+//        glm::vec3(-8.0f, 0.05f, -12.0f),
+//        glm::vec3(0.35f),
+//        true
+//    );
+//
+//    AddEnvironmentModel(
+//        &pineTreeModel,
+//        "Pine Tree 2",
+//        glm::vec3(7.0f, 0.0f, -14.0f),
+//        glm::vec3(1.0f),
+//        true
+//    );
+//
+//    AddEnvironmentModel(
+//        &commonTreeModel,
+//        "Common Tree 1",
+//        glm::vec3(-12.0f, 0.0f, -4.0f),
+//        glm::vec3(0.9f),
+//        true
+//    );
+//
+//    AddEnvironmentModel(
+//        &commonTreeModel,
+//        "Common Tree 2",
+//        glm::vec3(10.0f, 0.0f, -6.0f),
+//        glm::vec3(1.1f),
+//        false
+//    );
+//
+//    // Rocks
+//    AddEnvironmentModel(
+//        &rockModel,
+//        "Rock 1",
+//        glm::vec3(-4.0f, 0.0f, -8.0f),
+//        glm::vec3(1.0f),
+//        true
+//    );
+//
+//    AddEnvironmentModel(
+//        &rockModel,
+//        "Rock 2",
+//        glm::vec3(5.0f, 0.0f, -10.0f),
+//        glm::vec3(0.7f),
+//        true
+//    );
+//
+//    // Bushes
+//    AddEnvironmentModel(
+//        &bushModel,
+//        "Bush 1",
+//        glm::vec3(-2.0f, 0.0f, -5.0f),
+//        glm::vec3(0.8f),
+//        false
+//    );
+//
+//    AddEnvironmentModel(
+//        &bushModel,
+//        "Bush 2",
+//        glm::vec3(3.0f, 0.0f, -7.0f),
+//        glm::vec3(0.9f),
+//        true
+//    );
+//
+//    // Grass patches
+//    AddEnvironmentModel(
+//        &grassModel,
+//        "Grass Patch 1",
+//        glm::vec3(0.0f, 0.0f, -6.0f),
+//        glm::vec3(1.0f),
+//        false
+//    );
+//
+//    AddEnvironmentModel(
+//        &grassModel,
+//        "Grass Patch 2",
+//        glm::vec3(6.0f, 0.0f, -3.0f),
+//        glm::vec3(1.2f),
+//        true
+//    );
+//
+//    // Wood log
+//    AddEnvironmentModel(
+//        &woodLogModel,
+//        "Wood Log",
+//        glm::vec3(-6.0f, 0.0f, -6.0f),
+//        glm::vec3(1.0f),
+//        true
+//    );
     // ================= EXTRA FOREST DECORATION =================
 
 // Trees
@@ -1152,6 +1160,209 @@ int main()
             );
         }
     }*/
+    // ================= FOREST GENERATOR V1 =================
+
+    srand(7);
+
+    auto RandomRange =
+        [](float minValue, float maxValue)
+        {
+            float t =
+                (float)(rand() % 1000) / 1000.0f;
+
+            return minValue +
+                t * (maxValue - minValue);
+        };
+
+    std::vector<Model*> treeModels =
+    {
+        &pineTreeModel,
+        &pineTree2Model,
+        &pineTree3Model,
+        &commonTreeModel,
+        &commonTree2Model,
+        &birchTreeModel
+    };
+
+    std::vector<Model*> rockModels =
+    {
+        &rockModel,
+        &rock2Model,
+        &rock3Model,
+        &rockMossModel
+    };
+
+    std::vector<Model*> plantModels =
+    {
+        &bushModel,
+        &bush2Model,
+        &plantModel,
+        &plant2Model,
+        &flowersModel
+    };
+
+    // Trees
+    for (int i = 0; i < 35; i++)
+    {
+        Model* chosenTree =
+            treeModels[
+                rand() % treeModels.size()
+            ];
+
+        float x =
+            RandomRange(
+                -55.0f,
+                55.0f
+            );
+
+        float z =
+            RandomRange(
+                -55.0f,
+                55.0f
+            );
+
+        float scale =
+            RandomRange(
+                0.70f,
+                1.10f
+            );
+        AddEnvironmentModel(
+            chosenTree,
+            "Generated Tree",
+            glm::vec3(
+                x,
+                0.05f,
+                z
+            ),
+            glm::vec3(
+                scale
+            ),
+            false
+        );
+    }
+
+    // Rocks
+    for (int i = 0; i < 22; i++)
+    {
+        Model* chosenRock =
+            rockModels[
+                rand() % rockModels.size()
+            ];
+
+        float x =
+            RandomRange(
+                -50.0f,
+                50.0f
+            );
+
+        float z =
+            RandomRange(
+                -50.0f,
+                50.0f
+            );
+
+        float scale =
+            RandomRange(
+                0.60f,
+                1.00f
+            );
+
+        AddEnvironmentModel(
+            chosenRock,
+            "Generated Rock",
+            glm::vec3(
+                x,
+                0.05f,
+                z
+            ),
+            glm::vec3(
+                scale
+            ),
+            true
+        );
+    }
+
+    // Bushes / plants / flowers
+    for (int i = 0; i < 45; i++)
+    {
+        Model* chosenPlant =
+            plantModels[
+                rand() % plantModels.size()
+            ];
+
+        float x =
+            RandomRange(
+                -55.0f,
+                55.0f
+            );
+
+        float z =
+            RandomRange(
+                -55.0f,
+                55.0f
+            );
+
+        float scale =
+            RandomRange(
+                0.50f,
+                0.85f
+            );
+
+        AddEnvironmentModel(
+            chosenPlant,
+            "Generated Plant",
+            glm::vec3(
+                x,
+                0.05f,
+                z
+            ),
+            glm::vec3(
+                scale
+            ),
+            false
+        );
+    }
+
+    // Logs / stumps
+    for (int i = 0; i < 10; i++)
+    {
+        Model* chosenObject =
+            (rand() % 2 == 0)
+            ? &woodLogModel
+            : &treeStumpModel;
+
+        float x =
+            RandomRange(
+                -45.0f,
+                45.0f
+            );
+
+        float z =
+            RandomRange(
+                -45.0f,
+                45.0f
+            );
+
+        float scale =
+            RandomRange(
+                0.80f,
+                1.25f
+            );
+
+        AddEnvironmentModel(
+            chosenObject,
+            "Generated Log/Stump",
+            glm::vec3(
+                x,
+                0.05f,
+                z
+            ),
+            glm::vec3(
+                scale
+            ),
+            true
+        );
+    }
     playerObject =
         new SceneObject(
             &myModel,

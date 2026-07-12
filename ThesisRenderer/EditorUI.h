@@ -5,6 +5,8 @@
 #include "Camera.h"
 #include "AppMode.h"
 #include "Light.h"
+#include "Model.h"
+#include "Camera.h"
 class EditorUI
 {
 public:
@@ -13,7 +15,16 @@ public:
         SceneObject*& selectedObject,
         Mesh* cubeMesh,
         Shader* shader,
-        Material* material
+        Material* material,
+        Camera& camera,
+
+        Model* pineTreeModel,
+        Model* commonTreeModel,
+        Model* rockModel,
+        Model* bushModel,
+        Model* woodLogModel,
+        Model* treeStumpModel,
+        Model* grassModel
     );
     static void DrawCrosshair();
     static void DrawHierarchy(

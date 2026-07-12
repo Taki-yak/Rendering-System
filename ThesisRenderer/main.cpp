@@ -1810,8 +1810,9 @@ int main()
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-        ImGuiIO& debugIO = ImGui::GetIO();
-        if (
+       ImGuiIO& debugIO = ImGui::GetIO();
+       // resseting plaaayer to the start .............................
+   /*     if (
             previousAppMode == AppMode::Editor &&
             appMode == AppMode::Play
             )
@@ -1830,7 +1831,7 @@ int main()
                 thirdPersonController.isGrounded =
                     true;
             }
-        }
+        }*/
 
         previousAppMode =
             appMode;
@@ -1839,7 +1840,19 @@ int main()
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
-        float cameraSpeed = 2.5f * deltaTime;
+        float cameraSpeed =
+    5.0f *
+    deltaTime;
+
+if (
+    appMode == AppMode::Editor &&
+    glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS
+)
+{
+    cameraSpeed =
+        15.0f *
+        deltaTime;
+}
 
         glfwPollEvents();
 
@@ -2627,7 +2640,16 @@ int main()
                 selectedObject,
                 &cube,
                 &shader,
-                &cubeMaterial
+                &cubeMaterial,
+                camera,
+
+                &pineTreeModel,
+                &commonTreeModel,
+                &rockModel,
+                &bushModel,
+                &woodLogModel,
+                &treeStumpModel,
+                &grassModel
             );
 
             if (selectedObject != nullptr)

@@ -451,7 +451,16 @@ void EditorUI::DrawAssetBrowser(
     SceneObject*& selectedObject,
     Mesh* cubeMesh,
     Shader* shader,
-    Material* material
+    Material* material,
+    Camera& camera,
+
+    Model* pineTreeModel,
+    Model* commonTreeModel,
+    Model* rockModel,
+    Model* bushModel,
+    Model* woodLogModel,
+    Model* treeStumpModel,
+    Model* grassModel
 )
 {
     ImGui::SetNextWindowPos(
@@ -496,6 +505,148 @@ void EditorUI::DrawAssetBrowser(
 
     ImGui::Text("Environment Props");
 
+    auto SpawnModelObject =
+        [&](const std::string& name,
+            Model* model,
+            glm::vec3 scale,
+            bool collider,
+            float colliderRadius)
+        {
+            glm::vec3 forward =
+                glm::normalize(
+                    glm::vec3(
+                        camera.Front.x,
+                        0.0f,
+                        camera.Front.z
+                    )
+                );
+
+            glm::vec3 spawnPosition =
+                glm::vec3(
+                    camera.Position.x,
+                    0.05f,
+                    camera.Position.z
+                )
+                +
+                forward * 6.0f;
+
+            SceneObject* obj =
+                new SceneObject(
+                    model,
+                    shader
+                );
+
+            obj->name =
+                name;
+
+            obj->transform.position =
+                spawnPosition;
+
+            obj->transform.scale =
+                scale;
+
+            obj->isCollider =
+                collider;
+
+            obj->colliderRadius =
+                colliderRadius;
+
+            obj->boundingRadius =
+                50.0f;
+
+            scene.AddObject(
+                obj
+            );
+
+            selectedObject =
+                obj;
+        };
+    ImGui::Separator();
+
+    ImGui::Text("Nature Assets");
+
+    if (ImGui::Button("Spawn Pine Tree"))
+    {
+        SpawnModelObject(
+            "Pine Tree",
+            pineTreeModel,
+            glm::vec3(1.0f),
+            false,
+            0.8f
+        );
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Spawn Common Tree"))
+    {
+        SpawnModelObject(
+            "Common Tree",
+            commonTreeModel,
+            glm::vec3(1.0f),
+            false,
+            0.8f
+        );
+    }
+
+    if (ImGui::Button("Spawn Rock"))
+    {
+        SpawnModelObject(
+            "Rock",
+            rockModel,
+            glm::vec3(0.8f),
+            true,
+            0.8f
+        );
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Spawn Bush"))
+    {
+        SpawnModelObject(
+            "Bush",
+            bushModel,
+            glm::vec3(0.8f),
+            false,
+            0.4f
+        );
+    }
+
+    if (ImGui::Button("Spawn Wood Log"))
+    {
+        SpawnModelObject(
+            "Wood Log",
+            woodLogModel,
+            glm::vec3(1.0f),
+            true,
+            1.0f
+        );
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Spawn Stump"))
+    {
+        SpawnModelObject(
+            "Tree Stump",
+            treeStumpModel,
+            glm::vec3(0.9f),
+            true,
+            0.8f
+        );
+    }
+
+    if (ImGui::Button("Spawn Grass Patch"))
+    {
+        SpawnModelObject(
+            "Grass Patch",
+            grassModel,
+            glm::vec3(0.8f),
+            false,
+            0.2f
+        );
+    }
     if (ImGui::Button("Spawn Crate"))
     {
         SceneObject* crate =

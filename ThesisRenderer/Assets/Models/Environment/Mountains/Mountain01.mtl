@@ -1,0 +1,8 @@
+newmtl Mountain01Material
+Ka 1.000 1.000 1.000
+Kd 1.000 1.000 1.000
+Ks 0.100 0.100 0.100
+Ns 16.000
+d 1.000
+illum 2
+map_Kd Mountain01_4k_BaseColor.png

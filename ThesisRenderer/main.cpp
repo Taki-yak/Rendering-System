@@ -629,6 +629,61 @@ int main()
    Model importedTree(
         "Assets/Models/Nature/Tree.obj"
     );
+   Model pineTree4Model(
+       "Assets/Models/Environment/NaturePack/PineTree_4.obj"
+   );
+
+   Model pineTree5Model(
+       "Assets/Models/Environment/NaturePack/PineTree_5.obj"
+   );
+
+   Model commonTree3Model(
+       "Assets/Models/Environment/NaturePack/CommonTree_3.obj"
+   );
+
+   Model commonTree4Model(
+       "Assets/Models/Environment/NaturePack/CommonTree_4.obj"
+   );
+
+   Model birchTree3Model(
+       "Assets/Models/Environment/NaturePack/BirchTree_3.obj"
+   );
+
+   Model willowTreeModel(
+       "Assets/Models/Environment/NaturePack/Willow_1.obj"
+   );
+
+   Model willowTree2Model(
+       "Assets/Models/Environment/NaturePack/Willow_2.obj"
+   );
+
+   Model rock4Model(
+       "Assets/Models/Environment/NaturePack/Rock_4.obj"
+   );
+
+   Model rock5Model(
+       "Assets/Models/Environment/NaturePack/Rock_5.obj"
+   );
+
+   Model rockMoss2Model(
+       "Assets/Models/Environment/NaturePack/Rock_Moss_2.obj"
+   );
+
+   Model rockMoss3Model(
+       "Assets/Models/Environment/NaturePack/Rock_Moss_3.obj"
+   );
+
+   Model bushBerriesModel(
+       "Assets/Models/Environment/NaturePack/BushBerries_1.obj"
+   );
+
+   Model grass2Model(
+       "Assets/Models/Environment/NaturePack/Grass_2.obj"
+   );
+
+   Model wheatModel(
+       "Assets/Models/Environment/NaturePack/Wheat.obj"
+   );
     Model forestEnvironment(
         "Assets/Models/Environment/terrain.obj"
     );
@@ -713,7 +768,20 @@ int main()
     Model bush2Model(
         "Assets/Models/Environment/NaturePack/Bush_2.obj"
     );
+    //Model mountain1Model(
+    //    "Assets/Models/Environment/Mountains/Mountain01.obj",
+    //    "Assets/Models/Environment/Mountains/"
+    //);
 
+    //Model mountain2Model(
+    //    "Assets/Models/Environment/Mountains/Mountain02.obj",
+    //    "Assets/Models/Environment/Mountains/"
+    //);
+
+    //Model mountain3Model(
+    //    "Assets/Models/Environment/Mountains/Mountain03.obj",
+    //    "Assets/Models/Environment/Mountains/"
+    //);
 
     Shader skyboxShader(skyboxVertex, skyboxFragment);
     Shader gizmoShader(gizmoVertexShader, gizmoFragmentShader);
@@ -909,15 +977,13 @@ int main()
 
             return obj;
         };
-    // ================= PLAYABLE FOREST ENVIRONMENT =================
- // ================= REPEATED GRASS TERRAIN =================
 
     float grassTileSpacing =
         8.0f;
 
-    for (int x = -6; x <= 6; x++)
+    for (int x = -10; x <= 10; x++)
     {
-        for (int z = -6; z <= 6; z++)
+        for (int z = -10; z <= 10; z++)
         {
             AddEnvironmentModel(
                 &grassTerrainModel,
@@ -1029,104 +1095,104 @@ int main()
     // ================= EXTRA FOREST DECORATION =================
 
 // Trees
-    AddEnvironmentModel(
-        &pineTree2Model,
-        "Pine Tree 3",
-        glm::vec3(-18.0f, 0.05f, -18.0f),
-        glm::vec3(0.35f),
-        false
-    );
+    //AddEnvironmentModel(
+    //    &pineTree2Model,
+    //    "Pine Tree 3",
+    //    glm::vec3(-18.0f, 0.05f, -18.0f),
+    //    glm::vec3(0.35f),
+    //    false
+    //);
 
-    AddEnvironmentModel(
-        &pineTree3Model,
-        "Pine Tree 4",
-        glm::vec3(18.0f, 0.05f, -22.0f),
-        glm::vec3(0.38f),
-        false
-    );
+    //AddEnvironmentModel(
+    //    &pineTree3Model,
+    //    "Pine Tree 4",
+    //    glm::vec3(18.0f, 0.05f, -22.0f),
+    //    glm::vec3(0.38f),
+    //    false
+    //);
 
-    AddEnvironmentModel(
-        &birchTreeModel,
-        "Birch Tree 1",
-        glm::vec3(-22.0f, 0.05f, 8.0f),
-        glm::vec3(0.35f),
-        false
-    );
+    //AddEnvironmentModel(
+    //    &birchTreeModel,
+    //    "Birch Tree 1",
+    //    glm::vec3(-22.0f, 0.05f, 8.0f),
+    //    glm::vec3(0.35f),
+    //    false
+    //);
 
-    AddEnvironmentModel(
-        &birchTree2Model,
-        "Birch Tree 2",
-        glm::vec3(22.0f, 0.05f, 10.0f),
-        glm::vec3(0.35f),
-        false
-    );
+    //AddEnvironmentModel(
+    //    &birchTree2Model,
+    //    "Birch Tree 2",
+    //    glm::vec3(22.0f, 0.05f, 10.0f),
+    //    glm::vec3(0.35f),
+    //    false
+    //);
 
-    AddEnvironmentModel(
-        &commonTree2Model,
-        "Common Tree 3",
-        glm::vec3(0.0f, 0.05f, -25.0f),
-        glm::vec3(0.40f),
-        false
-    );
+    //AddEnvironmentModel(
+    //    &commonTree2Model,
+    //    "Common Tree 3",
+    //    glm::vec3(0.0f, 0.05f, -25.0f),
+    //    glm::vec3(0.40f),
+    //    false
+    //);
 
-    // Rocks
-    AddEnvironmentModel(
-        &rock2Model,
-        "Rock 3",
-        glm::vec3(-10.0f, 0.05f, 6.0f),
-        glm::vec3(0.35f),
-        true
-    );
+    //// Rocks
+    //AddEnvironmentModel(
+    //    &rock2Model,
+    //    "Rock 3",
+    //    glm::vec3(-10.0f, 0.05f, 6.0f),
+    //    glm::vec3(0.35f),
+    //    true
+    //);
 
-    AddEnvironmentModel(
-        &rock3Model,
-        "Rock 4",
-        glm::vec3(12.0f, 0.05f, -4.0f),
-        glm::vec3(0.35f),
-        true
-    );
+    //AddEnvironmentModel(
+    //    &rock3Model,
+    //    "Rock 4",
+    //    glm::vec3(12.0f, 0.05f, -4.0f),
+    //    glm::vec3(0.35f),
+    //    true
+    //);
 
-    AddEnvironmentModel(
-        &rockMossModel,
-        "Moss Rock",
-        glm::vec3(4.0f, 0.05f, 14.0f),
-        glm::vec3(0.40f),
-        true
-    );
+    //AddEnvironmentModel(
+    //    &rockMossModel,
+    //    "Moss Rock",
+    //    glm::vec3(4.0f, 0.05f, 14.0f),
+    //    glm::vec3(0.40f),
+    //    true
+    //);
 
-    // Plants / flowers
-    AddEnvironmentModel(
-        &plantModel,
-        "Plant 1",
-        glm::vec3(-5.0f, 0.05f, 10.0f),
-        glm::vec3(0.35f),
-        false
-    );
+    //// Plants / flowers
+    //AddEnvironmentModel(
+    //    &plantModel,
+    //    "Plant 1",
+    //    glm::vec3(-5.0f, 0.05f, 10.0f),
+    //    glm::vec3(0.35f),
+    //    false
+    //);
 
-    AddEnvironmentModel(
-        &plant2Model,
-        "Plant 2",
-        glm::vec3(8.0f, 0.05f, 12.0f),
-        glm::vec3(0.35f),
-        false
-    );
+    //AddEnvironmentModel(
+    //    &plant2Model,
+    //    "Plant 2",
+    //    glm::vec3(8.0f, 0.05f, 12.0f),
+    //    glm::vec3(0.35f),
+    //    false
+    //);
 
-    AddEnvironmentModel(
-        &flowersModel,
-        "Flowers",
-        glm::vec3(2.0f, 0.05f, 8.0f),
-        glm::vec3(0.45f),
-        false
-    );
+    //AddEnvironmentModel(
+    //    &flowersModel,
+    //    "Flowers",
+    //    glm::vec3(2.0f, 0.05f, 8.0f),
+    //    glm::vec3(0.45f),
+    //    false
+    //);
 
-    // Stump
-    AddEnvironmentModel(
-        &treeStumpModel,
-        "Tree Stump",
-        glm::vec3(-14.0f, 0.05f, -2.0f),
-        glm::vec3(0.45f),
-        true
-    );
+    //// Stump
+    //AddEnvironmentModel(
+    //    &treeStumpModel,
+    //    "Tree Stump",
+    //    glm::vec3(-14.0f, 0.05f, -2.0f),
+    //    glm::vec3(0.45f),
+    //    true
+    //);
     // ================= GRASS FIELD =================
 
    /* for (int x = -8; x <= 8; x++)
@@ -1160,7 +1226,107 @@ int main()
             );
         }
     }*/
+    // ================= REAL MOUNTAIN BORDER =================
+
+    //std::vector<Model*> mountainModels =
+    //{
+    //    &mountain1Model,
+    //    &mountain2Model,
+    //    &mountain3Model
+    //};
+
+    //auto AddBorderMountain =
+    //    [&](float x, float z, float scale)
+    //    {
+    //        Model* selectedMountain =
+    //            mountainModels[
+    //                rand() % mountainModels.size()
+    //            ];
+
+    //        SceneObject* mountain =
+    //            AddEnvironmentModel(
+    //                selectedMountain,
+    //                "Border Mountain",
+    //                glm::vec3(
+    //                    x,
+    //                    -2.0f,
+    //                    z
+    //                ),
+    //                glm::vec3(
+    //                    scale
+    //                ),
+    //                false
+    //            );
+
+    //        mountain->boundingRadius =
+    //            500.0f;
+
+    //        return mountain;
+    //    };
+    //// Back border mountains
+    //for (int i = -4; i <= 4; i++)
+    //{
+    //    AddBorderMountain(
+    //        i * 35.0f,
+    //        -120.0f,
+    //        8.0f
+    //    );
+    //}
+
+    //// Left border mountains
+    //for (int i = -3; i <= 3; i++)
+    //{
+    //    AddBorderMountain(
+    //        -120.0f,
+    //        i * 35.0f,
+    //        8.0f
+    //    );
+    //}
+
+    //// Right border mountains
+    //for (int i = -3; i <= 3; i++)
+    //{
+    //    AddBorderMountain(
+    //        120.0f,
+    //        i * 35.0f,
+    //        8.0f
+    //    );
+    //}
+    // ================= TEST ONE MOUNTAIN =================
+
+   /* SceneObject* testMountain =
+        new SceneObject(
+            &mountain2Model,
+            &shader
+        );
+
+    testMountain->name =
+        "Test Mountain";
+
+    testMountain->transform.position =
+        glm::vec3(
+            0.0f,
+            -2.0f,
+            -80.0f
+        );
+
+    testMountain->transform.scale =
+        glm::vec3(
+            0.02f
+        );
+
+    testMountain->boundingRadius =
+        500.0f;
+
+    testMountain->isCollider =
+        false;*/
+
+  /*  scene.AddObject(
+        testMountain
+    );*/
+
     // ================= FOREST GENERATOR V1 =================
+    // ================= WORLD BORDER MOUNTAINS =================
 
     srand(7);
 
@@ -1179,9 +1345,20 @@ int main()
         &pineTreeModel,
         &pineTree2Model,
         &pineTree3Model,
+        &pineTree4Model,
+        &pineTree5Model,
+
         &commonTreeModel,
         &commonTree2Model,
-        &birchTreeModel
+        &commonTree3Model,
+        &commonTree4Model,
+
+        &birchTreeModel,
+        &birchTree2Model,
+        &birchTree3Model,
+
+        &willowTreeModel,
+        &willowTree2Model
     };
 
     std::vector<Model*> rockModels =
@@ -1189,20 +1366,31 @@ int main()
         &rockModel,
         &rock2Model,
         &rock3Model,
-        &rockMossModel
+        &rock4Model,
+        &rock5Model,
+
+        &rockMossModel,
+        &rockMoss2Model,
+        &rockMoss3Model
     };
 
     std::vector<Model*> plantModels =
     {
         &bushModel,
         &bush2Model,
+        &bushBerriesModel,
+
         &plantModel,
         &plant2Model,
-        &flowersModel
+
+        &flowersModel,
+        &grassModel,
+        &grass2Model,
+        &wheatModel
     };
 
     // Trees
-    for (int i = 0; i < 35; i++)
+    for (int i = 0; i < 60; i++)
     {
         Model* chosenTree =
             treeModels[
@@ -1242,7 +1430,7 @@ int main()
     }
 
     // Rocks
-    for (int i = 0; i < 22; i++)
+    for (int i = 0; i < 40; i++)
     {
         Model* chosenRock =
             rockModels[
@@ -1283,7 +1471,7 @@ int main()
     }
 
     // Bushes / plants / flowers
-    for (int i = 0; i < 45; i++)
+    for (int i = 0; i < 100; i++)
     {
         Model* chosenPlant =
             plantModels[
@@ -1324,7 +1512,7 @@ int main()
     }
 
     // Logs / stumps
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < 20; i++)
     {
         Model* chosenObject =
             (rand() % 2 == 0)
@@ -1363,12 +1551,109 @@ int main()
             true
         );
     }
+    // ================= FOREST BORDER WALL =================
+
+    auto AddBorderTree =
+        [&](float x, float z)
+        {
+            Model* chosenTree =
+                treeModels[
+                    rand() % treeModels.size()
+                ];
+
+            float scale =
+                RandomRange(
+                    1.1f,
+                    1.7f
+                );
+
+            AddEnvironmentModel(
+                chosenTree,
+                "Border Tree",
+                glm::vec3(
+                    x,
+                    0.05f,
+                    z
+                ),
+                glm::vec3(
+                    scale
+                ),
+                false
+            );
+        };
+
+    // Back forest border
+    for (int i = -14; i <= 14; i++)
+    {
+        AddBorderTree(
+            i * 7.0f,
+            -85.0f + RandomRange(-3.0f, 3.0f)
+        );
+    }
+
+    // Left forest border
+    for (int i = -12; i <= 12; i++)
+    {
+        AddBorderTree(
+            -85.0f + RandomRange(-3.0f, 3.0f),
+            i * 7.0f
+        );
+    }
+
+    // Right forest border
+    for (int i = -12; i <= 12; i++)
+    {
+        AddBorderTree(
+            85.0f + RandomRange(-3.0f, 3.0f),
+            i * 7.0f
+        );
+    }
+    // ================= EXTRA ROCK CLUSTERS =================
+
+    for (int cluster = 0; cluster < 12; cluster++)
+    {
+        float centerX =
+            RandomRange(
+                -70.0f,
+                70.0f
+            );
+
+        float centerZ =
+            RandomRange(
+                -70.0f,
+                70.0f
+            );
+
+        int rocksInCluster =
+            3 + rand() % 4;
+
+        for (int i = 0; i < rocksInCluster; i++)
+        {
+            Model* chosenRock =
+                rockModels[
+                    rand() % rockModels.size()
+                ];
+
+            AddEnvironmentModel(
+                chosenRock,
+                "Rock Cluster",
+                glm::vec3(
+                    centerX + RandomRange(-3.0f, 3.0f),
+                    0.05f,
+                    centerZ + RandomRange(-3.0f, 3.0f)
+                ),
+                glm::vec3(
+                    RandomRange(0.6f, 1.2f)
+                ),
+                true
+            );
+        }
+    }
     playerObject =
         new SceneObject(
             &myModel,
             &shader
         );
-
     playerObject->name = "Player";
     playerObject->transform.position =
         playerSpawnPosition;

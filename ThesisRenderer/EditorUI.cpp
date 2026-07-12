@@ -703,7 +703,17 @@ void EditorUI::DrawAssetBrowser(
                 3.0f,
                 0.3f
             );
+        wall->isCollider =
+            true;
 
+        wall->colliderRadius =
+            glm::max(
+                wall->transform.scale.x,
+                wall->transform.scale.z
+            ) * 0.8f;
+
+        wall->boundingRadius =
+            50.0f;
         scene.AddObject(wall);
 
         selectedObject = wall;

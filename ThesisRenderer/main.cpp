@@ -253,7 +253,7 @@ void main()
 const char* fragmentShaderSource = R"(
 
 #version 330 core
-#define MAX_LIGHTS 3
+#define MAX_LIGHTS 5
 
 out vec4 FragColor;
 uniform vec3 sunDirection;
@@ -580,12 +580,13 @@ int main()
     Scene scene;
     PlayerController playerController;
     ThirdPersonController thirdPersonController;
-   
+  
+
     AppMode appMode = AppMode::Editor;
-    Light* testLight = new Light();
-
     static int lightCounter = 1;
+   /* Light* testLight = new Light();
 
+  
     testLight->name =
         "Light_" +
         std::to_string(lightCounter++);
@@ -609,7 +610,7 @@ int main()
             0.0f
         );
 
-    scene.AddLight(testLight);
+    scene.AddLight(testLight);*/
     Light* sun = new Light();
 
     sun->name = "Sun";
@@ -769,9 +770,9 @@ int main()
         "Assets/Models/Environment/NaturePack/Bush_2.obj"
     );
     Model torchModel(
-    "Assets/Models/Environment/Torch/Torch.obj",
-    "Assets/Models/Environment/Torch/"
-);
+        "Assets/Models/Environment/Torch/Torch.obj",
+        "Assets/Models/Environment/Torch/"
+    );
     //Model mountain1Model(
     //    "Assets/Models/Environment/Mountains/Mountain01.obj",
     //    "Assets/Models/Environment/Mountains/"
@@ -2429,7 +2430,7 @@ if (
             if (light->type == LightType::Directional)
                 continue;
 
-            if (pointLightIndex >= 3)
+            if (pointLightIndex >= 5)
                 break;
 
             shader.setVec3(
@@ -2440,16 +2441,16 @@ if (
             shader.setVec3(
                 "lightColors[" + std::to_string(pointLightIndex) + "]",
                 glm::vec3(
-                    3.0f,
-                    2.2f,
-                    1.2f
+                    1.4f,
+                    1.1f,
+                    0.65f
                 )
             );
 
             pointLightIndex++;
         }
 
-        for (int i = pointLightIndex; i < 3; i++)
+        for (int i = pointLightIndex; i < 5; i++)
         {
             shader.setVec3(
                 "lightPositions[" + std::to_string(i) + "]",
@@ -2580,18 +2581,7 @@ if (
                 culledObjects++;
             }
         }
-        for (SceneObject* obj : scene.objects)
-        {
-            if (obj == nullptr)
-                continue;
 
-            if (obj->attachedLight == nullptr)
-                continue;
-
-            obj->attachedLight->position =
-                obj->transform.position +
-                obj->attachedLightOffset;
-        }
         // ===== DRAW MODELS (each binds its own texture) =====
   /*      glm::mat4 model1 = glm::mat4(1.0f);
         model1 = glm::translate(model1, glm::vec3(-3.0f, 2.0f, -3.0f));
@@ -2688,6 +2678,7 @@ if (
             lightCounter,
             appMode
         );
+
         if (appMode == AppMode::Editor)
         {
             EditorUI::DrawHierarchy(scene, selectedObject, selectedLight);

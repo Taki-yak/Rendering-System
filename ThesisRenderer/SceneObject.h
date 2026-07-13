@@ -7,6 +7,7 @@
 #include "Transform.h"
 #include "Component.h"
 #include "Model.h"
+#include "Light.h"
 class Renderer;
 
 class SceneObject
@@ -27,7 +28,13 @@ public:
     float colliderRadius = 1.0f;
     void AddChild(SceneObject* child);
     void Draw(Renderer& renderer, glm::mat4 parentTransform);
+    Light* attachedLight =
+        nullptr;
 
+    glm::vec3 attachedLightOffset =
+        glm::vec3(
+            0.0f
+        );
     
     void AddComponent(Component* component)
     {

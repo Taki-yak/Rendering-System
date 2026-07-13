@@ -752,12 +752,16 @@ void EditorUI::DrawAssetBrowser(
     }
 
     ImGui::End();
-}void EditorUI::DrawToolbar(
+}
+void EditorUI::DrawToolbar(
     Scene& scene,
     SceneObject*& selectedObject,
+    Light*& selectedLight,
     Mesh* cubeMesh,
     Shader* shader,
     Material* material,
+    Camera& camera,
+    Model* torchModel,
     int& lightCounter,
     AppMode& appMode
 )
@@ -823,46 +827,101 @@ void EditorUI::DrawAssetBrowser(
     }
 
     ImGui::SameLine();
-
     if (ImGui::Button("Add Light"))
     {
-        Light* newLight = new Light();
+        glm::vec3 forward =
+            glm::vec3(
+                camera.Front.x,
+                0.0f,
+                camera.Front.z
+            );
 
-        newLight->name =
-            "Light_" +
+        if (glm::length(forward) < 0.001f)
+        {
+            forward =
+                glm::vec3(
+                    0.0f,
+                    0.0f,
+                    -1.0f
+                );
+        }
+
+        forward =
+            glm::normalize(
+                forward
+            );
+
+        glm::vec3 spawnPosition =
+            camera.Position +
+            forward * 6.0f;
+
+        spawnPosition.y =
+            0.05f;
+
+        Light* torchLight =
+            new Light();
+
+        torchLight->name =
+            "Torch Light " +
             std::to_string(lightCounter++);
 
-        newLight->position =
+        torchLight->type =
+            LightType::Point;
+
+        torchLight->position =
+            spawnPosition +
             glm::vec3(
                 0.0f,
-                3.0f,
+                1.8f,
                 0.0f
             );
 
-        scene.AddLight(newLight);
-    }
-    ImGui::SameLine();
+        scene.AddLight(
+            torchLight
+        );
 
-    if (ImGui::Button("Duplicate##Toolbar"))
-    {
-        if (selectedObject)
-        {
-            SceneObject* copy =
-                new SceneObject(
-                    selectedObject->mesh,
-                    selectedObject->shader,
-                    selectedObject->material
-                );
+        SceneObject* torchObject =
+            new SceneObject(
+                torchModel,
+                shader
+            );
 
-            copy->transform =
-                selectedObject->transform;
+        torchObject->name =
+            torchLight->name + " Object";
 
-            copy->transform.position.x += 1.0f;
+        torchObject->transform.position =
+            spawnPosition;
 
-            scene.AddObject(copy);
+        torchObject->transform.scale =
+            glm::vec3(
+                1.0f
+            );
 
-            selectedObject = copy;
-        }
+        torchObject->isCollider =
+            false;
+
+        torchObject->boundingRadius =
+            20.0f;
+
+        torchObject->attachedLight =
+            torchLight;
+
+        torchObject->attachedLightOffset =
+            glm::vec3(
+                0.0f,
+                1.8f,
+                0.0f
+            );
+
+        scene.AddObject(
+            torchObject
+        );
+
+        selectedLight =
+            torchLight;
+
+        selectedObject =
+            torchObject;
     }
 
     ImGui::SameLine();

@@ -768,6 +768,10 @@ int main()
     Model bush2Model(
         "Assets/Models/Environment/NaturePack/Bush_2.obj"
     );
+    Model torchModel(
+    "Assets/Models/Environment/Torch/Torch.obj",
+    "Assets/Models/Environment/Torch/"
+);
     //Model mountain1Model(
     //    "Assets/Models/Environment/Mountains/Mountain01.obj",
     //    "Assets/Models/Environment/Mountains/"
@@ -2414,10 +2418,54 @@ if (
         shader.setVec3(
             "sunColor",
             glm::vec3(1.0f));
-        for (int i = 0; i < 3; i++)
+        int pointLightIndex =
+            0;
+
+        for (Light* light : scene.lights)
         {
-            shader.setVec3("lightPositions[" + std::to_string(i) + "]", lightPositions[i]);
-            shader.setVec3("lightColors[" + std::to_string(i) + "]", lightColors[i]);
+            if (light == nullptr)
+                continue;
+
+            if (light->type == LightType::Directional)
+                continue;
+
+            if (pointLightIndex >= 3)
+                break;
+
+            shader.setVec3(
+                "lightPositions[" + std::to_string(pointLightIndex) + "]",
+                light->position
+            );
+
+            shader.setVec3(
+                "lightColors[" + std::to_string(pointLightIndex) + "]",
+                glm::vec3(
+                    3.0f,
+                    2.2f,
+                    1.2f
+                )
+            );
+
+            pointLightIndex++;
+        }
+
+        for (int i = pointLightIndex; i < 3; i++)
+        {
+            shader.setVec3(
+                "lightPositions[" + std::to_string(i) + "]",
+                glm::vec3(
+                    0.0f,
+                    -1000.0f,
+                    0.0f
+                )
+            );
+
+            shader.setVec3(
+                "lightColors[" + std::to_string(i) + "]",
+                glm::vec3(
+                    0.0f
+                )
+            );
         }
         shader.setMat4("view", glm::value_ptr(view));
         shader.setMat4("projection", glm::value_ptr(projection));
@@ -2532,7 +2580,18 @@ if (
                 culledObjects++;
             }
         }
+        for (SceneObject* obj : scene.objects)
+        {
+            if (obj == nullptr)
+                continue;
 
+            if (obj->attachedLight == nullptr)
+                continue;
+
+            obj->attachedLight->position =
+                obj->transform.position +
+                obj->attachedLightOffset;
+        }
         // ===== DRAW MODELS (each binds its own texture) =====
   /*      glm::mat4 model1 = glm::mat4(1.0f);
         model1 = glm::translate(model1, glm::vec3(-3.0f, 2.0f, -3.0f));
@@ -2620,13 +2679,15 @@ if (
         EditorUI::DrawToolbar(
             scene,
             selectedObject,
+            selectedLight,
             &cube,
             &shader,
             &cubeMaterial,
+            camera,
+            &torchModel,
             lightCounter,
             appMode
         );
-
         if (appMode == AppMode::Editor)
         {
             EditorUI::DrawHierarchy(scene, selectedObject, selectedLight);

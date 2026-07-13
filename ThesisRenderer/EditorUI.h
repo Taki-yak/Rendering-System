@@ -47,9 +47,12 @@ public:
     static void DrawToolbar(
         Scene& scene,
         SceneObject*& selectedObject,
+        Light*& selectedLight,
         Mesh* cubeMesh,
         Shader* shader,
         Material* material,
+        Camera& camera,
+        Model* torchModel,
         int& lightCounter,
         AppMode& appMode
     );

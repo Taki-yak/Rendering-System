@@ -2703,7 +2703,72 @@ if (
                 &treeStumpModel,
                 &grassModel
             );
+            // ================= PLAYER SPAWN TOOLS =================
 
+            ImGui::Begin("Player Tools");
+
+            if (playerObject != nullptr)
+            {
+                ImGui::Text("Player Position");
+                ImGui::Text(
+                    "X: %.2f  Y: %.2f  Z: %.2f",
+                    playerObject->transform.position.x,
+                    playerObject->transform.position.y,
+                    playerObject->transform.position.z
+                );
+
+                ImGui::Separator();
+
+                ImGui::Text("Saved Spawn Position");
+                ImGui::Text(
+                    "X: %.2f  Y: %.2f  Z: %.2f",
+                    playerSpawnPosition.x,
+                    playerSpawnPosition.y,
+                    playerSpawnPosition.z
+                );
+
+                ImGui::Separator();
+
+                if (ImGui::Button("Set Spawn Here"))
+                {
+                    playerSpawnPosition =
+                        playerObject->transform.position;
+
+                    std::cout
+                        << "Player spawn set to: "
+                        << playerSpawnPosition.x << ", "
+                        << playerSpawnPosition.y << ", "
+                        << playerSpawnPosition.z
+                        << std::endl;
+                }
+
+                if (ImGui::Button("Respawn Player"))
+                {
+                    playerObject->transform.position =
+                        playerSpawnPosition;
+
+                    playerObject->transform.rotation =
+                        glm::vec3(
+                            0.0f
+                        );
+
+                    thirdPersonController.verticalVelocity =
+                        0.0f;
+
+                    thirdPersonController.isGrounded =
+                        true;
+
+                    std::cout
+                        << "Player respawned."
+                        << std::endl;
+                }
+            }
+            else
+            {
+                ImGui::Text("Player not found.");
+            }
+
+            ImGui::End();
             if (selectedObject != nullptr)
             {
                 glLineWidth(4.0f);

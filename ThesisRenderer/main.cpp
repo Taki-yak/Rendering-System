@@ -2828,6 +2828,183 @@ if (
             }
 
             ImGui::End();
+            // ================= SELECTED OBJECT PLACEMENT TOOLS =================
+
+            ImGui::Begin("Selected Object Tools");
+
+            if (selectedObject != nullptr)
+            {
+                ImGui::Text("Selected:");
+                ImGui::Text("%s", selectedObject->name.c_str());
+
+                ImGui::Separator();
+
+                ImGui::Text(
+                    "Position: %.2f, %.2f, %.2f",
+                    selectedObject->transform.position.x,
+                    selectedObject->transform.position.y,
+                    selectedObject->transform.position.z
+                );
+
+                ImGui::Text(
+                    "Scale: %.2f, %.2f, %.2f",
+                    selectedObject->transform.scale.x,
+                    selectedObject->transform.scale.y,
+                    selectedObject->transform.scale.z
+                );
+
+                ImGui::Separator();
+
+                if (ImGui::Button("Move Selected In Front Of Camera"))
+                {
+                    glm::vec3 forward =
+                        glm::vec3(
+                            camera.Front.x,
+                            0.0f,
+                            camera.Front.z
+                        );
+
+                    if (glm::length(forward) < 0.001f)
+                    {
+                        forward =
+                            glm::vec3(
+                                0.0f,
+                                0.0f,
+                                -1.0f
+                            );
+                    }
+
+                    forward =
+                        glm::normalize(
+                            forward
+                        );
+
+                    glm::vec3 newPosition =
+                        camera.Position +
+                        forward * 6.0f;
+
+                    newPosition.y =
+                        selectedObject->transform.position.y;
+
+                    selectedObject->transform.position =
+                        newPosition;
+
+                    std::cout
+                        << "Moved selected object in front of camera."
+                        << std::endl;
+                }
+
+                if (ImGui::Button("Snap Selected To Ground"))
+                {
+                    selectedObject->transform.position.y =
+                        0.05f;
+
+                    std::cout
+                        << "Selected object snapped to ground."
+                        << std::endl;
+                }
+
+                ImGui::Separator();
+
+                if (ImGui::Button("Rotate Y +15"))
+                {
+                    selectedObject->transform.rotation.y +=
+                        15.0f;
+                }
+
+                ImGui::SameLine();
+
+                if (ImGui::Button("Rotate Y -15"))
+                {
+                    selectedObject->transform.rotation.y -=
+                        15.0f;
+                }
+
+                if (ImGui::Button("Rotate Y +90"))
+                {
+                    selectedObject->transform.rotation.y +=
+                        90.0f;
+                }
+
+                ImGui::SameLine();
+
+                if (ImGui::Button("Random Y Rotation"))
+                {
+                    selectedObject->transform.rotation.y =
+                        static_cast<float>(
+                            rand() % 360
+                            );
+                }
+
+                ImGui::Separator();
+
+                if (ImGui::Button("Scale Up"))
+                {
+                    selectedObject->transform.scale *=
+                        1.1f;
+                }
+
+                ImGui::SameLine();
+
+                if (ImGui::Button("Scale Down"))
+                {
+                    selectedObject->transform.scale *=
+                        0.9f;
+                }
+
+                if (ImGui::Button("Random Small Scale"))
+                {
+                    float randomScale =
+                        0.8f +
+                        static_cast<float>(rand() % 41) / 100.0f;
+
+                    selectedObject->transform.scale =
+                        glm::vec3(
+                            randomScale
+                        );
+                }
+
+                ImGui::Separator();
+
+                if (ImGui::Button("Mark As Collider"))
+                {
+                    selectedObject->isCollider =
+                        true;
+
+                    selectedObject->colliderRadius =
+                        glm::max(
+                            selectedObject->transform.scale.x,
+                            selectedObject->transform.scale.z
+                        ) * 0.8f;
+
+                    std::cout
+                        << "Selected object marked as collider."
+                        << std::endl;
+                }
+
+                ImGui::SameLine();
+
+                if (ImGui::Button("Remove Collider"))
+                {
+                    selectedObject->isCollider =
+                        false;
+
+                    std::cout
+                        << "Selected object collider removed."
+                        << std::endl;
+                }
+
+                ImGui::Text(
+                    "Collider: %s",
+                    selectedObject->isCollider ? "ON" : "OFF"
+                );
+            }
+            else
+            {
+                ImGui::Text("No object selected.");
+            }
+
+            ImGui::End();
             if (selectedObject != nullptr)
             {
                 glLineWidth(4.0f);

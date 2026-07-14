@@ -2762,6 +2762,65 @@ if (
                         << "Player respawned."
                         << std::endl;
                 }
+                if (ImGui::Button("Place Player In Front Of Camera"))
+                {
+                    glm::vec3 forward =
+                        glm::vec3(
+                            camera.Front.x,
+                            0.0f,
+                            camera.Front.z
+                        );
+
+                    if (glm::length(forward) < 0.001f)
+                    {
+                        forward =
+                            glm::vec3(
+                                0.0f,
+                                0.0f,
+                                -1.0f
+                            );
+                    }
+
+                    forward =
+                        glm::normalize(
+                            forward
+                        );
+
+                    glm::vec3 newPlayerPosition =
+                        camera.Position +
+                        forward * 5.0f;
+
+                    newPlayerPosition.y =
+                        0.0f;
+
+                    playerObject->transform.position =
+                        newPlayerPosition;
+
+                    thirdPersonController.verticalVelocity =
+                        0.0f;
+
+                    thirdPersonController.isGrounded =
+                        true;
+
+                    selectedObject =
+                        playerObject;
+
+                    std::cout
+                        << "Player placed in front of camera."
+                        << std::endl;
+                }
+                if (ImGui::Button("Select Player"))
+                {
+                    selectedObject =
+                        playerObject;
+
+                    selectedLight =
+                        nullptr;
+
+                    std::cout
+                        << "Player selected."
+                        << std::endl;
+                }
             }
             else
             {

@@ -2704,7 +2704,21 @@ if (
                 &grassModel
             );
             // ================= PLAYER SPAWN TOOLS =================
+            ImGui::SetNextWindowPos(
+                ImVec2(
+                    1240.0f,
+                    360.0f
+                ),
+                ImGuiCond_Once
+            );
 
+            ImGui::SetNextWindowSize(
+                ImVec2(
+                    340.0f,
+                    230.0f
+                ),
+                ImGuiCond_Once
+            );
             ImGui::Begin("Player Tools");
 
             if (playerObject != nullptr)
@@ -2829,7 +2843,21 @@ if (
 
             ImGui::End();
             // ================= SELECTED OBJECT PLACEMENT TOOLS =================
+            ImGui::SetNextWindowPos(
+                ImVec2(
+                    1240.0f,
+                    600.0f
+                ),
+                ImGuiCond_Once
+            );
 
+            ImGui::SetNextWindowSize(
+                ImVec2(
+                    340.0f,
+                    280.0f
+                ),
+                ImGuiCond_Once
+            );
             ImGui::Begin("Selected Object Tools");
 
             if (selectedObject != nullptr)

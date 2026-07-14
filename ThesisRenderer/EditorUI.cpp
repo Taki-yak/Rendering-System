@@ -128,6 +128,21 @@ void EditorUI::DrawHierarchy(
 {
     ImGui::SetNextWindowPos(ImVec2(0, 20), ImGuiCond_Once);
     ImGui::SetNextWindowSize(ImVec2(250, 500), ImGuiCond_Once);
+    ImGui::SetNextWindowPos(
+        ImVec2(
+            10.0f,
+            70.0f
+        ),
+        ImGuiCond_Once
+    );
+
+    ImGui::SetNextWindowSize(
+        ImVec2(
+            260.0f,
+            360.0f
+        ),
+        ImGuiCond_Once
+    );
     ImGui::Begin("Hierarchy");
     static char searchBuffer[128] = "";
 
@@ -224,6 +239,21 @@ void EditorUI::DrawInspector(
 {
     ImGui::SetNextWindowPos(ImVec2(550, 20), ImGuiCond_Once);
     ImGui::SetNextWindowSize(ImVec2(250, 500), ImGuiCond_Once);
+    ImGui::SetNextWindowPos(
+        ImVec2(
+            1240.0f,
+            70.0f
+        ),
+        ImGuiCond_Once
+    );
+
+    ImGui::SetNextWindowSize(
+        ImVec2(
+            340.0f,
+            280.0f
+        ),
+        ImGuiCond_Once
+    );
     ImGui::Begin("Inspector");
 
     if (selectedObject != nullptr)
@@ -340,6 +370,22 @@ void EditorUI::DrawLightInspector(
     Light* selectedLight
 )
 {
+
+    ImGui::SetNextWindowPos(
+        ImVec2(
+            930.0f,
+            70.0f
+        ),
+        ImGuiCond_Once
+    );
+
+    ImGui::SetNextWindowSize(
+        ImVec2(
+            300.0f,
+            260.0f
+        ),
+        ImGuiCond_Once
+    );
     ImGui::Begin("Light Inspector");
 
     if (selectedLight)
@@ -400,6 +446,21 @@ void EditorUI::DrawDebug(
 {
     ImGui::SetNextWindowPos(ImVec2(260, 20), ImGuiCond_Once);
     ImGui::SetNextWindowSize(ImVec2(280, 200), ImGuiCond_Once);
+    ImGui::SetNextWindowPos(
+        ImVec2(
+            10.0f,
+            440.0f
+        ),
+        ImGuiCond_Once
+    );
+
+    ImGui::SetNextWindowSize(
+        ImVec2(
+            260.0f,
+            190.0f
+        ),
+        ImGuiCond_Once
+    );
     ImGui::Begin("Debug");
 
     ImGui::Text(
@@ -472,7 +533,21 @@ void EditorUI::DrawAssetBrowser(
         ImVec2(530, 180),
         ImGuiCond_Once
     );
+    ImGui::SetNextWindowPos(
+        ImVec2(
+            10.0f,
+            650.0f
+        ),
+        ImGuiCond_Once
+    );
 
+    ImGui::SetNextWindowSize(
+        ImVec2(
+            900.0f,
+            230.0f
+        ),
+        ImGuiCond_Once
+    );
     ImGui::Begin("Asset Browser");
 
     if (ImGui::TreeNode("Textures"))
@@ -995,6 +1070,21 @@ void EditorUI::DrawStatistics(
     float deltaTime
 )
 {
+    ImGui::SetNextWindowPos(
+        ImVec2(
+            280.0f,
+            70.0f
+        ),
+        ImGuiCond_Once
+    );
+
+    ImGui::SetNextWindowSize(
+        ImVec2(
+            260.0f,
+            160.0f
+        ),
+        ImGuiCond_Once
+    );
     ImGui::Begin("Statistics");
 
     ImGui::Text(

@@ -514,7 +514,6 @@ void EditorUI::DrawAssetBrowser(
     Shader* shader,
     Material* material,
     Camera& camera,
-
     Model* pineTreeModel,
     Model* commonTreeModel,
     Model* rockModel,
@@ -524,15 +523,6 @@ void EditorUI::DrawAssetBrowser(
     Model* grassModel
 )
 {
-    ImGui::SetNextWindowPos(
-        ImVec2(10, 520),
-        ImGuiCond_Once
-    );
-
-    ImGui::SetNextWindowSize(
-        ImVec2(530, 180),
-        ImGuiCond_Once
-    );
     ImGui::SetNextWindowPos(
         ImVec2(
             10.0f,
@@ -548,282 +538,396 @@ void EditorUI::DrawAssetBrowser(
         ),
         ImGuiCond_Once
     );
+
     ImGui::Begin("Asset Browser");
 
-    if (ImGui::TreeNode("Textures"))
-    {
-        ImGui::Selectable("container.jpg");
-        ImGui::TreePop();
-    }
-    if (ImGui::TreeNode("Models"))
-    {
-        for (auto& asset : AssetDatabase::assets)
-        {
-            if (asset.type == "Model")
-            {
-                ImGui::Selectable(
-                    asset.name.c_str()
-                );
-            }
-        }
-
-        ImGui::TreePop();
-    }
-
-    if (ImGui::TreeNode("Materials"))
-    {
-        ImGui::Selectable("Default Material");
-        ImGui::TreePop();
-    }
-
-    ImGui::Separator();
-
-    ImGui::Text("Environment Props");
-
-    auto SpawnModelObject =
-        [&](const std::string& name,
-            Model* model,
-            glm::vec3 scale,
-            bool collider,
-            float colliderRadius)
+    auto GetSpawnPosition =
+        [&](float distance, float yPosition)
         {
             glm::vec3 forward =
-                glm::normalize(
+                glm::vec3(
+                    camera.Front.x,
+                    0.0f,
+                    camera.Front.z
+                );
+
+            if (glm::length(forward) < 0.001f)
+            {
+                forward =
                     glm::vec3(
-                        camera.Front.x,
                         0.0f,
-                        camera.Front.z
-                    )
+                        0.0f,
+                        -1.0f
+                    );
+            }
+
+            forward =
+                glm::normalize(
+                    forward
                 );
 
             glm::vec3 spawnPosition =
-                glm::vec3(
-                    camera.Position.x,
-                    0.05f,
-                    camera.Position.z
-                )
-                +
-                forward * 6.0f;
+                camera.Position +
+                forward * distance;
 
-            SceneObject* obj =
+            spawnPosition.y =
+                yPosition;
+
+            return spawnPosition;
+        };
+
+    auto SpawnModelObject =
+        [&](const std::string& objectName,
+            Model* model,
+            glm::vec3 scale,
+            bool collider)
+        {
+            if (model == nullptr)
+                return;
+
+            SceneObject* object =
                 new SceneObject(
                     model,
                     shader
                 );
 
-            obj->name =
-                name;
+            object->name =
+                objectName;
 
-            obj->transform.position =
-                spawnPosition;
+            object->transform.position =
+                GetSpawnPosition(
+                    6.0f,
+                    0.05f
+                );
 
-            obj->transform.scale =
+            object->transform.scale =
                 scale;
 
-            obj->isCollider =
+            object->isCollider =
                 collider;
 
-            obj->colliderRadius =
-                colliderRadius;
-
-            obj->boundingRadius =
+            object->boundingRadius =
                 50.0f;
 
+            object->colliderRadius =
+                glm::max(
+                    scale.x,
+                    scale.z
+                ) * 0.8f;
+
             scene.AddObject(
-                obj
+                object
             );
 
             selectedObject =
-                obj;
+                object;
         };
-    ImGui::Separator();
 
-    ImGui::Text("Nature Assets");
+    auto SpawnCubeObject =
+        [&](const std::string& objectName,
+            glm::vec3 scale,
+            glm::vec3 positionOffset,
+            bool collider)
+        {
+            SceneObject* object =
+                new SceneObject(
+                    cubeMesh,
+                    shader,
+                    material
+                );
 
-    if (ImGui::Button("Spawn Pine Tree"))
-    {
-        SpawnModelObject(
-            "Pine Tree",
-            pineTreeModel,
-            glm::vec3(1.0f),
-            false,
-            0.8f
-        );
-    }
+            object->name =
+                objectName;
 
-    ImGui::SameLine();
+            object->transform.position =
+                GetSpawnPosition(
+                    6.0f,
+                    0.0f
+                ) +
+                positionOffset;
 
-    if (ImGui::Button("Spawn Common Tree"))
-    {
-        SpawnModelObject(
-            "Common Tree",
-            commonTreeModel,
-            glm::vec3(1.0f),
-            false,
-            0.8f
-        );
-    }
+            object->transform.scale =
+                scale;
 
-    if (ImGui::Button("Spawn Rock"))
-    {
-        SpawnModelObject(
-            "Rock",
-            rockModel,
-            glm::vec3(0.8f),
-            true,
-            0.8f
-        );
-    }
+            object->isCollider =
+                collider;
 
-    ImGui::SameLine();
+            object->boundingRadius =
+                50.0f;
 
-    if (ImGui::Button("Spawn Bush"))
-    {
-        SpawnModelObject(
-            "Bush",
-            bushModel,
-            glm::vec3(0.8f),
-            false,
-            0.4f
-        );
-    }
+            object->colliderRadius =
+                glm::max(
+                    scale.x,
+                    scale.z
+                ) * 0.8f;
 
-    if (ImGui::Button("Spawn Wood Log"))
-    {
-        SpawnModelObject(
-            "Wood Log",
-            woodLogModel,
-            glm::vec3(1.0f),
-            true,
-            1.0f
-        );
-    }
-
-    ImGui::SameLine();
-
-    if (ImGui::Button("Spawn Stump"))
-    {
-        SpawnModelObject(
-            "Tree Stump",
-            treeStumpModel,
-            glm::vec3(0.9f),
-            true,
-            0.8f
-        );
-    }
-
-    if (ImGui::Button("Spawn Grass Patch"))
-    {
-        SpawnModelObject(
-            "Grass Patch",
-            grassModel,
-            glm::vec3(0.8f),
-            false,
-            0.2f
-        );
-    }
-    if (ImGui::Button("Spawn Crate"))
-    {
-        SceneObject* crate =
-            new SceneObject(
-                cubeMesh,
-                shader,
-                material
+            scene.AddObject(
+                object
             );
 
-        crate->name = "Crate";
-        crate->isCollider = true;
-        crate->transform.position =
-            glm::vec3(
-                0.0f,
-                0.5f,
-                -5.0f
-            );
+            selectedObject =
+                object;
+        };
 
-        crate->transform.scale =
-            glm::vec3(
-                1.0f,
-                1.0f,
-                1.0f
-            );
-
-        scene.AddObject(crate);
-
-        selectedObject = crate;
-    }
-
-    ImGui::SameLine();
-
-    if (ImGui::Button("Spawn Wall"))
+    if (ImGui::BeginTabBar("AssetBrowserTabs"))
     {
-        SceneObject* wall =
-            new SceneObject(
-                cubeMesh,
-                shader,
-                material
-            );
+        if (ImGui::BeginTabItem("Nature"))
+        {
+            ImGui::Text("Trees");
 
-        wall->name = "Wall";
-        wall->isCollider = true;
-        wall->transform.position =
-            glm::vec3(
-                0.0f,
-                1.5f,
-                -8.0f
-            );
+            if (ImGui::Button("Pine Tree"))
+            {
+                SpawnModelObject(
+                    "Pine Tree",
+                    pineTreeModel,
+                    glm::vec3(
+                        0.8f
+                    ),
+                    false
+                );
+            }
 
-        wall->transform.scale =
-            glm::vec3(
-                6.0f,
-                3.0f,
-                0.3f
-            );
-        wall->isCollider =
-            true;
+            ImGui::SameLine();
 
-        wall->colliderRadius =
-            glm::max(
-                wall->transform.scale.x,
-                wall->transform.scale.z
-            ) * 0.8f;
+            if (ImGui::Button("Common Tree"))
+            {
+                SpawnModelObject(
+                    "Common Tree",
+                    commonTreeModel,
+                    glm::vec3(
+                        0.9f
+                    ),
+                    false
+                );
+            }
 
-        wall->boundingRadius =
-            50.0f;
-        scene.AddObject(wall);
+            ImGui::Separator();
 
-        selectedObject = wall;
-    }
+            ImGui::Text("Rocks / Plants");
 
-    ImGui::SameLine();
+            if (ImGui::Button("Rock"))
+            {
+                SpawnModelObject(
+                    "Rock",
+                    rockModel,
+                    glm::vec3(
+                        0.8f
+                    ),
+                    true
+                );
+            }
 
-    if (ImGui::Button("Spawn Pillar"))
-    {
-        SceneObject* pillar =
-            new SceneObject(
-                cubeMesh,
-                shader,
-                material
-            );
+            ImGui::SameLine();
 
-        pillar->name = "Pillar";
-        pillar->isCollider = true;
-        pillar->transform.position =
-            glm::vec3(
-                3.0f,
-                1.5f,
-                -6.0f
-            );
+            if (ImGui::Button("Bush"))
+            {
+                SpawnModelObject(
+                    "Bush",
+                    bushModel,
+                    glm::vec3(
+                        0.8f
+                    ),
+                    false
+                );
+            }
 
-        pillar->transform.scale =
-            glm::vec3(
-                0.7f,
-                3.0f,
-                0.7f
-            );
+            ImGui::SameLine();
 
-        scene.AddObject(pillar);
+            if (ImGui::Button("Grass"))
+            {
+                SpawnModelObject(
+                    "Grass",
+                    grassModel,
+                    glm::vec3(
+                        0.7f
+                    ),
+                    false
+                );
+            }
 
-        selectedObject = pillar;
+            ImGui::Separator();
+
+            ImGui::Text("Forest Props");
+
+            if (ImGui::Button("Wood Log"))
+            {
+                SpawnModelObject(
+                    "Wood Log",
+                    woodLogModel,
+                    glm::vec3(
+                        1.0f
+                    ),
+                    true
+                );
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("Tree Stump"))
+            {
+                SpawnModelObject(
+                    "Tree Stump",
+                    treeStumpModel,
+                    glm::vec3(
+                        0.9f
+                    ),
+                    true
+                );
+            }
+
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("Structures"))
+        {
+            ImGui::Text("Basic Building Pieces");
+
+            if (ImGui::Button("Wall"))
+            {
+                SpawnCubeObject(
+                    "Wall",
+                    glm::vec3(
+                        4.0f,
+                        2.5f,
+                        0.25f
+                    ),
+                    glm::vec3(
+                        0.0f,
+                        1.25f,
+                        0.0f
+                    ),
+                    true
+                );
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("Fence Segment"))
+            {
+                SpawnCubeObject(
+                    "Fence Segment",
+                    glm::vec3(
+                        3.0f,
+                        1.0f,
+                        0.18f
+                    ),
+                    glm::vec3(
+                        0.0f,
+                        0.5f,
+                        0.0f
+                    ),
+                    true
+                );
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("Fence Post"))
+            {
+                SpawnCubeObject(
+                    "Fence Post",
+                    glm::vec3(
+                        0.3f,
+                        1.3f,
+                        0.3f
+                    ),
+                    glm::vec3(
+                        0.0f,
+                        0.65f,
+                        0.0f
+                    ),
+                    true
+                );
+            }
+
+            ImGui::Separator();
+
+            ImGui::Text("Camp Layout Pieces");
+
+            if (ImGui::Button("Path Tile"))
+            {
+                SpawnCubeObject(
+                    "Path Tile",
+                    glm::vec3(
+                        3.0f,
+                        0.05f,
+                        3.0f
+                    ),
+                    glm::vec3(
+                        0.0f,
+                        0.03f,
+                        0.0f
+                    ),
+                    false
+                );
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("Wood Platform"))
+            {
+                SpawnCubeObject(
+                    "Wood Platform",
+                    glm::vec3(
+                        4.0f,
+                        0.2f,
+                        4.0f
+                    ),
+                    glm::vec3(
+                        0.0f,
+                        0.1f,
+                        0.0f
+                    ),
+                    true
+                );
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("House Block"))
+            {
+                SpawnCubeObject(
+                    "House Block Placeholder",
+                    glm::vec3(
+                        5.0f,
+                        3.0f,
+                        5.0f
+                    ),
+                    glm::vec3(
+                        0.0f,
+                        1.5f,
+                        0.0f
+                    ),
+                    true
+                );
+            }
+
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("Lights"))
+        {
+            ImGui::Text("Torch lights are created from the toolbar.");
+            ImGui::Text("Use Add Light to spawn a torch object with a point light.");
+            ImGui::Separator();
+            ImGui::Text("Current safe light limit: 5 active torch lights.");
+
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("Gameplay"))
+        {
+            ImGui::Text("Gameplay tools are in the Player Tools window.");
+            ImGui::Text("Available tools:");
+            ImGui::BulletText("Place Player In Front Of Camera");
+            ImGui::BulletText("Set Spawn Here");
+            ImGui::BulletText("Respawn Player");
+            ImGui::BulletText("Select Player");
+
+            ImGui::EndTabItem();
+        }
+
+        ImGui::EndTabBar();
     }
 
     ImGui::End();

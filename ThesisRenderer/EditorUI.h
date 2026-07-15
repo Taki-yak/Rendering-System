@@ -17,7 +17,6 @@ public:
         Shader* shader,
         Material* material,
         Camera& camera,
-
         Model* pineTreeModel,
         Model* commonTreeModel,
         Model* rockModel,

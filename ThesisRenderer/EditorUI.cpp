@@ -507,6 +507,255 @@ void EditorUI::DrawDebug(
 
     ImGui::End();
 }
+static SceneObject* SpawnCampModel(
+    Scene& scene,
+    Model* model,
+    Shader* shader,
+    const std::string& name,
+    const glm::vec3& position,
+    const glm::vec3& rotation,
+    const glm::vec3& scale,
+    bool isCollider,
+    float colliderRadius
+)
+{
+    SceneObject* obj =
+        new SceneObject(model, shader);
+
+    obj->name = name;
+    obj->transform.position = position;
+    obj->transform.rotation = rotation;
+    obj->transform.scale = scale;
+
+    obj->isCollider = isCollider;
+    obj->colliderRadius = colliderRadius;
+    obj->boundingRadius = colliderRadius;
+
+    scene.AddObject(obj);
+
+    return obj;
+}
+
+static void BuildRealCamp(
+    Scene& scene,
+    SceneObject*& selectedObject,
+    Camera& camera,
+    Shader* shader,
+    Model* woodenHouseModel,
+    Model* pineTreeModel,
+    Model* commonTreeModel,
+    Model* rockModel,
+    Model* bushModel,
+    Model* woodLogModel,
+    Model* treeStumpModel
+)
+{
+    glm::vec3 forward =
+        glm::vec3(
+            camera.Front.x,
+            0.0f,
+            camera.Front.z
+        );
+
+    if (glm::length(forward) < 0.001f)
+    {
+        forward = glm::vec3(0.0f, 0.0f, -1.0f);
+    }
+
+    forward = glm::normalize(forward);
+
+    glm::vec3 right =
+        glm::normalize(
+            glm::cross(
+                forward,
+                glm::vec3(0.0f, 1.0f, 0.0f)
+            )
+        );
+
+    glm::vec3 campCenter =
+        camera.Position + forward * 18.0f;
+
+    campCenter.y = 0.0f;
+
+    // ================= HOUSE =================
+    SceneObject* house =
+        SpawnCampModel(
+            scene,
+            woodenHouseModel,
+            shader,
+            "Camp House",
+            campCenter,
+            glm::vec3(0.0f, 180.0f, 0.0f),
+            glm::vec3(1.0f),
+            true,
+            6.0f
+        );
+
+    selectedObject = house;
+
+    // ================= TREES =================
+    SpawnCampModel(
+        scene,
+        pineTreeModel,
+        shader,
+        "Camp Tree 1",
+        campCenter + right * -9.0f + forward * 6.0f,
+        glm::vec3(0.0f, 25.0f, 0.0f),
+        glm::vec3(2.5f),
+        true,
+        2.5f
+    );
+
+    SpawnCampModel(
+        scene,
+        pineTreeModel,
+        shader,
+        "Camp Tree 2",
+        campCenter + right * 10.0f + forward * 7.0f,
+        glm::vec3(0.0f, -10.0f, 0.0f),
+        glm::vec3(2.8f),
+        true,
+        2.5f
+    );
+
+    SpawnCampModel(
+        scene,
+        commonTreeModel,
+        shader,
+        "Camp Tree 3",
+        campCenter + right * -12.0f - forward * 3.0f,
+        glm::vec3(0.0f, 40.0f, 0.0f),
+        glm::vec3(2.2f),
+        true,
+        2.5f
+    );
+
+    SpawnCampModel(
+        scene,
+        commonTreeModel,
+        shader,
+        "Camp Tree 4",
+        campCenter + right * 12.0f - forward * 5.0f,
+        glm::vec3(0.0f, -35.0f, 0.0f),
+        glm::vec3(2.4f),
+        true,
+        2.5f
+    );
+
+    // ================= ROCKS =================
+    SpawnCampModel(
+        scene,
+        rockModel,
+        shader,
+        "Camp Rock 1",
+        campCenter + right * -5.0f + forward * 2.0f,
+        glm::vec3(0.0f, 20.0f, 0.0f),
+        glm::vec3(1.8f),
+        true,
+        1.5f
+    );
+
+    SpawnCampModel(
+        scene,
+        rockModel,
+        shader,
+        "Camp Rock 2",
+        campCenter + right * 6.0f + forward * 1.5f,
+        glm::vec3(0.0f, -30.0f, 0.0f),
+        glm::vec3(1.5f),
+        true,
+        1.5f
+    );
+
+    SpawnCampModel(
+        scene,
+        rockModel,
+        shader,
+        "Camp Rock 3",
+        campCenter + right * 3.0f - forward * 6.0f,
+        glm::vec3(0.0f, 10.0f, 0.0f),
+        glm::vec3(1.7f),
+        true,
+        1.5f
+    );
+
+    // ================= BUSHES =================
+    SpawnCampModel(
+        scene,
+        bushModel,
+        shader,
+        "Camp Bush 1",
+        campCenter + right * -4.0f - forward * 5.0f,
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(1.4f),
+        false,
+        1.0f
+    );
+
+    SpawnCampModel(
+        scene,
+        bushModel,
+        shader,
+        "Camp Bush 2",
+        campCenter + right * 5.0f - forward * 4.5f,
+        glm::vec3(0.0f, 20.0f, 0.0f),
+        glm::vec3(1.5f),
+        false,
+        1.0f
+    );
+
+    SpawnCampModel(
+        scene,
+        bushModel,
+        shader,
+        "Camp Bush 3",
+        campCenter + right * 8.0f + forward * 5.0f,
+        glm::vec3(0.0f, -10.0f, 0.0f),
+        glm::vec3(1.3f),
+        false,
+        1.0f
+    );
+
+    // ================= CAMP CENTER =================
+    glm::vec3 campFireArea =
+        campCenter - forward * 5.0f;
+
+    SpawnCampModel(
+        scene,
+        treeStumpModel,
+        shader,
+        "Camp Stump",
+        campFireArea + right * -2.0f,
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(1.6f),
+        false,
+        1.0f
+    );
+
+    SpawnCampModel(
+        scene,
+        woodLogModel,
+        shader,
+        "Camp Log 1",
+        campFireArea + right * 1.8f,
+        glm::vec3(0.0f, 25.0f, 0.0f),
+        glm::vec3(1.8f),
+        false,
+        1.0f
+    );
+
+    SpawnCampModel(
+        scene,
+        woodLogModel,
+        shader,
+        "Camp Log 2",
+        campFireArea + forward * 1.5f,
+        glm::vec3(0.0f, -25.0f, 0.0f),
+        glm::vec3(1.8f),
+        false,
+        1.0f
+    );
+}
 void EditorUI::DrawAssetBrowser(
     Scene& scene,
     SceneObject*& selectedObject,
@@ -514,6 +763,8 @@ void EditorUI::DrawAssetBrowser(
     Shader* shader,
     Material* material,
     Camera& camera,
+
+    Model* woodenHouseModel,
     Model* pineTreeModel,
     Model* commonTreeModel,
     Model* rockModel,
@@ -780,6 +1031,71 @@ void EditorUI::DrawAssetBrowser(
 
         if (ImGui::BeginTabItem("Structures"))
         {
+            ImGui::Text("Real Structure Models");
+
+            if (ImGui::Button("Wooden House"))
+            {
+                glm::vec3 forward =
+                    glm::vec3(
+                        camera.Front.x,
+                        0.0f,
+                        camera.Front.z
+                    );
+
+                if (glm::length(forward) < 0.001f)
+                {
+                    forward =
+                        glm::vec3(
+                            0.0f,
+                            0.0f,
+                            -1.0f
+                        );
+                }
+
+                forward =
+                    glm::normalize(
+                        forward
+                    );
+
+                SceneObject* house =
+                    new SceneObject(
+                        woodenHouseModel,
+                        shader
+                    );
+
+                house->name =
+                    "Wooden House";
+
+                house->transform.position =
+                    camera.Position +
+                    forward * 8.0f;
+
+                house->transform.position.y =
+                    0.0f;
+
+                house->transform.scale =
+                    glm::vec3(
+                        1.0f
+                    );
+
+                house->isCollider =
+                    true;
+
+                house->boundingRadius =
+                    100.0f;
+
+                house->colliderRadius =
+                    6.0f;
+
+                scene.AddObject(
+                    house
+                );
+
+                selectedObject =
+                    house;
+            }
+
+            ImGui::Separator();
             ImGui::Text("Basic Building Pieces");
 
             if (ImGui::Button("Wall"))
@@ -843,7 +1159,22 @@ void EditorUI::DrawAssetBrowser(
             ImGui::Separator();
 
             ImGui::Text("Camp Layout Pieces");
-
+            if (ImGui::Button("Build Real Camp"))
+            {
+                BuildRealCamp(
+                    scene,
+                    selectedObject,
+                    camera,
+                    shader,
+                    woodenHouseModel,
+                    pineTreeModel,
+                    commonTreeModel,
+                    rockModel,
+                    bushModel,
+                    woodLogModel,
+                    treeStumpModel
+                );
+            }
             if (ImGui::Button("Path Tile"))
             {
                 SpawnCubeObject(
@@ -884,23 +1215,7 @@ void EditorUI::DrawAssetBrowser(
 
             ImGui::SameLine();
 
-            if (ImGui::Button("House Block"))
-            {
-                SpawnCubeObject(
-                    "House Block Placeholder",
-                    glm::vec3(
-                        5.0f,
-                        3.0f,
-                        5.0f
-                    ),
-                    glm::vec3(
-                        0.0f,
-                        1.5f,
-                        0.0f
-                    ),
-                    true
-                );
-            }
+         
 
             ImGui::EndTabItem();
         }

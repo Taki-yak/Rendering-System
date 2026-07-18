@@ -116,6 +116,62 @@ bool IsEditorSavedObject(SceneObject* object)
     return true;
 }
 
+std::string GetEditorObjectType(SceneObject* object)
+{
+    if (object == nullptr)
+        return "Unknown";
+
+    if (object->name.find("Wooden House") != std::string::npos)
+        return "WoodenHouse";
+
+    if (object->name.find("Camp House") != std::string::npos)
+        return "WoodenHouse";
+
+    if (object->name.find("Pine Tree") != std::string::npos)
+        return "PineTree";
+
+    if (object->name.find("Camp Tree") != std::string::npos)
+        return "PineTree";
+
+    if (object->name.find("Common Tree") != std::string::npos)
+        return "CommonTree";
+
+    if (object->name.find("Rock") != std::string::npos)
+        return "Rock";
+
+    if (object->name.find("Bush") != std::string::npos)
+        return "Bush";
+
+    if (object->name.find("Wood Log") != std::string::npos)
+        return "WoodLog";
+
+    if (object->name.find("Camp Log") != std::string::npos)
+        return "WoodLog";
+
+    if (object->name.find("Tree Stump") != std::string::npos)
+        return "TreeStump";
+
+    if (object->name.find("Camp Stump") != std::string::npos)
+        return "TreeStump";
+
+    if (object->name.find("Grass") != std::string::npos)
+        return "Grass";
+
+    if (object->name.find("Wall") != std::string::npos)
+        return "Cube";
+
+    if (object->name.find("Fence") != std::string::npos)
+        return "Cube";
+
+    if (object->name.find("Path") != std::string::npos)
+        return "Cube";
+
+    if (object->name.find("Platform") != std::string::npos)
+        return "Cube";
+
+    return "Cube";
+}
+
 void SaveEditorObjects(
     Scene& scene,
     const std::string& filePath
@@ -139,7 +195,13 @@ void SaveEditorObjects(
         if (!IsEditorSavedObject(object))
             continue;
 
+        std::string objectType =
+            GetEditorObjectType(
+                object
+            );
+
         file
+            << objectType << "|"
             << object->name << "|"
 
             << object->transform.position.x << " "
@@ -161,17 +223,64 @@ void SaveEditorObjects(
     file.close();
 
     std::cout
-        << "Editor objects saved to "
+        << "Editor objects saved with prefab types to "
         << filePath
         << std::endl;
 }
+Model* GetModelFromEditorType(
+    const std::string& objectType,
+    Model* woodenHouseModel,
+    Model* pineTreeModel,
+    Model* commonTreeModel,
+    Model* rockModel,
+    Model* bushModel,
+    Model* woodLogModel,
+    Model* treeStumpModel,
+    Model* grassModel
+)
+{
+    if (objectType == "WoodenHouse")
+        return woodenHouseModel;
+
+    if (objectType == "PineTree")
+        return pineTreeModel;
+
+    if (objectType == "CommonTree")
+        return commonTreeModel;
+
+    if (objectType == "Rock")
+        return rockModel;
+
+    if (objectType == "Bush")
+        return bushModel;
+
+    if (objectType == "WoodLog")
+        return woodLogModel;
+
+    if (objectType == "TreeStump")
+        return treeStumpModel;
+
+    if (objectType == "Grass")
+        return grassModel;
+
+    return nullptr;
+}
+
 void LoadEditorObjects(
     Scene& scene,
     const std::string& filePath,
     Mesh* cubeMesh,
     Shader* shader,
     Material* material,
-    SceneObject*& selectedObject
+    SceneObject*& selectedObject,
+    Model* woodenHouseModel,
+    Model* pineTreeModel,
+    Model* commonTreeModel,
+    Model* rockModel,
+    Model* bushModel,
+    Model* woodLogModel,
+    Model* treeStumpModel,
+    Model* grassModel
 )
 {
     std::ifstream file(
@@ -198,12 +307,14 @@ void LoadEditorObjects(
             line
         );
 
+        std::string typePart;
         std::string namePart;
         std::string positionPart;
         std::string rotationPart;
         std::string scalePart;
         std::string colliderPart;
 
+        std::getline(lineStream, typePart, '|');
         std::getline(lineStream, namePart, '|');
         std::getline(lineStream, positionPart, '|');
         std::getline(lineStream, rotationPart, '|');
@@ -211,11 +322,38 @@ void LoadEditorObjects(
         std::getline(lineStream, colliderPart, '|');
 
         SceneObject* object =
-            new SceneObject(
-                cubeMesh,
-                shader,
-                material
+            nullptr;
+
+        Model* model =
+            GetModelFromEditorType(
+                typePart,
+                woodenHouseModel,
+                pineTreeModel,
+                commonTreeModel,
+                rockModel,
+                bushModel,
+                woodLogModel,
+                treeStumpModel,
+                grassModel
             );
+
+        if (model != nullptr)
+        {
+            object =
+                new SceneObject(
+                    model,
+                    shader
+                );
+        }
+        else
+        {
+            object =
+                new SceneObject(
+                    cubeMesh,
+                    shader,
+                    material
+                );
+        }
 
         object->name =
             namePart;
@@ -251,7 +389,7 @@ void LoadEditorObjects(
             colliderPart == "1";
 
         object->boundingRadius =
-            50.0f;
+            80.0f;
 
         object->colliderRadius =
             glm::max(
@@ -270,7 +408,7 @@ void LoadEditorObjects(
     file.close();
 
     std::cout
-        << "Editor objects loaded from "
+        << "Editor objects loaded with prefab types from "
         << filePath
         << std::endl;
 }
@@ -961,6 +1099,10 @@ int main()
     Model torchModel(
         "Assets/Models/Environment/Torch/Torch.obj",
         "Assets/Models/Environment/Torch/"
+    );
+    Model woodenHouseModel(
+        "Assets/Models/Environment/WoodenHouse/WoodenHouse.obj",
+        "Assets/Models/Environment/WoodenHouse/"
     );
     //Model mountain1Model(
     //    "Assets/Models/Environment/Mountains/Mountain01.obj",
@@ -2884,6 +3026,7 @@ if (
                 &cubeMaterial,
                 camera,
 
+                &woodenHouseModel,
                 &pineTreeModel,
                 &commonTreeModel,
                 &rockModel,
@@ -3240,314 +3383,36 @@ if (
                 ImGuiCond_Once
             );
 
+            // ================= CAMP BUILDER TOOLS =================
+
+            ImGui::SetNextWindowPos(
+                ImVec2(
+                    920.0f,
+                    360.0f
+                ),
+                ImGuiCond_Once
+            );
+
+            ImGui::SetNextWindowSize(
+                ImVec2(
+                    300.0f,
+                    160.0f
+                ),
+                ImGuiCond_Once
+            );
+
             ImGui::Begin("Camp Builder");
 
-            ImGui::Text("Quick Scene Builder");
+            ImGui::TextWrapped(
+                "Use Asset Browser -> Structures -> Build Real Camp."
+            );
+
             ImGui::Separator();
-
-            if (ImGui::Button("Build Small Camp In Front Of Camera"))
-            {
-                glm::vec3 forward =
-                    glm::vec3(
-                        camera.Front.x,
-                        0.0f,
-                        camera.Front.z
-                    );
-
-                if (glm::length(forward) < 0.001f)
-                {
-                    forward =
-                        glm::vec3(
-                            0.0f,
-                            0.0f,
-                            -1.0f
-                        );
-                }
-
-                forward =
-                    glm::normalize(
-                        forward
-                    );
-
-                glm::vec3 right =
-                    glm::normalize(
-                        glm::cross(
-                            forward,
-                            glm::vec3(
-                                0.0f,
-                                1.0f,
-                                0.0f
-                            )
-                        )
-                    );
-
-                glm::vec3 campCenter =
-                    camera.Position +
-                    forward * 14.0f;
-
-                campCenter.y =
-                    0.0f;
-
-                auto SpawnCampCube =
-                    [&](const std::string& name,
-                        glm::vec3 localOffset,
-                        glm::vec3 scale,
-                        glm::vec3 rotation,
-                        bool collider)
-                    {
-                        SceneObject* object =
-                            new SceneObject(
-                                &cube,
-                                &shader,
-                                &cubeMaterial
-                            );
-
-                        object->name =
-                            name;
-
-                        object->transform.position =
-                            campCenter +
-                            right * localOffset.x +
-                            glm::vec3(
-                                0.0f,
-                                localOffset.y,
-                                0.0f
-                            ) +
-                            forward * localOffset.z;
-
-                        object->transform.scale =
-                            scale;
-
-                        object->transform.rotation =
-                            rotation;
-
-                        object->isCollider =
-                            collider;
-
-                        object->boundingRadius =
-                            50.0f;
-
-                        object->colliderRadius =
-                            glm::max(
-                                scale.x,
-                                scale.z
-                            ) * 0.8f;
-
-                        scene.AddObject(
-                            object
-                        );
-
-                        selectedObject =
-                            object;
-
-                        return object;
-                    };
-
-                // House base
-                SpawnCampCube(
-                    "Camp House Body",
-                    glm::vec3(
-                        0.0f,
-                        1.5f,
-                        0.0f
-                    ),
-                    glm::vec3(
-                        5.0f,
-                        3.0f,
-                        5.0f
-                    ),
-                    glm::vec3(
-                        0.0f
-                    ),
-                    true
-                );
-
-                // Simple roof placeholder
-                SpawnCampCube(
-                    "Camp House Roof",
-                    glm::vec3(
-                        0.0f,
-                        3.25f,
-                        0.0f
-                    ),
-                    glm::vec3(
-                        6.0f,
-                        0.5f,
-                        6.0f
-                    ),
-                    glm::vec3(
-                        0.0f
-                    ),
-                    true
-                );
-
-                // Door/path entrance gap is at front
-                for (int i = -2; i <= 2; i++)
-                {
-                    SpawnCampCube(
-                        "Path Tile",
-                        glm::vec3(
-                            0.0f,
-                            0.03f,
-                            5.0f + i * 3.0f
-                        ),
-                        glm::vec3(
-                            2.5f,
-                            0.05f,
-                            2.5f
-                        ),
-                        glm::vec3(
-                            0.0f
-                        ),
-                        false
-                    );
-                }
-
-                // Back fence
-                for (int i = -3; i <= 3; i++)
-                {
-                    SpawnCampCube(
-                        "Back Fence Segment",
-                        glm::vec3(
-                            i * 3.0f,
-                            0.6f,
-                            -8.0f
-                        ),
-                        glm::vec3(
-                            2.6f,
-                            1.2f,
-                            0.18f
-                        ),
-                        glm::vec3(
-                            0.0f
-                        ),
-                        true
-                    );
-                }
-
-                // Left and right fences
-                for (int i = -2; i <= 2; i++)
-                {
-                    SpawnCampCube(
-                        "Left Fence Segment",
-                        glm::vec3(
-                            -10.0f,
-                            0.6f,
-                            i * 3.0f
-                        ),
-                        glm::vec3(
-                            2.6f,
-                            1.2f,
-                            0.18f
-                        ),
-                        glm::vec3(
-                            0.0f,
-                            90.0f,
-                            0.0f
-                        ),
-                        true
-                    );
-
-                    SpawnCampCube(
-                        "Right Fence Segment",
-                        glm::vec3(
-                            10.0f,
-                            0.6f,
-                            i * 3.0f
-                        ),
-                        glm::vec3(
-                            2.6f,
-                            1.2f,
-                            0.18f
-                        ),
-                        glm::vec3(
-                            0.0f,
-                            90.0f,
-                            0.0f
-                        ),
-                        true
-                    );
-                }
-
-                // Front fence, with opening for path
-                for (int i = -3; i <= 3; i++)
-                {
-                    if (i == 0)
-                        continue;
-
-                    SpawnCampCube(
-                        "Front Fence Segment",
-                        glm::vec3(
-                            i * 3.0f,
-                            0.6f,
-                            8.0f
-                        ),
-                        glm::vec3(
-                            2.6f,
-                            1.2f,
-                            0.18f
-                        ),
-                        glm::vec3(
-                            0.0f
-                        ),
-                        true
-                    );
-                }
-
-                // Fence posts
-                for (int x = -1; x <= 1; x += 2)
-                {
-                    for (int z = -1; z <= 1; z += 2)
-                    {
-                        SpawnCampCube(
-                            "Fence Corner Post",
-                            glm::vec3(
-                                x * 10.0f,
-                                0.8f,
-                                z * 8.0f
-                            ),
-                            glm::vec3(
-                                0.35f,
-                                1.6f,
-                                0.35f
-                            ),
-                            glm::vec3(
-                                0.0f
-                            ),
-                            true
-                        );
-                    }
-                }
-
-                std::cout
-                    << "Small camp generated."
-                    << std::endl;
-            }
 
             ImGui::TextWrapped(
-                "This creates a placeholder camp using cubes. Later we replace these with real house, fence, and path models."
+                "The old cube camp builder was removed because it created placeholder objects."
             );
-            ImGui::Separator();
 
-            if (ImGui::Button("Save Editor Objects"))
-            {
-                SaveEditorObjects(
-                    scene,
-                    "SavedEditorObjects.txt"
-                );
-            }
-
-            if (ImGui::Button("Load Editor Objects"))
-            {
-                LoadEditorObjects(
-                    scene,
-                    "SavedEditorObjects.txt",
-                    &cube,
-                    &shader,
-                    &cubeMaterial,
-                    selectedObject
-                );
-            }
             ImGui::End();
             if (selectedObject != nullptr)
             {
@@ -3612,7 +3477,35 @@ if (
 
             ImGui::Separator();
             ImGui::Text("Press Stop to return to editor.");
+            ImGui::Separator();
 
+            if (ImGui::Button("Save Editor Objects"))
+            {
+                SaveEditorObjects(
+                    scene,
+                    "SavedEditorObjects.txt"
+                );
+            }
+
+            if (ImGui::Button("Load Editor Objects"))
+            {
+                LoadEditorObjects(
+                    scene,
+                    "SavedEditorObjects.txt",
+                    &cube,
+                    &shader,
+                    &cubeMaterial,
+                    selectedObject,
+                    &woodenHouseModel,
+                    &pineTreeModel,
+                    &commonTreeModel,
+                    &rockModel,
+                    &bushModel,
+                    &woodLogModel,
+                    &treeStumpModel,
+                    &grassModel
+                );
+            }
             ImGui::End();
         }
 

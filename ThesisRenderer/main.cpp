@@ -89,6 +89,7 @@ bool snapEnabled = false;
 bool gPressed = false;
 float gridSize = 1.0f;
 bool useGridSnap = true;
+bool blockEditorMouseLook = false;
 bool IsEditorSavedObject(SceneObject* object)
 {
     if (object == nullptr)
@@ -479,7 +480,10 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 
     //camera.ProcessMouseMovement(xoffset, yoffset);
     ImGuiIO& io = ImGui::GetIO();
-
+    if (blockEditorMouseLook)
+    {
+        return;
+    }
     if (
         glfwGetMouseButton(
             window,
@@ -2411,7 +2415,8 @@ if (
         15.0f *
         deltaTime;
 }
-
+blockEditorMouseLook =
+appMode == AppMode::Play;
         glfwPollEvents();
 
 
@@ -2575,7 +2580,7 @@ if (
                 );
 
             float playerGroundOffset =
-                0.0f;
+                0.2f;
 
             float targetY =
                 terrainHeight +

@@ -484,6 +484,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     {
         return;
     }
+
     if (
         glfwGetMouseButton(
             window,
@@ -826,7 +827,17 @@ float GetTerrainHeight(
 
     return height - 2.0f;
 }
-
+float GetPlayerTerrainY(
+    float x,
+    float z
+)
+{
+    return
+        GetTerrainHeight(
+            x,
+            z
+        ) + 0.25f;
+}
 glm::vec3 GetTerrainNormal(
     float x,
     float z
@@ -951,6 +962,76 @@ void BuildProceduralTerrain(
             AddTerrainVertex(vertices, x0, z1);
         }
     }
+}
+void UpdatePlayModeCameraFollow(
+    Camera& camera,
+    SceneObject* playerObject,
+    float deltaTime
+)
+{
+    if (playerObject == nullptr)
+        return;
+
+    glm::vec3 playerPosition =
+        playerObject->transform.position;
+
+    glm::vec3 cameraForward =
+        glm::vec3(
+            camera.Front.x,
+            0.0f,
+            camera.Front.z
+        );
+
+    if (glm::length(cameraForward) < 0.001f)
+    {
+        cameraForward =
+            glm::vec3(
+                0.0f,
+                0.0f,
+                -1.0f
+            );
+    }
+
+    cameraForward =
+        glm::normalize(
+            cameraForward
+        );
+
+    glm::vec3 lookTarget =
+        playerPosition +
+        glm::vec3(
+            0.0f,
+            1.6f,
+            0.0f
+        );
+
+    glm::vec3 desiredCameraPosition =
+        playerPosition
+        - cameraForward * 5.5f
+        + glm::vec3(
+            0.0f,
+            4.5f,
+            0.0f
+        );
+
+    float followSpeed =
+        1.0f -
+        exp(
+            -8.0f * deltaTime
+        );
+
+    camera.Position =
+        glm::mix(
+            camera.Position,
+            desiredCameraPosition,
+            followSpeed
+        );
+
+    camera.Front =
+        glm::normalize(
+            lookTarget -
+            camera.Position
+        );
 }
 // ================= MAIN =================
 glm::vec3 rotationAxis = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -2216,7 +2297,7 @@ int main()
     playerObject->transform.position =
         playerSpawnPosition;
     playerObject->transform.position.y =
-        GetTerrainHeight(
+        GetPlayerTerrainY(
             playerObject->transform.position.x,
             playerObject->transform.position.z
         );
@@ -2444,24 +2525,12 @@ appMode == AppMode::Play;
                 GLFW_CURSOR_NORMAL
             );
         }
-        bool nKeyCurrent = glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS;
 
-        if (nKeyCurrent && !nKeyLastState)
-        {
-            SceneObject* newCube = new SceneObject(&cube, &shader, &cubeMaterial);
-            newCube->name = "New Cube";
-            newCube->AddComponent(
-                new RotateComponent()
-            );
-
-            newCube->transform.position = camera.Position + camera.Front * 3.0f;
-
-            scene.AddObject(newCube);
-            selectedObject = newCube;
-            std::cout << "New cube added and selected\n";
-
-
-        }
+        bool nKeyCurrent =
+            glfwGetKey(
+                window,
+                GLFW_KEY_N
+            ) == GLFW_PRESS;
 
         nKeyLastState = nKeyCurrent;
 
@@ -2566,34 +2635,38 @@ appMode == AppMode::Play;
             );
         }
        
-
         // ================= TERRAIN PLAYER COLLISION =================
-
-      // ================= TERRAIN PLAYER COLLISION =================
 
         if (appMode == AppMode::Play && playerObject != nullptr)
         {
-            float terrainHeight =
-                GetTerrainHeight(
+            float targetY =
+                GetPlayerTerrainY(
                     playerObject->transform.position.x,
                     playerObject->transform.position.z
                 );
 
-            float playerGroundOffset =
-                0.2f;
+            bool jumpHeld =
+                glfwGetKey(
+                    window,
+                    GLFW_KEY_SPACE
+                ) == GLFW_PRESS;
 
-            float targetY =
-                terrainHeight +
-                playerGroundOffset;
+            bool movingUp =
+                thirdPersonController.verticalVelocity > 0.01f;
 
-            bool velocityAlmostZero =
-                std::abs(
-                    thirdPersonController.verticalVelocity
-                ) < 0.001f;
+            bool nearGround =
+                playerObject->transform.position.y <=
+                targetY + 0.65f;
+
+            if (movingUp)
+            {
+                thirdPersonController.isGrounded =
+                    false;
+            }
 
             if (
-                thirdPersonController.isGrounded ||
-                velocityAlmostZero
+                !jumpHeld &&
+                thirdPersonController.isGrounded
                 )
             {
                 playerObject->transform.position.y =
@@ -2606,8 +2679,8 @@ appMode == AppMode::Play;
                     true;
             }
             else if (
-                thirdPersonController.verticalVelocity < 0.0f &&
-                playerObject->transform.position.y <= targetY + 0.25f
+                !movingUp &&
+                nearGround
                 )
             {
                 playerObject->transform.position.y =
@@ -2619,6 +2692,14 @@ appMode == AppMode::Play;
                 thirdPersonController.isGrounded =
                     true;
             }
+        }
+        if (appMode == AppMode::Play && playerObject != nullptr)
+        {
+            UpdatePlayModeCameraFollow(
+                camera,
+                playerObject,
+                deltaTime
+            );
         }
         if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
             rotationAxis = glm::vec3(1.0f, 0.0f, 0.0f);
@@ -3366,11 +3447,10 @@ appMode == AppMode::Play;
                         playerObject->transform.position;
 
                     playerSpawnPosition.y =
-                        GetTerrainHeight(
+                        GetPlayerTerrainY(
                             playerSpawnPosition.x,
                             playerSpawnPosition.z
                         );
-
                     playerObject->transform.position =
                         playerSpawnPosition;
 
@@ -3388,7 +3468,7 @@ appMode == AppMode::Play;
                         playerSpawnPosition;
 
                     playerObject->transform.position.y =
-                        GetTerrainHeight(
+                        GetPlayerTerrainY(
                             playerObject->transform.position.x,
                             playerObject->transform.position.z
                         );

@@ -35,6 +35,8 @@
 #include <ctime>
 #include <fstream>
 #include <sstream>
+#include <vector>
+#include <cmath>
 // ================= CAMERA VARIABLES =================
 //glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 //glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -794,8 +796,161 @@ std::vector<std::string> faces =
     "textures/skybox/front.jpg",
     "textures/skybox/back.jpg"
 };
+float GetTerrainHeight(
+    float x,
+    float z
+)
+{
+    float height =
+        0.0f;
+
+    height +=
+        std::sin(x * 0.045f) *
+        2.0f;
+
+    height +=
+        std::cos(z * 0.045f) *
+        2.0f;
+
+    height +=
+        std::sin((x + z) * 0.025f) *
+        3.0f;
+
+    height +=
+        std::sin((x * 0.12f) + (z * 0.08f)) *
+        0.8f;
+
+    return height - 2.0f;
+}
+
+glm::vec3 GetTerrainNormal(
+    float x,
+    float z
+)
+{
+    float heightLeft =
+        GetTerrainHeight(
+            x - 1.0f,
+            z
+        );
+
+    float heightRight =
+        GetTerrainHeight(
+            x + 1.0f,
+            z
+        );
+
+    float heightDown =
+        GetTerrainHeight(
+            x,
+            z - 1.0f
+        );
+
+    float heightUp =
+        GetTerrainHeight(
+            x,
+            z + 1.0f
+        );
+
+    glm::vec3 normal =
+        glm::normalize(
+            glm::vec3(
+                heightLeft - heightRight,
+                2.0f,
+                heightDown - heightUp
+            )
+        );
+
+    return normal;
+}
+
+void AddTerrainVertex(
+    std::vector<float>& vertices,
+    float x,
+    float z
+)
+{
+    float y =
+        GetTerrainHeight(
+            x,
+            z
+        );
+
+    glm::vec3 normal =
+        GetTerrainNormal(
+            x,
+            z
+        );
+
+    float textureU =
+        x * 0.08f;
+
+    float textureV =
+        z * 0.08f;
+
+    // position
+    vertices.push_back(x);
+    vertices.push_back(y);
+    vertices.push_back(z);
+
+    // normal
+    vertices.push_back(normal.x);
+    vertices.push_back(normal.y);
+    vertices.push_back(normal.z);
+
+    // texcoord
+    vertices.push_back(textureU);
+    vertices.push_back(textureV);
+}
+
+void BuildProceduralTerrain(
+    std::vector<float>& vertices,
+    float terrainSize,
+    int resolution
+)
+{
+    vertices.clear();
+
+    float halfSize =
+        terrainSize * 0.5f;
+
+    float step =
+        terrainSize /
+        static_cast<float>(resolution);
+
+    for (int x = 0; x < resolution; x++)
+    {
+        for (int z = 0; z < resolution; z++)
+        {
+            float x0 =
+                -halfSize +
+                x * step;
+
+            float z0 =
+                -halfSize +
+                z * step;
+
+            float x1 =
+                x0 + step;
+
+            float z1 =
+                z0 + step;
+
+            // first triangle
+            AddTerrainVertex(vertices, x0, z0);
+            AddTerrainVertex(vertices, x1, z0);
+            AddTerrainVertex(vertices, x1, z1);
+
+            // second triangle
+            AddTerrainVertex(vertices, x0, z0);
+            AddTerrainVertex(vertices, x1, z1);
+            AddTerrainVertex(vertices, x0, z1);
+        }
+    }
+}
 // ================= MAIN =================
 glm::vec3 rotationAxis = glm::vec3(0.0f, 1.0f, 0.0f);
+
 int main()
 {
 
@@ -1238,6 +1393,58 @@ int main()
         &containerTexture
     );
     Mesh cube(vertices, sizeof(vertices));
+    std::vector<float> proceduralTerrainVertices;
+
+    BuildProceduralTerrain(
+        proceduralTerrainVertices,
+        240.0f,
+        140
+    );
+
+    Mesh proceduralTerrainMesh(
+        proceduralTerrainVertices.data(),
+        proceduralTerrainVertices.size() * sizeof(float)
+    );
+
+    Material proceduralTerrainMaterial(
+        nullptr
+    );
+
+    proceduralTerrainMaterial.tint =
+        glm::vec3(
+            0.35f,
+            0.65f,
+            0.25f
+        );
+
+    SceneObject proceduralTerrainObject(
+        &proceduralTerrainMesh,
+        &shader,
+        &proceduralTerrainMaterial
+    );
+
+    proceduralTerrainObject.name =
+        "Procedural Terrain";
+
+    proceduralTerrainObject.transform.position =
+        glm::vec3(
+            0.0f
+        );
+
+    proceduralTerrainObject.transform.scale =
+        glm::vec3(
+            1.0f
+        );
+
+    proceduralTerrainObject.boundingRadius =
+        500.0f;
+
+    proceduralTerrainObject.isCollider =
+        false;
+
+    scene.AddObject(
+        &proceduralTerrainObject
+    );
     SceneObject cube1(&cube, &shader, &cubeMaterial);
     SceneObject cube2(&cube, &shader, &cubeMaterial);
     SceneObject cube3(&cube, &shader, &cubeMaterial);
@@ -1316,24 +1523,29 @@ int main()
 
     float grassTileSpacing =
         8.0f;
+    bool useOldGrassTiles =
+        false;
 
-    for (int x = -10; x <= 10; x++)
+    if (useOldGrassTiles)
     {
-        for (int z = -10; z <= 10; z++)
+        for (int x = -10; x <= 10; x++)
         {
-            AddEnvironmentModel(
-                &grassTerrainModel,
-                "Grass Terrain Tile",
-                glm::vec3(
-                    x * grassTileSpacing,
-                    -0.35f,
-                    z * grassTileSpacing
-                ),
-                glm::vec3(
-                    0.35f
-                ),
-                false
-            );
+            for (int z = -10; z <= 10; z++)
+            {
+                AddEnvironmentModel(
+                    &grassTerrainModel,
+                    "Grass Terrain Tile",
+                    glm::vec3(
+                        x * grassTileSpacing,
+                        -0.35f,
+                        z * grassTileSpacing
+                    ),
+                    glm::vec3(
+                        0.35f
+                    ),
+                    false
+                );
+            }
         }
     }
 //// Trees
@@ -1755,7 +1967,7 @@ int main()
             "Generated Tree",
             glm::vec3(
                 x,
-                0.05f,
+                GetTerrainHeight(x, z) + 0.05f,
                 z
             ),
             glm::vec3(
@@ -1796,7 +2008,7 @@ int main()
             "Generated Rock",
             glm::vec3(
                 x,
-                0.05f,
+                GetTerrainHeight(x, z) + 0.05f,
                 z
             ),
             glm::vec3(
@@ -1837,7 +2049,7 @@ int main()
             "Generated Plant",
             glm::vec3(
                 x,
-                0.05f,
+                GetTerrainHeight(x, z) + 0.05f,
                 z
             ),
             glm::vec3(
@@ -1878,7 +2090,7 @@ int main()
             "Generated Log/Stump",
             glm::vec3(
                 x,
-                0.05f,
+                GetTerrainHeight(x, z) + 0.05f,
                 z
             ),
             glm::vec3(
@@ -1908,7 +2120,7 @@ int main()
                 "Border Tree",
                 glm::vec3(
                     x,
-                    0.05f,
+                    GetTerrainHeight(x, z) + 0.05f,
                     z
                 ),
                 glm::vec3(
@@ -1970,13 +2182,19 @@ int main()
                     rand() % rockModels.size()
                 ];
 
+            float rockX =
+                centerX + RandomRange(-3.0f, 3.0f);
+
+            float rockZ =
+                centerZ + RandomRange(-3.0f, 3.0f);
+
             AddEnvironmentModel(
                 chosenRock,
                 "Rock Cluster",
                 glm::vec3(
-                    centerX + RandomRange(-3.0f, 3.0f),
-                    0.05f,
-                    centerZ + RandomRange(-3.0f, 3.0f)
+                    rockX,
+                    GetTerrainHeight(rockX, rockZ) + 0.05f,
+                    rockZ
                 ),
                 glm::vec3(
                     RandomRange(0.6f, 1.2f)
@@ -1993,7 +2211,11 @@ int main()
     playerObject->name = "Player";
     playerObject->transform.position =
         playerSpawnPosition;
-
+    playerObject->transform.position.y =
+        GetTerrainHeight(
+            playerObject->transform.position.x,
+            playerObject->transform.position.z
+        );
     playerObject->transform.scale =
         glm::vec3(
             0.6f
@@ -2002,7 +2224,7 @@ int main()
     playerObject->boundingRadius = 3.0f;
 
     scene.AddObject(playerObject);
-    SceneObject* environmentObject =
+    /*SceneObject* environmentObject =
         new SceneObject(
             &forestEnvironment,
             &shader
@@ -2028,9 +2250,9 @@ int main()
     environmentObject->isCollider = false;
     scene.AddObject(
         environmentObject
-    );
+    );*/
     
-    ground.boundingRadius = 100.0f;
+    /*ground.boundingRadius = 100.0f;
     SceneObject* treeObject =
         new SceneObject(
             &importedTree,
@@ -2052,7 +2274,7 @@ int main()
             0.1f
         );
 
-    scene.AddObject(treeObject);
+    scene.AddObject(treeObject);*/
    /* std::vector<SceneObject*> manyCubes;
 
     for (int i = 0; i < 100; i++)
@@ -2337,6 +2559,61 @@ if (
                 scene,
                 deltaTime
             );
+        }
+       
+
+        // ================= TERRAIN PLAYER COLLISION =================
+
+      // ================= TERRAIN PLAYER COLLISION =================
+
+        if (appMode == AppMode::Play && playerObject != nullptr)
+        {
+            float terrainHeight =
+                GetTerrainHeight(
+                    playerObject->transform.position.x,
+                    playerObject->transform.position.z
+                );
+
+            float playerGroundOffset =
+                0.0f;
+
+            float targetY =
+                terrainHeight +
+                playerGroundOffset;
+
+            bool velocityAlmostZero =
+                std::abs(
+                    thirdPersonController.verticalVelocity
+                ) < 0.001f;
+
+            if (
+                thirdPersonController.isGrounded ||
+                velocityAlmostZero
+                )
+            {
+                playerObject->transform.position.y =
+                    targetY;
+
+                thirdPersonController.verticalVelocity =
+                    0.0f;
+
+                thirdPersonController.isGrounded =
+                    true;
+            }
+            else if (
+                thirdPersonController.verticalVelocity < 0.0f &&
+                playerObject->transform.position.y <= targetY + 0.25f
+                )
+            {
+                playerObject->transform.position.y =
+                    targetY;
+
+                thirdPersonController.verticalVelocity =
+                    0.0f;
+
+                thirdPersonController.isGrounded =
+                    true;
+            }
         }
         if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
             rotationAxis = glm::vec3(1.0f, 0.0f, 0.0f);
@@ -3036,6 +3313,8 @@ if (
                 &grassModel
             );
             // ================= PLAYER SPAWN TOOLS =================
+        
+
             ImGui::SetNextWindowPos(
                 ImVec2(
                     1240.0f,
@@ -3047,10 +3326,11 @@ if (
             ImGui::SetNextWindowSize(
                 ImVec2(
                     340.0f,
-                    230.0f
+                    260.0f
                 ),
                 ImGuiCond_Once
             );
+
             ImGui::Begin("Player Tools");
 
             if (playerObject != nullptr)
@@ -3080,8 +3360,17 @@ if (
                     playerSpawnPosition =
                         playerObject->transform.position;
 
+                    playerSpawnPosition.y =
+                        GetTerrainHeight(
+                            playerSpawnPosition.x,
+                            playerSpawnPosition.z
+                        );
+
+                    playerObject->transform.position =
+                        playerSpawnPosition;
+
                     std::cout
-                        << "Player spawn set to: "
+                        << "Player spawn set on terrain: "
                         << playerSpawnPosition.x << ", "
                         << playerSpawnPosition.y << ", "
                         << playerSpawnPosition.z
@@ -3092,6 +3381,12 @@ if (
                 {
                     playerObject->transform.position =
                         playerSpawnPosition;
+
+                    playerObject->transform.position.y =
+                        GetTerrainHeight(
+                            playerObject->transform.position.x,
+                            playerObject->transform.position.z
+                        );
 
                     playerObject->transform.rotation =
                         glm::vec3(
@@ -3105,9 +3400,10 @@ if (
                         true;
 
                     std::cout
-                        << "Player respawned."
+                        << "Player respawned on terrain."
                         << std::endl;
                 }
+
                 if (ImGui::Button("Place Player In Front Of Camera"))
                 {
                     glm::vec3 forward =
@@ -3132,15 +3428,18 @@ if (
                             forward
                         );
 
-                    glm::vec3 newPlayerPosition =
+                    glm::vec3 playerNewPosition =
                         camera.Position +
                         forward * 5.0f;
 
-                    newPlayerPosition.y =
-                        0.0f;
+                    playerNewPosition.y =
+                        GetTerrainHeight(
+                            playerNewPosition.x,
+                            playerNewPosition.z
+                        );
 
                     playerObject->transform.position =
-                        newPlayerPosition;
+                        playerNewPosition;
 
                     thirdPersonController.verticalVelocity =
                         0.0f;
@@ -3152,9 +3451,10 @@ if (
                         playerObject;
 
                     std::cout
-                        << "Player placed in front of camera."
+                        << "Player placed on terrain in front of camera."
                         << std::endl;
                 }
+
                 if (ImGui::Button("Select Player"))
                 {
                     selectedObject =
@@ -3256,8 +3556,8 @@ if (
 
                 if (ImGui::Button("Snap Selected To Ground"))
                 {
-                    selectedObject->transform.position.y =
-                        0.05f;
+                    selectedObject->transform.position.y = 0.05f;
+                     
 
                     std::cout
                         << "Selected object snapped to ground."

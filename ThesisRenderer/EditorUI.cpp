@@ -7,6 +7,24 @@
 #include "PrefabManager.h"
 #include "AssetDatabase.h"
 #include <glm/glm.hpp>
+extern float GetTerrainHeight(
+    float x,
+    float z
+);
+
+static glm::vec3 SnapEditorPositionToTerrain(
+    glm::vec3 position,
+    float offset = 0.05f
+)
+{
+    position.y =
+        GetTerrainHeight(
+            position.x,
+            position.z
+        ) + offset;
+
+    return position;
+}
 void DrawHierarchyNode(
     SceneObject* obj,
     SceneObject*& selectedObject
@@ -523,7 +541,22 @@ static SceneObject* SpawnCampModel(
         new SceneObject(model, shader);
 
     obj->name = name;
-    obj->transform.position = position;
+    glm::vec3 terrainPosition =
+        position;
+
+    float localYOffset =
+        position.y;
+
+    terrainPosition.y =
+        GetTerrainHeight(
+            position.x,
+            position.z
+        ) +
+        localYOffset +
+        0.05f;
+
+    obj->transform.position =
+        terrainPosition;
     obj->transform.rotation = rotation;
     obj->transform.scale = scale;
 
@@ -845,9 +878,15 @@ void EditorUI::DrawAssetBrowser(
             object->name =
                 objectName;
 
-            object->transform.position =
+            glm::vec3 spawnPosition =
                 GetSpawnPosition(
                     6.0f,
+                    0.0f
+                );
+
+            object->transform.position =
+                SnapEditorPositionToTerrain(
+                    spawnPosition,
                     0.05f
                 );
 
@@ -890,12 +929,27 @@ void EditorUI::DrawAssetBrowser(
             object->name =
                 objectName;
 
-            object->transform.position =
+            glm::vec3 spawnPosition =
                 GetSpawnPosition(
                     6.0f,
                     0.0f
+                );
+
+            spawnPosition.x +=
+                positionOffset.x;
+
+            spawnPosition.z +=
+                positionOffset.z;
+
+            spawnPosition.y =
+                GetTerrainHeight(
+                    spawnPosition.x,
+                    spawnPosition.z
                 ) +
-                positionOffset;
+                positionOffset.y;
+
+            object->transform.position =
+                spawnPosition;
 
             object->transform.scale =
                 scale;
@@ -1066,12 +1120,18 @@ void EditorUI::DrawAssetBrowser(
                 house->name =
                     "Wooden House";
 
-                house->transform.position =
+                glm::vec3 housePosition =
                     camera.Position +
                     forward * 8.0f;
 
-                house->transform.position.y =
-                    0.0f;
+                housePosition.y =
+                    GetTerrainHeight(
+                        housePosition.x,
+                        housePosition.z
+                    );
+
+                house->transform.position =
+                    housePosition;
 
                 house->transform.scale =
                     glm::vec3(
@@ -1379,7 +1439,11 @@ void EditorUI::DrawToolbar(
 
         torchObject->name =
             torchLight->name + " Object";
-
+        spawnPosition.y =
+            GetTerrainHeight(
+                spawnPosition.x,
+                spawnPosition.z
+            ) + 0.10f;
         torchObject->transform.position =
             spawnPosition;
 

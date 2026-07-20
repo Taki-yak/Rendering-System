@@ -838,6 +838,7 @@ float GetPlayerTerrainY(
             z
         ) + 0.25f;
 }
+
 glm::vec3 GetTerrainNormal(
     float x,
     float z
@@ -879,6 +880,47 @@ glm::vec3 GetTerrainNormal(
     return normal;
 }
 
+float GetObjectTerrainY(
+    float x,
+    float z,
+    float offset = 0.05f
+)
+{
+    return
+        GetTerrainHeight(
+            x,
+            z
+        ) + offset;
+}
+
+glm::vec3 SnapObjectToTerrain(
+    glm::vec3 position,
+    float offset = 0.05f
+)
+{
+    position.y =
+        GetObjectTerrainY(
+            position.x,
+            position.z,
+            offset
+        );
+
+    return position;
+}
+
+bool IsGoodTerrainSpawnPoint(
+    float x,
+    float z
+)
+{
+    glm::vec3 normal =
+        GetTerrainNormal(
+            x,
+            z
+        );
+
+    return normal.y > 0.72f;
+}
 void AddTerrainVertex(
     std::vector<float>& vertices,
     float x,
@@ -896,12 +938,11 @@ void AddTerrainVertex(
             x,
             z
         );
-
     float textureU =
-        x * 0.08f;
+        x * 0.035f;
 
     float textureV =
-        z * 0.08f;
+        z * 0.035f;
 
     // position
     vertices.push_back(x);
@@ -1177,7 +1218,9 @@ int main()
             0.0f
         );
 
+
     scene.AddLight(testLight);*/
+   
     Light* sun = new Light();
 
     sun->name = "Sun";
@@ -1490,16 +1533,19 @@ int main()
         proceduralTerrainVertices.data(),
         proceduralTerrainVertices.size() * sizeof(float)
     );
+    Texture terrainTexture(
+        "Assets/Textures/Terrain/grass.jpg"
+    );
 
     Material proceduralTerrainMaterial(
-        nullptr
+        &terrainTexture
     );
 
     proceduralTerrainMaterial.tint =
         glm::vec3(
-            0.35f,
-            0.65f,
-            0.25f
+            0.85f,
+            1.0f,
+            0.75f
         );
 
     SceneObject proceduralTerrainObject(
@@ -2021,7 +2067,58 @@ int main()
         &grass2Model,
         &wheatModel
     };
+    // ================= PROCEDURAL GRASS AND FLOWERS =================
 
+    std::vector<Model*> smallGroundModels =
+    {
+        &grassModel,
+        &grass2Model,
+        &flowersModel,
+        &wheatModel
+    };
+
+    for (int i = 0; i < 350; i++)
+    {
+        float x =
+            RandomRange(
+                -90.0f,
+                90.0f
+            );
+
+        float z =
+            RandomRange(
+                -90.0f,
+                90.0f
+            );
+
+        if (!IsGoodTerrainSpawnPoint(x, z))
+            continue;
+
+        Model* chosenGroundModel =
+            smallGroundModels[
+                rand() % smallGroundModels.size()
+            ];
+
+        float scale =
+            RandomRange(
+                0.35f,
+                0.75f
+            );
+
+        AddEnvironmentModel(
+            chosenGroundModel,
+            "Procedural Ground Detail",
+            glm::vec3(
+                x,
+                GetObjectTerrainY(x, z, 0.03f),
+                z
+            ),
+            glm::vec3(
+                scale
+            ),
+            false
+        );
+    }
     // Trees
     for (int i = 0; i < 60; i++)
     {
@@ -3630,7 +3727,22 @@ appMode == AppMode::Play;
 
                     newPosition.y =
                         selectedObject->transform.position.y;
+                    float oldTerrainY =
+                        GetTerrainHeight(
+                            selectedObject->transform.position.x,
+                            selectedObject->transform.position.z
+                        );
 
+                    float heightOffset =
+                        selectedObject->transform.position.y -
+                        oldTerrainY;
+
+                    newPosition.y =
+                        GetTerrainHeight(
+                            newPosition.x,
+                            newPosition.z
+                        ) +
+                        heightOffset;
                     selectedObject->transform.position =
                         newPosition;
 

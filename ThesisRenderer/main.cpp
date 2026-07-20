@@ -89,7 +89,9 @@ bool snapEnabled = false;
 bool gPressed = false;
 float gridSize = 1.0f;
 bool useGridSnap = true;
-bool blockEditorMouseLook = false;
+bool blockEditorMouseLook =
+false;
+float playCameraLookOffset =0.0f;
 bool IsEditorSavedObject(SceneObject* object)
 {
     if (object == nullptr)
@@ -452,6 +454,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 SceneObject* selectedObject = nullptr;
 Light* selectedLight = nullptr;
 Camera camera;
+bool editorCameraStartFixed =false;
 Frustum frustum;
 PlayerController playerController;
 ThirdPersonController thirdPersonController;
@@ -465,40 +468,80 @@ glm::vec3(
 // ================= MOUSE CALLBACK ==================
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
-    if (firstMouse)
-    {
-        lastX = (float)xpos;
-        lastY = (float)ypos;
-        firstMouse = false;
-    }
+    ImGuiIO& io =
+        ImGui::GetIO();
 
-    float xoffset = (float)xpos - lastX;
-    float yoffset = lastY - (float)ypos;
-
-    lastX = (float)xpos;
-    lastY = (float)ypos;
-
-    //camera.ProcessMouseMovement(xoffset, yoffset);
-    ImGuiIO& io = ImGui::GetIO();
-    if (blockEditorMouseLook)
-    {
-        return;
-    }
-
-    if (
+    bool rightMouseDown =
         glfwGetMouseButton(
             window,
             GLFW_MOUSE_BUTTON_RIGHT
-        ) == GLFW_PRESS
-        &&
-        !io.WantCaptureMouse
+        ) == GLFW_PRESS;
+
+    if (
+        !rightMouseDown ||
+        io.WantCaptureMouse
         )
     {
-        camera.ProcessMouseMovement(
-            xoffset,
-            yoffset
-        );
+        firstMouse =
+            true;
+
+        lastX =
+            static_cast<float>(xpos);
+
+        lastY =
+            static_cast<float>(ypos);
+
+        return;
     }
+
+    if (firstMouse)
+    {
+        lastX =
+            static_cast<float>(xpos);
+
+        lastY =
+            static_cast<float>(ypos);
+
+        firstMouse =
+            false;
+
+        return;
+    }
+
+    float xoffset =
+        static_cast<float>(xpos) -
+        lastX;
+
+    float yoffset =
+        lastY -
+        static_cast<float>(ypos);
+
+    lastX =
+        static_cast<float>(xpos);
+
+    lastY =
+        static_cast<float>(ypos);
+
+    if (blockEditorMouseLook)
+    {
+        playCameraLookOffset +=
+            yoffset *
+            0.025f;
+
+        playCameraLookOffset =
+            glm::clamp(
+                playCameraLookOffset,
+                -0.8f,
+                4.0f
+            );
+
+        return;
+    }
+
+    camera.ProcessMouseMovement(
+        xoffset,
+        yoffset
+    );
 }
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
@@ -614,7 +657,14 @@ void main()
 {
     vec3 textureColor;
 
-if (useTexture)
+bool isProceduralTerrain =false;
+    
+if (isProceduralTerrain)
+{
+    textureColor =
+        materialTint;
+}
+else if (useTexture)
 {
     textureColor =
         texture(texture1, TexCoord).rgb *
@@ -637,7 +687,7 @@ vec3 dirLight =
 normalize(-sunDirection);
 
 float dirDiff =
-max(dot(norm,dirLight),0.0);
+max(dot(norm, dirLight), 0.25);
 
 vec3 dirDiffuse =
 dirDiff *
@@ -662,7 +712,7 @@ sunColor;
 vec3 dirAmbient =
 materialAmbient *
 textureColor *
-0.15;
+0.55;
 
 result +=
 dirAmbient +
@@ -670,35 +720,84 @@ dirDiffuse +
 dirSpecular;
 
     for(int i = 0; i < MAX_LIGHTS; i++)
+{
+    if (length(lightColors[i]) < 0.001)
     {
-        vec3 lightDir = normalize(lightPositions[i] - FragPos);
-
-        float diff = max(dot(norm, lightDir), 0.0);
-        vec3 diffuse = diff * materialDiffuse * textureColor * lightColors[i];
-
-        vec3 reflectDir = reflect(-lightDir, norm);
-        float spec = pow(max(dot(viewDir, reflectDir), 0.0), materialShininess);
-        vec3 specular = materialSpecular * spec * lightColors[i];
-
-        vec3 ambient = materialAmbient * textureColor;
-
-        result += ambient + diffuse + specular;
+        continue;
     }
 
+    vec3 toLight =
+        lightPositions[i] - FragPos;
+
+    float distanceToLight =
+        length(toLight);
+
+    if (distanceToLight > 18.0)
+    {
+        continue;
+    }
+
+    vec3 lightDir =
+        normalize(toLight);
+
+    float attenuation =
+        1.0 /
+        (
+            1.0 +
+            0.18 * distanceToLight +
+            0.08 * distanceToLight * distanceToLight
+        );
+
+    float diff =
+        max(dot(norm, lightDir), 0.0);
+
+    vec3 diffuse =
+        diff *
+        materialDiffuse *
+        textureColor *
+        lightColors[i] *
+        attenuation;
+
+    vec3 reflectDir =
+        reflect(-lightDir, norm);
+
+    float spec =
+        pow(
+            max(dot(viewDir, reflectDir), 0.0),
+            materialShininess
+        );
+
+    vec3 specular =
+        materialSpecular *
+        spec *
+        lightColors[i] *
+        attenuation;
+
+    vec3 ambient =
+        materialAmbient *
+        textureColor *
+        lightColors[i] *
+        0.02 *
+        attenuation;
+
+    result +=
+        ambient +
+        diffuse +
+        specular;
+}
 if(isSelected)
 {
     result *= 1.3;
 }
 
 
-result *= 0.45;
+result *= 0.85;
 
 
 result = clamp(result, 0.0, 1.0);
 
 FragColor = vec4(result, 1.0);
 
-    FragColor = vec4(result, 1.0);
 }
 
 )";
@@ -810,22 +909,22 @@ float GetTerrainHeight(
         0.0f;
 
     height +=
-        std::sin(x * 0.045f) *
+        std::sin(x * 0.018f) *
         2.0f;
 
     height +=
-        std::cos(z * 0.045f) *
-        2.0f;
+        std::cos(z * 0.020f) *
+        1.6f;
 
     height +=
-        std::sin((x + z) * 0.025f) *
-        3.0f;
+        std::sin((x + z) * 0.012f) *
+        1.4f;
 
     height +=
-        std::sin((x * 0.12f) + (z * 0.08f)) *
-        0.8f;
+        std::sin((x * 0.035f) + (z * 0.025f)) *
+        0.6f;
 
-    return height - 2.0f;
+    return height - 1.0f;
 }
 float GetPlayerTerrainY(
     float x,
@@ -836,7 +935,7 @@ float GetPlayerTerrainY(
         GetTerrainHeight(
             x,
             z
-        ) + 0.25f;
+        ) + 0.55f;
 }
 
 glm::vec3 GetTerrainNormal(
@@ -1013,8 +1112,73 @@ void UpdatePlayModeCameraFollow(
     if (playerObject == nullptr)
         return;
 
+    static bool cameraFollowInitialized =
+        false;
+
+    static glm::vec3 smoothedFollowPosition =
+        glm::vec3(
+            0.0f
+        );
+
     glm::vec3 playerPosition =
         playerObject->transform.position;
+
+    glm::vec3 playerGroundPosition =
+        glm::vec3(
+            playerPosition.x,
+            GetPlayerTerrainY(
+                playerPosition.x,
+                playerPosition.z
+            ),
+            playerPosition.z
+        );
+
+    if (
+        !cameraFollowInitialized ||
+        deltaTime > 0.2f
+        )
+    {
+        smoothedFollowPosition =
+            playerGroundPosition;
+
+        cameraFollowInitialized =
+            true;
+    }
+
+    float horizontalSmooth =
+        glm::clamp(
+            deltaTime * 12.0f,
+            0.0f,
+            1.0f
+        );
+
+    float verticalSmooth =
+        glm::clamp(
+            deltaTime * 3.5f,
+            0.0f,
+            1.0f
+        );
+
+    smoothedFollowPosition.x =
+        glm::mix(
+            smoothedFollowPosition.x,
+            playerGroundPosition.x,
+            horizontalSmooth
+        );
+
+    smoothedFollowPosition.z =
+        glm::mix(
+            smoothedFollowPosition.z,
+            playerGroundPosition.z,
+            horizontalSmooth
+        );
+
+    smoothedFollowPosition.y =
+        glm::mix(
+            smoothedFollowPosition.y,
+            playerGroundPosition.y,
+            verticalSmooth
+        );
 
     glm::vec3 cameraForward =
         glm::vec3(
@@ -1039,33 +1203,33 @@ void UpdatePlayModeCameraFollow(
         );
 
     glm::vec3 lookTarget =
-        playerPosition +
+        smoothedFollowPosition +
         glm::vec3(
             0.0f,
-            1.6f,
+            1.25f + playCameraLookOffset,
             0.0f
         );
 
     glm::vec3 desiredCameraPosition =
-        playerPosition
-        - cameraForward * 5.5f
+        smoothedFollowPosition
+        - cameraForward * 6.5f
         + glm::vec3(
             0.0f,
-            4.5f,
+            2.65f + playCameraLookOffset * 0.25f,
             0.0f
         );
-
-    float followSpeed =
-        1.0f -
-        exp(
-            -8.0f * deltaTime
+    float cameraSmooth =
+        glm::clamp(
+            deltaTime * 10.0f,
+            0.0f,
+            1.0f
         );
 
     camera.Position =
         glm::mix(
             camera.Position,
             desiredCameraPosition,
-            followSpeed
+            cameraSmooth
         );
 
     camera.Front =
@@ -1387,6 +1551,15 @@ int main()
         "Assets/Models/Environment/WoodenHouse/WoodenHouse.obj",
         "Assets/Models/Environment/WoodenHouse/"
     );
+    Model grassClumpModel(
+        "Assets/Models/Environment/GrassClump/grass1.obj",
+        "Assets/Models/Environment/GrassClump/"
+    );
+
+    Model flowerClumpModel(
+        "Assets/Models/Environment/GrassClump/Flower.obj",
+        "Assets/Models/Environment/GrassClump/"
+    );
     //Model mountain1Model(
     //    "Assets/Models/Environment/Mountains/Mountain01.obj",
     //    "Assets/Models/Environment/Mountains/"
@@ -1525,28 +1698,47 @@ int main()
 
     BuildProceduralTerrain(
         proceduralTerrainVertices,
-        240.0f,
-        140
+        520.0f,
+        180
     );
 
     Mesh proceduralTerrainMesh(
         proceduralTerrainVertices.data(),
         proceduralTerrainVertices.size() * sizeof(float)
     );
-    Texture terrainTexture(
-        "Assets/Textures/Terrain/grass.jpg"
-    );
-
     Material proceduralTerrainMaterial(
-        &terrainTexture
+        nullptr
     );
-
     proceduralTerrainMaterial.tint =
         glm::vec3(
-            0.85f,
-            1.0f,
-            0.75f
+            0.28f,
+            0.55f,
+            0.18f
         );
+
+    proceduralTerrainMaterial.ambient =
+        glm::vec3(
+            0.55f,
+            0.55f,
+            0.55f
+        );
+
+    proceduralTerrainMaterial.diffuse =
+        glm::vec3(
+            0.85f,
+            0.85f,
+            0.85f
+        );
+
+    proceduralTerrainMaterial.specular =
+        glm::vec3(
+            0.0f,
+            0.0f,
+            0.0f
+        );
+
+    proceduralTerrainMaterial.shininess =
+        1.0f;
 
     SceneObject proceduralTerrainObject(
         &proceduralTerrainMesh,
@@ -2067,58 +2259,123 @@ int main()
         &grass2Model,
         &wheatModel
     };
-    // ================= PROCEDURAL GRASS AND FLOWERS =================
+    // ================= SIMPLE LOW-POLY GRASS FIELD =================
 
-    std::vector<Model*> smallGroundModels =
-    {
-        &grassModel,
-        &grass2Model,
-        &flowersModel,
-        &wheatModel
-    };
-
-    for (int i = 0; i < 350; i++)
+    for (int i = 0; i < 400; i++)
     {
         float x =
             RandomRange(
-                -90.0f,
-                90.0f
+                -240.0f,
+                240.0f
             );
 
         float z =
             RandomRange(
-                -90.0f,
-                90.0f
+                -240.0f,
+                240.0f
             );
 
         if (!IsGoodTerrainSpawnPoint(x, z))
             continue;
 
-        Model* chosenGroundModel =
-            smallGroundModels[
-                rand() % smallGroundModels.size()
-            ];
-
-        float scale =
-            RandomRange(
-                0.35f,
-                0.75f
+        float y =
+            GetObjectTerrainY(
+                x,
+                z,
+                0.02f
             );
 
-        AddEnvironmentModel(
-            chosenGroundModel,
-            "Procedural Ground Detail",
+        SceneObject* grassObject =
+            AddEnvironmentModel(
+                &grassClumpModel,
+                "Grass Clump",
+                glm::vec3(
+                    x,
+                    y,
+                    z
+                ),
+                glm::vec3(
+                    RandomRange(
+                        1.4f,
+                        2.2f
+                    )
+                ),
+                false
+            );
+
+        grassObject->transform.rotation =
             glm::vec3(
-                x,
-                GetObjectTerrainY(x, z, 0.03f),
-                z
-            ),
-            glm::vec3(
-                scale
-            ),
-            false
-        );
+                0.0f,
+                RandomRange(
+                    0.0f,
+                    360.0f
+                ),
+                0.0f
+            );
+
+        grassObject->boundingRadius =
+            8.0f;
     }
+
+    // ================= SIMPLE FLOWER PATCHES =================
+
+    for (int i = 0; i < 70; i++)
+    {
+        float x =
+            RandomRange(
+                -220.0f,
+                220.0f
+            );
+
+        float z =
+            RandomRange(
+                -220.0f,
+                220.0f
+            );
+
+        if (!IsGoodTerrainSpawnPoint(x, z))
+            continue;
+
+        float y =
+            GetObjectTerrainY(
+                x,
+                z,
+                0.03f
+            );
+
+        SceneObject* flowerObject =
+            AddEnvironmentModel(
+                &flowerClumpModel,
+                "Flower Clump",
+                glm::vec3(
+                    x,
+                    y,
+                    z
+                ),
+                glm::vec3(
+                    RandomRange(
+                        1.0f,
+                        1.6f
+                    )
+                ),
+                false
+            );
+
+        flowerObject->transform.rotation =
+            glm::vec3(
+                0.0f,
+                RandomRange(
+                    0.0f,
+                    360.0f
+                ),
+                0.0f
+            );
+
+        flowerObject->boundingRadius =
+            8.0f;
+    }
+    // ================= PROCEDURAL GRASS AND FLOWERS =================
+
     // Trees
     for (int i = 0; i < 60; i++)
     {
@@ -2129,14 +2386,14 @@ int main()
 
         float x =
             RandomRange(
-                -55.0f,
-                55.0f
+                -220.0f,
+                220.0f
             );
 
         float z =
             RandomRange(
-                -55.0f,
-                55.0f
+                -220.0f,
+                220.0f
             );
 
         float scale =
@@ -2169,14 +2426,14 @@ int main()
 
         float x =
             RandomRange(
-                -50.0f,
-                50.0f
+                -220.0f,
+                220.0f
             );
 
         float z =
             RandomRange(
-                -50.0f,
-                50.0f
+                -220.0f,
+                220.0f
             );
 
         float scale =
@@ -2210,15 +2467,15 @@ int main()
 
         float x =
             RandomRange(
-                -55.0f,
-                55.0f
+                -220.0f,
+                220.0f
             );
 
         float z =
-            RandomRange(
-                -55.0f,
-                55.0f
-            );
+          RandomRange(
+    -220.0f,
+    220.0f
+);
 
         float scale =
             RandomRange(
@@ -2251,14 +2508,14 @@ int main()
 
         float x =
             RandomRange(
-                -45.0f,
-                45.0f
+                -200.0f,
+                200.0f
             );
 
         float z =
             RandomRange(
-                -45.0f,
-                45.0f
+                -200.0f,
+                200.0f
             );
 
         float scale =
@@ -2398,6 +2655,8 @@ int main()
             playerObject->transform.position.x,
             playerObject->transform.position.z
         );
+    playerSpawnPosition =
+        playerObject->transform.position;
     playerObject->transform.scale =
         glm::vec3(
             0.6f
@@ -2579,7 +2838,18 @@ int main()
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
+        if (!editorCameraStartFixed)
+        {
+            camera.Position =
+                glm::vec3(
+                    0.0f,
+                    8.0f,
+                    18.0f
+                );
 
+            editorCameraStartFixed =
+                true;
+        }
         float cameraSpeed =
     5.0f *
     deltaTime;
@@ -3209,7 +3479,12 @@ appMode == AppMode::Play;
 
         shader.setVec3(
             "sunColor",
-            glm::vec3(1.0f));
+            glm::vec3(
+                1.15f,
+                1.10f,
+                1.0f
+            )
+        );
         int pointLightIndex =
             0;
 
@@ -3303,15 +3578,21 @@ appMode == AppMode::Play;
                 visibleObjects++;
                 if (obj->material != nullptr)
                 {
-                    shader.setBool("useTexture", true);
+                    bool objectHasTexture =
+                        obj->material->texture != nullptr;
 
-                    glActiveTexture(GL_TEXTURE0);
+                    shader.setBool(
+                        "useTexture",
+                        objectHasTexture
+                    );
 
-                    if (obj->material->texture != nullptr)
+                    if (objectHasTexture)
                     {
+                        glActiveTexture(GL_TEXTURE0);
+
                         obj->material->texture->Bind();
                     }
-                    shader.setBool("useTexture", true);
+
                     shader.setVec3("materialAmbient", obj->material->ambient);
                     shader.setVec3("materialDiffuse", obj->material->diffuse);
                     shader.setVec3("materialSpecular", obj->material->specular);
@@ -3615,7 +3896,7 @@ appMode == AppMode::Play;
                         forward * 5.0f;
 
                     playerNewPosition.y =
-                        GetTerrainHeight(
+                        GetPlayerTerrainY(
                             playerNewPosition.x,
                             playerNewPosition.z
                         );
@@ -3753,11 +4034,15 @@ appMode == AppMode::Play;
 
                 if (ImGui::Button("Snap Selected To Ground"))
                 {
-                    selectedObject->transform.position.y = 0.05f;
-                     
+                    selectedObject->transform.position.y =
+                        GetObjectTerrainY(
+                            selectedObject->transform.position.x,
+                            selectedObject->transform.position.z,
+                            0.05f
+                        );
 
                     std::cout
-                        << "Selected object snapped to ground."
+                        << "Selected object snapped to terrain."
                         << std::endl;
                 }
 

@@ -654,9 +654,11 @@ in vec2 TexCoord;
 
 uniform bool isSelected;
 uniform sampler2D texture1;
+uniform sampler2D terrainGrassTex;
+uniform sampler2D terrainCliffTex;
 uniform vec3 materialTint;
 uniform vec3 viewPos;
-
+uniform bool isProceduralTerrain;
 uniform vec3 lightPositions[MAX_LIGHTS];
 uniform vec3 lightColors[MAX_LIGHTS];
 
@@ -665,7 +667,6 @@ uniform vec3 materialDiffuse;
 uniform vec3 materialSpecular;
 uniform float materialShininess;
 uniform bool useTexture;
-uniform bool isProceduralTerrain;
 
 void main()
 {
@@ -673,56 +674,97 @@ void main()
     vec3 norm = normalize(Normal);
     vec3 viewDir = normalize(viewPos - FragPos);
 
-    if (isProceduralTerrain)
-    {
-        float slope =
-            1.0 -
-            clamp(norm.y, 0.0, 1.0);
+if (isProceduralTerrain)
+{
+    float slope =
+        1.0 -
+        clamp(norm.y, 0.0, 1.0);
 
-        float heightBlend =
-            smoothstep(-6.0, 10.0, FragPos.y);
+    vec2 grassUV =
+        TexCoord * 12.0;
 
-    vec3 lowGrass =
-    vec3(0.22, 0.43, 0.15);
+    vec2 cliffUV =
+        TexCoord * 8.0;
 
-vec3 hillGrass =
-    vec3(0.34, 0.50, 0.22);
+    vec3 grassA =
+        texture(
+            terrainGrassTex,
+            grassUV
+        ).rgb;
 
-vec3 dirt =
-    vec3(0.38, 0.32, 0.22);
+    vec3 grassB =
+        texture(
+            terrainGrassTex,
+            grassUV * 0.45 + vec2(0.17, 0.09)
+        ).rgb;
 
-vec3 rock =
-    vec3(0.45, 0.43, 0.40);
+    vec3 grassColor =
+        mix(
+            grassA,
+            grassB,
+            0.35
+        );
 
-        vec3 baseColor =
-            mix(lowGrass, hillGrass, heightBlend);
+    grassColor *=
+        vec3(
+            0.70,
+            0.82,
+            0.58
+        );
 
-        baseColor =
-            mix(
-                baseColor,
-                dirt,
-                smoothstep(0.18, 0.38, slope)
-            );
+    vec3 cliffColor =
+        texture(
+            terrainCliffTex,
+            cliffUV
+        ).rgb;
 
-        baseColor =
-            mix(
-                baseColor,
-                rock,
-                smoothstep(0.33, 0.62, slope)
-            );
-float colorVariation =
-    sin(FragPos.x * 0.045) *
-    cos(FragPos.z * 0.045) *
-    0.05;
+    cliffColor *=
+        vec3(
+            0.75,
+            0.70,
+            0.62
+        );
 
-        textureColor =
-            baseColor +
-            vec3(
-                colorVariation * 0.4,
-                colorVariation * 0.5,
-                colorVariation * 0.2
-            );
-    }
+    float cliffBlend =
+        smoothstep(
+            0.22,
+            0.50,
+            slope
+        );
+
+    float mountainHeightBlend =
+        smoothstep(
+            16.0,
+            32.0,
+            FragPos.y
+        ) * 0.25;
+
+    float finalRockBlend =
+        clamp(
+            cliffBlend + mountainHeightBlend,
+            0.0,
+            1.0
+        );
+
+    textureColor =
+        mix(
+            grassColor,
+            cliffColor,
+            finalRockBlend
+        );
+
+    float variation =
+        sin(FragPos.x * 0.045) *
+        cos(FragPos.z * 0.040) *
+        0.04;
+
+    textureColor +=
+        vec3(
+            variation * 0.25,
+            variation * 0.30,
+            variation * 0.15
+        );
+}
     else if (useTexture)
     {
         textureColor =
@@ -742,7 +784,7 @@ vec3 dirLight =
 normalize(-sunDirection);
 
 float dirDiff =
-max(dot(norm, dirLight), 0.25);
+max(dot(norm, dirLight), 0.12);
 
 vec3 dirDiffuse =
 dirDiff *
@@ -767,7 +809,7 @@ sunColor;
 vec3 dirAmbient =
 materialAmbient *
 textureColor *
-0.28;
+0.34;
 
 result +=
 dirAmbient +
@@ -846,7 +888,7 @@ if(isSelected)
 }
 
 
-result *= 0.95;
+result *= 0.90;
 
 
 result = clamp(result, 0.0, 1.0);
@@ -960,40 +1002,75 @@ float GetTerrainHeight(
     float z
 )
 {
-    float broadA =
-        std::sin(x * 0.008f) *
-        9.0f;
+    float height =
+        0.0f;
 
-    float broadB =
-        std::cos(z * 0.009f) *
-        8.0f;
+    // Broad rolling hills
+    height +=
+        std::sin(x * 0.006f) *
+        5.0f;
 
-    float broadC =
-        std::sin((x + z) * 0.006f) *
-        6.0f;
+    height +=
+        std::cos(z * 0.007f) *
+        4.5f;
 
-    float ridge =
-        std::sin((x - z) * 0.012f) *
-        3.5f;
+    height +=
+        std::sin((x + z) * 0.005f) *
+        4.0f;
 
-    float detail =
-        std::sin(x * 0.032f) *
-        std::cos(z * 0.027f) *
-        1.4f;
+    // Medium terrain waves
+    height +=
+        std::sin((x - z) * 0.013f) *
+        2.4f;
 
-    float valley =
-        -4.0f *
+    height +=
+        std::sin(x * 0.028f) *
+        std::cos(z * 0.024f) *
+        1.2f;
+
+    // Mountain spot 1
+    float mountain1Distance =
+        ((x + 170.0f) * (x + 170.0f)) +
+        ((z + 130.0f) * (z + 130.0f));
+
+    float mountain1 =
         std::exp(
-            -((x * x) + (z * z)) * 0.00010f
+            -mountain1Distance * 0.00011f
+        ) * 26.0f;
+
+    // Mountain spot 2
+    float mountain2Distance =
+        ((x - 180.0f) * (x - 180.0f)) +
+        ((z - 120.0f) * (z - 120.0f));
+
+    float mountain2 =
+        std::exp(
+            -mountain2Distance * 0.00013f
+        ) * 22.0f;
+
+    // Smaller hill near side
+    float hillDistance =
+        ((x - 40.0f) * (x - 40.0f)) +
+        ((z + 210.0f) * (z + 210.0f));
+
+    float sideHill =
+        std::exp(
+            -hillDistance * 0.00020f
+        ) * 13.0f;
+
+    // Slight lower valley near center so player area stays playable
+    float centerValley =
+        -5.0f *
+        std::exp(
+            -((x * x) + (z * z)) * 0.00008f
         );
 
     return
-        broadA +
-        broadB +
-        broadC +
-        ridge +
-        detail +
-        valley;
+        height +
+        mountain1 +
+        mountain2 +
+        sideHill +
+        centerValley;
 }
 float GetPlayerTerrainY(
     float x,
@@ -1040,7 +1117,7 @@ glm::vec3 GetTerrainNormal(
         glm::normalize(
             glm::vec3(
                 heightLeft - heightRight,
-                2.0f,
+                4.0f,
                 heightDown - heightUp
             )
         );
@@ -1783,7 +1860,13 @@ int main()
 
     glBindVertexArray(0);
     Texture containerTexture("container.jpg");
+    Texture terrainGrassTexture(
+        "textures/terrain/grass.jpg"
+    );
 
+    Texture terrainCliffTexture(
+        "textures/terrain/cliff.jpg"
+    );
 
     Material cubeMaterial(&containerTexture);
     Material groundMaterial(
@@ -1814,27 +1897,27 @@ int main()
 
     proceduralTerrainMaterial.ambient =
         glm::vec3(
-            0.42f,
-            0.42f,
-            0.42f
+            0.45f,
+            0.45f,
+            0.45f
         );
 
     proceduralTerrainMaterial.diffuse =
         glm::vec3(
-            0.95f,
-            0.95f,
-            0.95f
+            1.0f,
+            1.0f,
+            1.0f
         );
 
     proceduralTerrainMaterial.specular =
         glm::vec3(
-            0.03f,
-            0.03f,
-            0.03f
+            0.05f,
+            0.05f,
+            0.05f
         );
 
     proceduralTerrainMaterial.shininess =
-        2.0f;
+        4.0f;
     SceneObject proceduralTerrainObject(
         &proceduralTerrainMesh,
         &shader,
@@ -3685,20 +3768,40 @@ appMode == AppMode::Play;
         }
 
         shader.use();
+        shader.setInt(
+    "texture1",
+    0
+);
+
+shader.setInt(
+    "terrainGrassTex",
+    1
+);
+
+shader.setInt(
+    "terrainCliffTex",
+    2
+);
         shader.setBool(
             "isProceduralTerrain",
             false
         );
         shader.setVec3(
             "sunDirection",
-            glm::vec3(-0.2f, -1.0f, -0.3f));
-
+            glm::normalize(
+                glm::vec3(
+                    -0.55f,
+                    -1.0f,
+                    -0.35f
+                )
+            )
+        );
         shader.setVec3(
             "sunColor",
             glm::vec3(
-                1.15f,
                 1.10f,
-                1.0f
+                1.05f,
+                0.95f
             )
         );
         int pointLightIndex =
@@ -3792,6 +3895,7 @@ appMode == AppMode::Play;
                 )
             {
                 visibleObjects++;
+
                 bool objectIsProceduralTerrain =
                     obj->name == "Procedural Terrain";
 
@@ -3799,7 +3903,51 @@ appMode == AppMode::Play;
                     "isProceduralTerrain",
                     objectIsProceduralTerrain
                 );
-                if (obj->material != nullptr)
+
+                if (objectIsProceduralTerrain)
+                {
+                    glActiveTexture(GL_TEXTURE1);
+                    terrainGrassTexture.Bind();
+
+                    glActiveTexture(GL_TEXTURE2);
+                    terrainCliffTexture.Bind();
+
+                    shader.setBool(
+                        "useTexture",
+                        false
+                    );
+
+                    shader.setVec3(
+                        "materialAmbient",
+                        obj->material->ambient
+                    );
+
+                    shader.setVec3(
+                        "materialDiffuse",
+                        obj->material->diffuse
+                    );
+
+                    shader.setVec3(
+                        "materialSpecular",
+                        obj->material->specular
+                    );
+
+                    shader.setVec3(
+                        "materialTint",
+                        obj->material->tint
+                    );
+
+                    shader.setFloat(
+                        "materialShininess",
+                        obj->material->shininess
+                    );
+
+                    glPolygonMode(
+                        GL_FRONT_AND_BACK,
+                        GL_FILL
+                    );
+                }
+                else if (obj->material != nullptr)
                 {
                     bool objectHasTexture =
                         obj->material->texture != nullptr;
@@ -3869,7 +4017,7 @@ appMode == AppMode::Play;
                     );
                 }
                 obj->Draw(renderer, glm::mat4(1.0f));
-
+       
             }
             else
             {

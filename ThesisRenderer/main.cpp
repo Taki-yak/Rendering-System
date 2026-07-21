@@ -92,6 +92,11 @@ bool useGridSnap = true;
 bool blockEditorMouseLook =
 false;
 float playCameraLookOffset =0.0f;
+bool rightMouseCameraActive =
+false;
+
+bool ignoreNextMouseDelta =
+false;
 bool IsEditorSavedObject(SceneObject* object)
 {
     if (object == nullptr)
@@ -471,30 +476,27 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     ImGuiIO& io =
         ImGui::GetIO();
 
-    bool rightMouseDown =
-        glfwGetMouseButton(
-            window,
-            GLFW_MOUSE_BUTTON_RIGHT
-        ) == GLFW_PRESS;
-
     if (
-        !rightMouseDown ||
+        !rightMouseCameraActive ||
         io.WantCaptureMouse
         )
     {
-        firstMouse =
-            true;
-
         lastX =
             static_cast<float>(xpos);
 
         lastY =
             static_cast<float>(ypos);
+
+        firstMouse =
+            true;
 
         return;
     }
 
-    if (firstMouse)
+    if (
+        firstMouse ||
+        ignoreNextMouseDelta
+        )
     {
         lastX =
             static_cast<float>(xpos);
@@ -503,6 +505,9 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
             static_cast<float>(ypos);
 
         firstMouse =
+            false;
+
+        ignoreNextMouseDelta =
             false;
 
         return;
@@ -522,17 +527,25 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     lastY =
         static_cast<float>(ypos);
 
+    if (
+        std::abs(xoffset) > 80.0f ||
+        std::abs(yoffset) > 80.0f
+        )
+    {
+        return;
+    }
+
     if (blockEditorMouseLook)
     {
         playCameraLookOffset +=
             yoffset *
-            0.025f;
+            0.02f;
 
         playCameraLookOffset =
             glm::clamp(
                 playCameraLookOffset,
-                -0.8f,
-                4.0f
+                -0.6f,
+                5.5f
             );
 
         return;
@@ -2972,28 +2985,72 @@ appMode == AppMode::Play;
 
         ImGuiIO& io = ImGui::GetIO();
 
+      
+        bool rightMouseDown =
+            glfwGetMouseButton(
+                window,
+                GLFW_MOUSE_BUTTON_RIGHT
+            ) == GLFW_PRESS;
+
+        bool canControlCamera =
+            rightMouseDown &&
+            !io.WantCaptureMouse;
+
         if (
-            glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT)
-            == GLFW_PRESS
-            &&
-            !io.WantCaptureMouse
+            canControlCamera &&
+            !rightMouseCameraActive
             )
         {
+            double mouseX;
+            double mouseY;
+
+            glfwGetCursorPos(
+                window,
+                &mouseX,
+                &mouseY
+            );
+
+            lastX =
+                static_cast<float>(mouseX);
+
+            lastY =
+                static_cast<float>(mouseY);
+
+            firstMouse =
+                true;
+
+            ignoreNextMouseDelta =
+                true;
+
             glfwSetInputMode(
                 window,
                 GLFW_CURSOR,
                 GLFW_CURSOR_DISABLED
             );
+
+            rightMouseCameraActive =
+                true;
         }
-        else
+        else if (
+            !canControlCamera &&
+            rightMouseCameraActive
+            )
         {
             glfwSetInputMode(
                 window,
                 GLFW_CURSOR,
                 GLFW_CURSOR_NORMAL
             );
-        }
 
+            rightMouseCameraActive =
+                false;
+
+            firstMouse =
+                true;
+
+            ignoreNextMouseDelta =
+                true;
+        }
         bool nKeyCurrent =
             glfwGetKey(
                 window,

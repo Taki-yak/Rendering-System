@@ -665,35 +665,77 @@ uniform vec3 materialDiffuse;
 uniform vec3 materialSpecular;
 uniform float materialShininess;
 uniform bool useTexture;
+uniform bool isProceduralTerrain;
 
 void main()
 {
     vec3 textureColor;
-
-bool isProceduralTerrain =false;
-    
-if (isProceduralTerrain)
-{
-    textureColor =
-        materialTint;
-}
-else if (useTexture)
-{
-    textureColor =
-        texture(texture1, TexCoord).rgb *
-        materialTint;
-}
-else
-{
-    textureColor =
-        materialTint;
-}
-
     vec3 norm = normalize(Normal);
     vec3 viewDir = normalize(viewPos - FragPos);
 
-    vec3 result = vec3(0.0);
+    if (isProceduralTerrain)
+    {
+        float slope =
+            1.0 -
+            clamp(norm.y, 0.0, 1.0);
 
+        float heightBlend =
+            smoothstep(-6.0, 10.0, FragPos.y);
+
+    vec3 lowGrass =
+    vec3(0.22, 0.43, 0.15);
+
+vec3 hillGrass =
+    vec3(0.34, 0.50, 0.22);
+
+vec3 dirt =
+    vec3(0.38, 0.32, 0.22);
+
+vec3 rock =
+    vec3(0.45, 0.43, 0.40);
+
+        vec3 baseColor =
+            mix(lowGrass, hillGrass, heightBlend);
+
+        baseColor =
+            mix(
+                baseColor,
+                dirt,
+                smoothstep(0.18, 0.38, slope)
+            );
+
+        baseColor =
+            mix(
+                baseColor,
+                rock,
+                smoothstep(0.33, 0.62, slope)
+            );
+float colorVariation =
+    sin(FragPos.x * 0.045) *
+    cos(FragPos.z * 0.045) *
+    0.05;
+
+        textureColor =
+            baseColor +
+            vec3(
+                colorVariation * 0.4,
+                colorVariation * 0.5,
+                colorVariation * 0.2
+            );
+    }
+    else if (useTexture)
+    {
+        textureColor =
+            texture(texture1, TexCoord).rgb *
+            materialTint;
+    }
+    else
+    {
+        textureColor =
+            materialTint;
+    }
+
+    vec3 result = vec3(0.0);
 // Directional Light
 
 vec3 dirLight =
@@ -725,7 +767,7 @@ sunColor;
 vec3 dirAmbient =
 materialAmbient *
 textureColor *
-0.55;
+0.28;
 
 result +=
 dirAmbient +
@@ -804,7 +846,7 @@ if(isSelected)
 }
 
 
-result *= 0.85;
+result *= 0.95;
 
 
 result = clamp(result, 0.0, 1.0);
@@ -918,26 +960,40 @@ float GetTerrainHeight(
     float z
 )
 {
-    float height =
-        0.0f;
+    float broadA =
+        std::sin(x * 0.008f) *
+        9.0f;
 
-    height +=
-        std::sin(x * 0.018f) *
-        2.0f;
+    float broadB =
+        std::cos(z * 0.009f) *
+        8.0f;
 
-    height +=
-        std::cos(z * 0.020f) *
-        1.6f;
+    float broadC =
+        std::sin((x + z) * 0.006f) *
+        6.0f;
 
-    height +=
-        std::sin((x + z) * 0.012f) *
+    float ridge =
+        std::sin((x - z) * 0.012f) *
+        3.5f;
+
+    float detail =
+        std::sin(x * 0.032f) *
+        std::cos(z * 0.027f) *
         1.4f;
 
-    height +=
-        std::sin((x * 0.035f) + (z * 0.025f)) *
-        0.6f;
+    float valley =
+        -4.0f *
+        std::exp(
+            -((x * x) + (z * z)) * 0.00010f
+        );
 
-    return height - 1.0f;
+    return
+        broadA +
+        broadB +
+        broadC +
+        ridge +
+        detail +
+        valley;
 }
 float GetPlayerTerrainY(
     float x,
@@ -1738,8 +1794,8 @@ int main()
 
     BuildProceduralTerrain(
         proceduralTerrainVertices,
-        520.0f,
-        180
+        700.0f,
+        220
     );
 
     Mesh proceduralTerrainMesh(
@@ -1751,35 +1807,34 @@ int main()
     );
     proceduralTerrainMaterial.tint =
         glm::vec3(
-            0.28f,
-            0.55f,
-            0.18f
+            1.0f,
+            1.0f,
+            1.0f
         );
 
     proceduralTerrainMaterial.ambient =
         glm::vec3(
-            0.55f,
-            0.55f,
-            0.55f
+            0.42f,
+            0.42f,
+            0.42f
         );
 
     proceduralTerrainMaterial.diffuse =
         glm::vec3(
-            0.85f,
-            0.85f,
-            0.85f
+            0.95f,
+            0.95f,
+            0.95f
         );
 
     proceduralTerrainMaterial.specular =
         glm::vec3(
-            0.0f,
-            0.0f,
-            0.0f
+            0.03f,
+            0.03f,
+            0.03f
         );
 
     proceduralTerrainMaterial.shininess =
-        1.0f;
-
+        2.0f;
     SceneObject proceduralTerrainObject(
         &proceduralTerrainMesh,
         &shader,
@@ -1807,7 +1862,7 @@ int main()
         );
 
     proceduralTerrainObject.boundingRadius =
-        500.0f;
+        800.0f;
 
     proceduralTerrainObject.isCollider =
         false;
@@ -2957,8 +3012,8 @@ int main()
             camera.Position =
                 glm::vec3(
                     0.0f,
-                    8.0f,
-                    18.0f
+                    25.0f,
+                    45.0f
                 );
 
             editorCameraStartFixed =
@@ -3465,12 +3520,11 @@ appMode == AppMode::Play;
             (float)glfwGetTime(),
             glm::vec3(0.5f, 1.0f, 0.0f));
         glm::mat4 view = camera.GetViewMatrix();
-
         glm::mat4 projection = glm::perspective(
             glm::radians(45.0f),
             (float)width / (float)height,
             0.1f,
-            100.0f
+            900.0f
         );
 
         glDepthFunc(GL_LEQUAL);
@@ -3631,6 +3685,10 @@ appMode == AppMode::Play;
         }
 
         shader.use();
+        shader.setBool(
+            "isProceduralTerrain",
+            false
+        );
         shader.setVec3(
             "sunDirection",
             glm::vec3(-0.2f, -1.0f, -0.3f));
@@ -3734,6 +3792,13 @@ appMode == AppMode::Play;
                 )
             {
                 visibleObjects++;
+                bool objectIsProceduralTerrain =
+                    obj->name == "Procedural Terrain";
+
+                shader.setBool(
+                    "isProceduralTerrain",
+                    objectIsProceduralTerrain
+                );
                 if (obj->material != nullptr)
                 {
                     bool objectHasTexture =

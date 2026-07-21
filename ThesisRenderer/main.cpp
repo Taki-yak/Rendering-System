@@ -1020,6 +1020,33 @@ bool IsGoodTerrainSpawnPoint(
 
     return normal.y > 0.72f;
 }
+void SetObjectMetadata(
+    SceneObject* object,
+    const std::string& assetId,
+    AssetType assetType,
+    SpawnSource spawnSource,
+    bool persistent,
+    bool showInHierarchy
+)
+{
+    if (object == nullptr)
+        return;
+
+    object->assetId =
+        assetId;
+
+    object->assetType =
+        assetType;
+
+    object->spawnSource =
+        spawnSource;
+
+    object->persistent =
+        persistent;
+
+    object->showInHierarchy =
+        showInHierarchy;
+}
 void AddTerrainVertex(
     std::vector<float>& vertices,
     float x,
@@ -1748,7 +1775,14 @@ int main()
 
     proceduralTerrainObject.name =
         "Procedural Terrain";
-
+    SetObjectMetadata(
+        &proceduralTerrainObject,
+        "procedural_terrain",
+        AssetType::Terrain,
+        SpawnSource::Procedural,
+        false,
+        true
+    );
     proceduralTerrainObject.transform.position =
         glm::vec3(
             0.0f
@@ -1822,7 +1856,20 @@ int main()
                 );
 
             obj->name = name;
+            obj->assetId =
+                name;
 
+            obj->assetType =
+                AssetType::Prop;
+
+            obj->spawnSource =
+                SpawnSource::Procedural;
+
+            obj->persistent =
+                false;
+
+            obj->showInHierarchy =
+                true;
             obj->transform.position =
                 position;
 
@@ -2315,6 +2362,14 @@ int main()
 
         grassObject->boundingRadius =
             8.0f;
+        SetObjectMetadata(
+            grassObject,
+            "grass_clump",
+            AssetType::Grass,
+            SpawnSource::Procedural,
+            false,
+            false
+        );
     }
 
     // ================= SIMPLE FLOWER PATCHES =================
@@ -2373,6 +2428,14 @@ int main()
 
         flowerObject->boundingRadius =
             8.0f;
+        SetObjectMetadata(
+            flowerObject,
+            "flower_clump",
+            AssetType::Flower,
+            SpawnSource::Procedural,
+            false,
+            false
+        );
     }
     // ================= PROCEDURAL GRASS AND FLOWERS =================
 
@@ -2401,18 +2464,28 @@ int main()
                 0.70f,
                 1.10f
             );
-        AddEnvironmentModel(
-            chosenTree,
-            "Generated Tree",
-            glm::vec3(
-                x,
-                GetTerrainHeight(x, z) + 0.05f,
-                z
-            ),
-            glm::vec3(
-                scale
-            ),
-            false
+        SceneObject* treeObject =
+            AddEnvironmentModel(
+                chosenTree,
+                "Generated Tree",
+                glm::vec3(
+                    x,
+                    GetTerrainHeight(x, z) + 0.05f,
+                    z
+                ),
+                glm::vec3(
+                    scale
+                ),
+                false
+            );
+
+        SetObjectMetadata(
+            treeObject,
+            "generated_tree",
+            AssetType::Tree,
+            SpawnSource::Procedural,
+            false,
+            true
         );
     }
 
@@ -2442,17 +2515,27 @@ int main()
                 1.00f
             );
 
-        AddEnvironmentModel(
-            chosenRock,
-            "Generated Rock",
-            glm::vec3(
-                x,
-                GetTerrainHeight(x, z) + 0.05f,
-                z
-            ),
-            glm::vec3(
-                scale
-            ),
+        SceneObject* rockObject =
+            AddEnvironmentModel(
+                chosenRock,
+                "Generated Rock",
+                glm::vec3(
+                    x,
+                    GetTerrainHeight(x, z) + 0.05f,
+                    z
+                ),
+                glm::vec3(
+                    scale
+                ),
+                true
+            );
+
+        SetObjectMetadata(
+            rockObject,
+            "generated_rock",
+            AssetType::Rock,
+            SpawnSource::Procedural,
+            false,
             true
         );
     }
@@ -2483,17 +2566,27 @@ int main()
                 0.85f
             );
 
-        AddEnvironmentModel(
-            chosenPlant,
-            "Generated Plant",
-            glm::vec3(
-                x,
-                GetTerrainHeight(x, z) + 0.05f,
-                z
-            ),
-            glm::vec3(
-                scale
-            ),
+        SceneObject* plantObject =
+            AddEnvironmentModel(
+                chosenPlant,
+                "Generated Plant",
+                glm::vec3(
+                    x,
+                    GetTerrainHeight(x, z) + 0.05f,
+                    z
+                ),
+                glm::vec3(
+                    scale
+                ),
+                false
+            );
+
+        SetObjectMetadata(
+            plantObject,
+            "generated_plant",
+            AssetType::Bush,
+            SpawnSource::Procedural,
+            false,
             false
         );
     }
@@ -2648,6 +2741,14 @@ int main()
             &shader
         );
     playerObject->name = "Player";
+    SetObjectMetadata(
+        playerObject,
+        "player",
+        AssetType::Player,
+        SpawnSource::Manual,
+        true,
+        true
+    );
     playerObject->transform.position =
         playerSpawnPosition;
     playerObject->transform.position.y =

@@ -8,12 +8,50 @@
 #include "Component.h"
 #include "Model.h"
 #include "Light.h"
+#include <string>
 class Renderer;
+enum class AssetType
+{
+    Unknown,
+    Terrain,
+    Player,
+    Tree,
+    Rock,
+    Grass,
+    Flower,
+    Bush,
+    House,
+    Mountain,
+    Fence,
+    Prop,
+    Light,
+    Gameplay
+};
 
+enum class SpawnSource
+{
+    Manual,
+    Procedural,
+    LoadedScene
+};
 class SceneObject
 {
 public:
     std::string name = "GameObject";
+    std::string assetId =
+        "unknown";
+
+    AssetType assetType =
+        AssetType::Unknown;
+
+    SpawnSource spawnSource =
+        SpawnSource::Manual;
+
+    bool persistent =
+        true;
+
+    bool showInHierarchy =
+        true;
     SceneObject(Mesh* m, Shader* s, Material* mat);
     ~SceneObject()
     {

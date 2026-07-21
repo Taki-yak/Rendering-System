@@ -163,7 +163,15 @@ void EditorUI::DrawHierarchy(
     );
     ImGui::Begin("Hierarchy");
     static char searchBuffer[128] = "";
+    static bool showGeneratedObjects =
+        false;
 
+    ImGui::Checkbox(
+        "Show generated objects",
+        &showGeneratedObjects
+    );
+
+    ImGui::Separator();
     ImGui::InputText(
         "Search",
         searchBuffer,
@@ -173,6 +181,11 @@ void EditorUI::DrawHierarchy(
     ImGui::Separator();
     for (SceneObject* obj : scene.objects)
     {
+        if (obj == nullptr)
+            continue;
+
+        if (!obj->showInHierarchy && !showGeneratedObjects)
+            continue;
         std::string objectName = obj->name;
 
         if (strlen(searchBuffer) > 0)

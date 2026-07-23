@@ -677,106 +677,77 @@ void main()
 if (isProceduralTerrain)
 {
     float slope =
-        1.0 -
-        clamp(norm.y, 0.0, 1.0);
+        1.0 - clamp(norm.y, 0.0, 1.0);
 
-    vec2 grassUV =
-        TexCoord * 12.0;
+    vec3 grassLow =
+        vec3(0.27, 0.37, 0.17);
 
-    vec2 cliffUV =
-        TexCoord * 8.0;
+    vec3 grassMid =
+        vec3(0.35, 0.46, 0.22);
 
-    vec3 grassA =
-        texture(
-            terrainGrassTex,
-            grassUV
-        ).rgb;
+    vec3 grassHigh =
+        vec3(0.43, 0.52, 0.28);
 
-    vec3 grassB =
-        texture(
-            terrainGrassTex,
-            grassUV * 0.45 + vec2(0.17, 0.09)
-        ).rgb;
+    vec3 dirt =
+        vec3(0.50, 0.39, 0.25);
 
-    vec3 grassColor =
+    vec3 rock =
+        vec3(0.53, 0.52, 0.49);
+
+    vec3 baseColor =
         mix(
-            grassA,
-            grassB,
-            0.35
+            grassLow,
+            grassMid,
+            smoothstep(-4.0, 10.0, FragPos.y)
         );
 
-    grassColor *=
-        vec3(
-            0.70,
-            0.82,
-            0.58
+    baseColor =
+        mix(
+            baseColor,
+            grassHigh,
+            smoothstep(10.0, 24.0, FragPos.y)
         );
 
-    vec3 cliffColor =
-        texture(
-            terrainCliffTex,
-            cliffUV
-        ).rgb;
-
-    cliffColor *=
-        vec3(
-            0.75,
-            0.70,
-            0.62
+    baseColor =
+        mix(
+            baseColor,
+            dirt,
+            smoothstep(0.22, 0.42, slope)
         );
 
-    float cliffBlend =
-        smoothstep(
-            0.22,
-            0.50,
-            slope
+    baseColor =
+        mix(
+            baseColor,
+            rock,
+            smoothstep(0.42, 0.68, slope)
         );
 
-    float mountainHeightBlend =
-        smoothstep(
-            16.0,
-            32.0,
-            FragPos.y
-        ) * 0.25;
+    float macroNoise =
+        sin(FragPos.x * 0.03) *
+        cos(FragPos.z * 0.028);
 
-    float finalRockBlend =
-        clamp(
-            cliffBlend + mountainHeightBlend,
-            0.0,
-            1.0
-        );
+    float microNoise =
+        sin(FragPos.x * 0.11 + FragPos.z * 0.09) * 0.02;
 
     textureColor =
-        mix(
-            grassColor,
-            cliffColor,
-            finalRockBlend
-        );
-
-    float variation =
-        sin(FragPos.x * 0.045) *
-        cos(FragPos.z * 0.040) *
-        0.04;
-
-    textureColor +=
+        baseColor +
         vec3(
-            variation * 0.25,
-            variation * 0.30,
-            variation * 0.15
+            macroNoise * 0.03 + microNoise,
+            macroNoise * 0.04 + microNoise,
+            macroNoise * 0.015
         );
 }
-    else if (useTexture)
-    {
-        textureColor =
-            texture(texture1, TexCoord).rgb *
-            materialTint;
-    }
-    else
-    {
-        textureColor =
-            materialTint;
-    }
-
+else if (useTexture)
+{
+    textureColor =
+        texture(texture1, TexCoord).rgb *
+        materialTint;
+}
+else
+{
+    textureColor =
+        materialTint;
+}
     vec3 result = vec3(0.0);
 // Directional Light
 
@@ -812,9 +783,22 @@ textureColor *
 0.34;
 
 result +=
-dirAmbient +
-dirDiffuse +
-dirSpecular;
+    dirAmbient +
+    dirDiffuse +
+    dirSpecular;
+
+float hemi =
+    clamp(norm.y * 0.5 + 0.5, 0.0, 1.0);
+
+vec3 hemiLight =
+    mix(
+        vec3(0.08, 0.07, 0.06),
+        vec3(0.20, 0.24, 0.28),
+        hemi
+    );
+
+result +=
+    textureColor * hemiLight;
 
     for(int i = 0; i < MAX_LIGHTS; i++)
 {
@@ -889,7 +873,25 @@ if(isSelected)
 
 
 result *= 0.90;
+float fogDistance =
+    distance(viewPos, FragPos);
 
+float fogFactor =
+    clamp(
+        (fogDistance - 120.0) / 180.0,
+        0.0,
+        1.0
+    );
+
+vec3 fogColor =
+    vec3(0.70, 0.77, 0.84);
+
+result =
+    mix(
+        result,
+        fogColor,
+        fogFactor
+    );
 
 result = clamp(result, 0.0, 1.0);
 
@@ -1002,75 +1004,72 @@ float GetTerrainHeight(
     float z
 )
 {
-    float height =
-        0.0f;
+    float dist =
+        std::sqrt(x * x + z * z);
 
-    // Broad rolling hills
-    height +=
-        std::sin(x * 0.006f) *
-        5.0f;
+    float base =
+        std::sin(x * 0.010f) * 2.2f +
+        std::cos(z * 0.012f) * 1.8f +
+        std::sin((x + z) * 0.008f) * 1.5f;
 
-    height +=
-        std::cos(z * 0.007f) *
-        4.5f;
+    base +=
+        std::sin(x * 0.035f) *
+        std::cos(z * 0.030f) *
+        2.2f;
 
-    height +=
-        std::sin((x + z) * 0.005f) *
-        4.0f;
-
-    // Medium terrain waves
-    height +=
-        std::sin((x - z) * 0.013f) *
-        2.4f;
-
-    height +=
-        std::sin(x * 0.028f) *
-        std::cos(z * 0.024f) *
-        1.2f;
-
-    // Mountain spot 1
-    float mountain1Distance =
-        ((x + 170.0f) * (x + 170.0f)) +
-        ((z + 130.0f) * (z + 130.0f));
-
-    float mountain1 =
+    float peak1 =
+        26.0f *
         std::exp(
-            -mountain1Distance * 0.00011f
-        ) * 26.0f;
-
-    // Mountain spot 2
-    float mountain2Distance =
-        ((x - 180.0f) * (x - 180.0f)) +
-        ((z - 120.0f) * (z - 120.0f));
-
-    float mountain2 =
-        std::exp(
-            -mountain2Distance * 0.00013f
-        ) * 22.0f;
-
-    // Smaller hill near side
-    float hillDistance =
-        ((x - 40.0f) * (x - 40.0f)) +
-        ((z + 210.0f) * (z + 210.0f));
-
-    float sideHill =
-        std::exp(
-            -hillDistance * 0.00020f
-        ) * 13.0f;
-
-    // Slight lower valley near center so player area stays playable
-    float centerValley =
-        -5.0f *
-        std::exp(
-            -((x * x) + (z * z)) * 0.00008f
+            -(
+                (x - 55.0f) * (x - 55.0f) +
+                (z + 35.0f) * (z + 35.0f)
+                ) / 2200.0f
         );
 
+    float peak2 =
+        18.0f *
+        std::exp(
+            -(
+                (x + 70.0f) * (x + 70.0f) +
+                (z - 45.0f) * (z - 45.0f)
+                ) / 2600.0f
+        );
+
+    float peak3 =
+        22.0f *
+        std::exp(
+            -(
+                (x - 15.0f) * (x - 15.0f) +
+                (z - 95.0f) * (z - 95.0f)
+                ) / 1800.0f
+        );
+
+    float ring =
+        0.0f;
+
+    if (dist > 120.0f)
+    {
+        float t =
+            (dist - 120.0f) / 90.0f;
+
+        t =
+            glm::clamp(
+                t,
+                0.0f,
+                1.0f
+            );
+
+        ring =
+            t * t * 38.0f;
+    }
+
     return
-        height +
-        mountain1 +
-        mountain2 +
-        sideHill +
-        centerValley;
+        base +
+        peak1 +
+        peak2 +
+        peak3 +
+        ring -
+        2.0f;
 }
 float GetPlayerTerrainY(
     float x,
@@ -1877,7 +1876,7 @@ int main()
 
     BuildProceduralTerrain(
         proceduralTerrainVertices,
-        700.0f,
+        520.0f,
         220
     );
 
@@ -3991,19 +3990,24 @@ shader.setInt(
                         GL_FILL
                     );
 
+                    shader.setBool(
+                        "useTexture",
+                        obj->useModel
+                    );
+
                     shader.setVec3(
                         "materialAmbient",
-                        glm::vec3(0.4f)
+                        glm::vec3(0.32f)
                     );
 
                     shader.setVec3(
                         "materialDiffuse",
-                        glm::vec3(0.8f)
+                        glm::vec3(0.95f)
                     );
 
                     shader.setVec3(
                         "materialSpecular",
-                        glm::vec3(0.1f)
+                        glm::vec3(0.05f)
                     );
 
                     shader.setVec3(
@@ -4013,7 +4017,7 @@ shader.setInt(
 
                     shader.setFloat(
                         "materialShininess",
-                        8.0f
+                        6.0f
                     );
                 }
                 obj->Draw(renderer, glm::mat4(1.0f));

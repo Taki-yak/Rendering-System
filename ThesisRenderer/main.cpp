@@ -655,6 +655,7 @@ in vec2 TexCoord;
 uniform bool isSelected;
 uniform sampler2D texture1;
 uniform sampler2D terrainGrassTex;
+uniform sampler2D terrainDirtTex;
 uniform sampler2D terrainCliffTex;
 uniform vec3 materialTint;
 uniform vec3 viewPos;
@@ -676,54 +677,132 @@ void main()
 
 if (isProceduralTerrain)
 {
-    float slope =
+    float rawSlope =
         1.0 -
         clamp(norm.y, 0.0, 1.0);
 
-    float heightValue =
-        FragPos.y;
+    float slope =
+        pow(
+            rawSlope,
+            0.55
+        );
 
-    vec3 valleyGrass =
-        vec3(0.34, 0.44, 0.20);
+    vec2 grassUV =
+        TexCoord * 3.0;
 
-    vec3 hillGrass =
-        vec3(0.43, 0.53, 0.27);
+    vec2 dirtUV =
+        TexCoord * 2.2;
 
-    vec3 dryGrass =
-        vec3(0.52, 0.49, 0.30);
+    vec2 cliffUV =
+        TexCoord * 2.0;
 
-    vec3 dirt =
-        vec3(0.55, 0.42, 0.27);
+    vec3 grassTex =
+        texture(
+            terrainGrassTex,
+            grassUV
+        ).rgb;
 
-    vec3 cliff =
-        vec3(0.46, 0.44, 0.40);
+    vec3 dirtTex =
+        texture(
+            terrainDirtTex,
+            dirtUV
+        ).rgb;
+
+    vec3 cliffTex =
+        texture(
+            terrainCliffTex,
+            cliffUV
+        ).rgb;
+
+    vec3 grassBase =
+        vec3(
+            0.32,
+            0.42,
+            0.20
+        );
+
+    vec3 dirtBase =
+        vec3(
+            0.52,
+            0.39,
+            0.24
+        );
+
+    vec3 cliffBase =
+        vec3(
+            0.45,
+            0.43,
+            0.39
+        );
+
+    vec3 grassColor =
+        mix(
+            grassBase,
+            grassTex,
+            0.45
+        );
+
+    vec3 dirtColor =
+        mix(
+            dirtBase,
+            dirtTex,
+            0.65
+        );
+
+    vec3 cliffColor =
+        mix(
+            cliffBase,
+            cliffTex,
+            0.75
+        );
+
+    float dirtBlend =
+        smoothstep(
+            0.08,
+            0.22,
+            slope
+        );
+
+    float cliffBlend =
+        smoothstep(
+            0.20,
+            0.42,
+            slope
+        );
+
+    float highMountainRock =
+        smoothstep(
+            12.0,
+            28.0,
+            FragPos.y
+        ) * 0.35;
+
+    float finalDirtBlend =
+        clamp(
+            dirtBlend,
+            0.0,
+            1.0
+        );
+
+    float finalCliffBlend =
+        clamp(
+            cliffBlend + highMountainRock,
+            0.0,
+            1.0
+        );
 
     vec3 baseColor =
         mix(
-            valleyGrass,
-            hillGrass,
-            smoothstep(-3.0, 10.0, heightValue)
+            grassColor,
+            dirtColor,
+            finalDirtBlend
         );
 
     baseColor =
         mix(
             baseColor,
-            dryGrass,
-            smoothstep(10.0, 22.0, heightValue) * 0.45
-        );
-
-    baseColor =
-        mix(
-            baseColor,
-            dirt,
-            smoothstep(0.16, 0.34, slope)
-        );
-
-    baseColor =
-        mix(
-            baseColor,
-            cliff,
-            smoothstep(0.36, 0.62, slope)
+            cliffColor,
+            finalCliffBlend
         );
 
     float broadVariation =
@@ -733,9 +812,9 @@ if (isProceduralTerrain)
     textureColor =
         baseColor +
         vec3(
+            broadVariation * 0.020,
             broadVariation * 0.025,
-            broadVariation * 0.030,
-            broadVariation * 0.012
+            broadVariation * 0.010
         );
 }
 else if (useTexture)
@@ -1861,7 +1940,11 @@ int main()
     glBindVertexArray(0);
     Texture containerTexture("container.jpg");
     Texture terrainGrassTexture(
-        "textures/terrain/grass.jpg"
+        "textures/terrain/grass1.jpg"
+    );
+
+    Texture terrainDirtTexture(
+        "textures/terrain/dirt.jpg"
     );
 
     Texture terrainCliffTexture(
@@ -3773,15 +3856,20 @@ appMode == AppMode::Play;
     0
 );
 
-shader.setInt(
-    "terrainGrassTex",
-    1
-);
+        shader.setInt(
+            "terrainGrassTex",
+            1
+        );
 
-shader.setInt(
-    "terrainCliffTex",
-    2
-);
+        shader.setInt(
+            "terrainDirtTex",
+            2
+        );
+
+        shader.setInt(
+            "terrainCliffTex",
+            3
+        );
         shader.setBool(
             "isProceduralTerrain",
             false
@@ -3903,13 +3991,15 @@ shader.setInt(
                     "isProceduralTerrain",
                     objectIsProceduralTerrain
                 );
-
                 if (objectIsProceduralTerrain)
                 {
                     glActiveTexture(GL_TEXTURE1);
                     terrainGrassTexture.Bind();
 
                     glActiveTexture(GL_TEXTURE2);
+                    terrainDirtTexture.Bind();
+
+                    glActiveTexture(GL_TEXTURE3);
                     terrainCliffTexture.Bind();
 
                     shader.setBool(

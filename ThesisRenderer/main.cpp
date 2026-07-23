@@ -677,64 +677,65 @@ void main()
 if (isProceduralTerrain)
 {
     float slope =
-        1.0 - clamp(norm.y, 0.0, 1.0);
+        1.0 -
+        clamp(norm.y, 0.0, 1.0);
 
-    vec3 grassLow =
-        vec3(0.27, 0.37, 0.17);
+    float heightValue =
+        FragPos.y;
 
-    vec3 grassMid =
-        vec3(0.35, 0.46, 0.22);
+    vec3 valleyGrass =
+        vec3(0.34, 0.44, 0.20);
 
-    vec3 grassHigh =
-        vec3(0.43, 0.52, 0.28);
+    vec3 hillGrass =
+        vec3(0.43, 0.53, 0.27);
+
+    vec3 dryGrass =
+        vec3(0.52, 0.49, 0.30);
 
     vec3 dirt =
-        vec3(0.50, 0.39, 0.25);
+        vec3(0.55, 0.42, 0.27);
 
-    vec3 rock =
-        vec3(0.53, 0.52, 0.49);
+    vec3 cliff =
+        vec3(0.46, 0.44, 0.40);
 
     vec3 baseColor =
         mix(
-            grassLow,
-            grassMid,
-            smoothstep(-4.0, 10.0, FragPos.y)
+            valleyGrass,
+            hillGrass,
+            smoothstep(-3.0, 10.0, heightValue)
         );
 
     baseColor =
         mix(
             baseColor,
-            grassHigh,
-            smoothstep(10.0, 24.0, FragPos.y)
+            dryGrass,
+            smoothstep(10.0, 22.0, heightValue) * 0.45
         );
 
     baseColor =
         mix(
             baseColor,
             dirt,
-            smoothstep(0.22, 0.42, slope)
+            smoothstep(0.16, 0.34, slope)
         );
 
     baseColor =
         mix(
             baseColor,
-            rock,
-            smoothstep(0.42, 0.68, slope)
+            cliff,
+            smoothstep(0.36, 0.62, slope)
         );
 
-    float macroNoise =
-        sin(FragPos.x * 0.03) *
-        cos(FragPos.z * 0.028);
-
-    float microNoise =
-        sin(FragPos.x * 0.11 + FragPos.z * 0.09) * 0.02;
+    float broadVariation =
+        sin(FragPos.x * 0.018) *
+        cos(FragPos.z * 0.021);
 
     textureColor =
         baseColor +
         vec3(
-            macroNoise * 0.03 + microNoise,
-            macroNoise * 0.04 + microNoise,
-            macroNoise * 0.015
+            broadVariation * 0.025,
+            broadVariation * 0.030,
+            broadVariation * 0.012
         );
 }
 else if (useTexture)
@@ -2458,7 +2459,7 @@ int main()
     };
     // ================= SIMPLE LOW-POLY GRASS FIELD =================
 
-    for (int i = 0; i < 400; i++)
+    for (int i = 0; i < 160; i++)
     {
         float x =
             RandomRange(
@@ -2493,8 +2494,8 @@ int main()
                 ),
                 glm::vec3(
                     RandomRange(
-                        1.4f,
-                        2.2f
+                        0.8f,
+                        1.3f
                     )
                 ),
                 false
@@ -2611,8 +2612,8 @@ int main()
 
         float scale =
             RandomRange(
-                0.70f,
-                1.10f
+                1.35f,
+                2.10f
             );
         SceneObject* treeObject =
             AddEnvironmentModel(
@@ -2661,8 +2662,8 @@ int main()
 
         float scale =
             RandomRange(
-                0.60f,
-                1.00f
+                1.20f,
+                2.00f
             );
 
         SceneObject* rockObject =
@@ -3985,9 +3986,9 @@ shader.setInt(
                 }
                 else
                 {
-                    glPolygonMode(
-                        GL_FRONT_AND_BACK,
-                        GL_FILL
+                    shader.setBool(
+                        "isProceduralTerrain",
+                        false
                     );
 
                     shader.setBool(
@@ -3995,29 +3996,50 @@ shader.setInt(
                         obj->useModel
                     );
 
+                    glPolygonMode(
+                        GL_FRONT_AND_BACK,
+                        GL_FILL
+                    );
+
                     shader.setVec3(
                         "materialAmbient",
-                        glm::vec3(0.32f)
+                        glm::vec3(
+                            0.65f,
+                            0.65f,
+                            0.65f
+                        )
                     );
 
                     shader.setVec3(
                         "materialDiffuse",
-                        glm::vec3(0.95f)
+                        glm::vec3(
+                            1.0f,
+                            1.0f,
+                            1.0f
+                        )
                     );
 
                     shader.setVec3(
                         "materialSpecular",
-                        glm::vec3(0.05f)
+                        glm::vec3(
+                            0.03f,
+                            0.03f,
+                            0.03f
+                        )
                     );
 
                     shader.setVec3(
                         "materialTint",
-                        glm::vec3(1.0f)
+                        glm::vec3(
+                            1.0f,
+                            1.0f,
+                            1.0f
+                        )
                     );
 
                     shader.setFloat(
                         "materialShininess",
-                        6.0f
+                        4.0f
                     );
                 }
                 obj->Draw(renderer, glm::mat4(1.0f));

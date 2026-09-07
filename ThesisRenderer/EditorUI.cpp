@@ -13,6 +13,7 @@
 #include <cmath>
 #include <cstdlib>
 #include "mesh.h"
+#include "EditorLayout.h"
 #include <fstream>
 #include <sstream>
 float GetObjectTerrainY(
@@ -24,26 +25,6 @@ extern float GetTerrainHeight(
     float x,
     float z
 );
-static const float leftX =
-10.0f;
-
-static const float topY =
-70.0f;
-
-static const float leftWidth =
-260.0f;
-
-static const float rightX =
-1240.0f;
-
-static const float rightWidth =
-340.0f;
-
-static const float centerX =
-280.0f;
-
-static const float centerWidth =
-940.0f;
 static glm::vec3 SnapEditorPositionToTerrain(
     glm::vec3 position,
     float offset = 0.05f

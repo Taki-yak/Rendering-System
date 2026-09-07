@@ -153,6 +153,7 @@
     <ClCompile Include="CoinRushGameMode.cpp" />
     <ClCompile Include="Cubemap.cpp" />
     <ClCompile Include="DayNightSystem.cpp" />
+    <ClCompile Include="EditorLayout.cpp" />
     <ClCompile Include="EditorUI.cpp" />
     <ClCompile Include="Frustum.cpp" />
     <ClCompile Include="GameplayFeedbackFX.cpp" />
@@ -192,6 +193,7 @@
     <ClInclude Include="Component.h" />
     <ClInclude Include="Cubemap.h" />
     <ClInclude Include="DayNightSystem.h" />
+    <ClInclude Include="EditorLayout.h" />
     <ClInclude Include="EditorUI.h" />
     <ClInclude Include="Frustum.h" />
     <ClInclude Include="GameplayFeedbackFX.h" />

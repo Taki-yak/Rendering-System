@@ -51,32 +51,13 @@
 #include "DayNightSystem.h"
 #include "CoinRushGameMode.h"
 #include "MonsterEscapeGameMode.h"
+#include "EditorLayout.h"
 #ifdef max
 #undef max
 #endif
 #ifdef min
 #undef min
 #endif
-static const float leftX =
-10.0f;
-
-static const float topY =
-70.0f;
-
-static const float leftWidth =
-260.0f;
-
-static const float rightX =
-1240.0f;
-
-static const float rightWidth =
-340.0f;
-
-static const float centerX =
-280.0f;
-
-static const float centerWidth =
-940.0f;
 // ================= CAMERA VARIABLES =================
 //glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 //glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -6315,8 +6296,49 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    // -screen>      GLFWwindow* window = glfwCreateWindow(1600, 900, "Orion", NULL, NULL);
-    GLFWmonitor* monitor =
+    GLFWmonitor* primaryMonitor =
+        glfwGetPrimaryMonitor();
+
+    int monitorX =
+        0;
+
+    int monitorY =
+        0;
+
+    int monitorWidth =
+        1600;
+
+    int monitorHeight =
+        900;
+
+    glfwGetMonitorWorkarea(
+        primaryMonitor,
+        &monitorX,
+        &monitorY,
+        &monitorWidth,
+        &monitorHeight
+    );
+
+    glfwWindowHint(
+        GLFW_DECORATED,
+        GLFW_FALSE
+    );
+
+    glfwWindowHint(
+        GLFW_RESIZABLE,
+        GLFW_TRUE
+    );
+
+    GLFWwindow* window =
+        glfwCreateWindow(
+            monitorWidth,
+            monitorHeight,
+            "Orion",
+            NULL,
+            NULL
+        );
+       // full screen
+ /*   GLFWmonitor* monitor =
         glfwGetPrimaryMonitor();
 
     const GLFWvidmode* videoMode =
@@ -6351,14 +6373,18 @@ int main()
             "Orion",
             monitor,
             NULL
-        );
+        );*/
     if (!window)
     {
         std::cout << "Failed to create window\n";
         glfwTerminate();
         return -1;
     }
-
+    glfwSetWindowPos(
+        window,
+        monitorX,
+        monitorY
+    );
     glfwMakeContextCurrent(window);
 
     glfwSetCursorPosCallback(window, mouse_callback);
@@ -8877,7 +8903,7 @@ int main()
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-
+        UpdateResponsiveEditorLayout();
         // ================= RETURN TO MAIN MENU WITH ESC =================
         bool escapeDown =
             glfwGetKey(
@@ -11900,16 +11926,16 @@ ImGuiIO& io = ImGui::GetIO();
             {
                 ImGui::SetNextWindowPos(
                     ImVec2(
-                        10.0f,
-                        455.0f
+                        leftX,
+                        topY + 380.0f
                     ),
                     ImGuiCond_FirstUseEver
                 );
 
                 ImGui::SetNextWindowSize(
                     ImVec2(
-                        260.0f,
-                        245.0f
+                        leftWidth,
+                        280.0f
                     ),
                     ImGuiCond_FirstUseEver
                 );

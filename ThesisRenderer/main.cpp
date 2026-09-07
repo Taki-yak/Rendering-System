@@ -2846,6 +2846,529 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 }
 
 SceneObject* selectedObject = nullptr;
+// ================= UNDO / REDO TRANSFORM SYSTEM V1 =================
+
+struct TransformHistoryState
+{
+    glm::vec3 position;
+    glm::vec3 rotation;
+    glm::vec3 scale;
+};
+
+struct TransformHistoryEntry
+{
+    SceneObject* object;
+    std::string objectName;
+
+    TransformHistoryState beforeState;
+    TransformHistoryState afterState;
+};
+
+std::vector<TransformHistoryEntry> undoTransformStack;
+std::vector<TransformHistoryEntry> redoTransformStack;
+
+const int maxTransformHistoryCount =
+80;
+
+bool undoShortcutPressed =
+false;
+
+bool redoShortcutPressed =
+false;
+
+bool transformTrackingInitialized =
+false;
+
+SceneObject* transformTrackingObject =
+nullptr;
+
+TransformHistoryState transformTrackingState;
+
+TransformHistoryState CaptureTransformHistoryState(
+    SceneObject* object
+)
+{
+    TransformHistoryState state;
+
+    if (object == nullptr)
+    {
+        state.position =
+            glm::vec3(0.0f);
+
+        state.rotation =
+            glm::vec3(0.0f);
+
+        state.scale =
+            glm::vec3(1.0f);
+
+        return state;
+    }
+
+    state.position =
+        object->transform.position;
+
+    state.rotation =
+        object->transform.rotation;
+
+    state.scale =
+        object->transform.scale;
+
+    return state;
+}
+
+void ApplyTransformHistoryState(
+    SceneObject* object,
+    const TransformHistoryState& state
+)
+{
+    if (object == nullptr)
+        return;
+
+    object->transform.position =
+        state.position;
+
+    object->transform.rotation =
+        state.rotation;
+
+    object->transform.scale =
+        state.scale;
+}
+
+bool TransformHistoryStateChanged(
+    const TransformHistoryState& a,
+    const TransformHistoryState& b
+)
+{
+    float positionDistance =
+        glm::length(
+            a.position -
+            b.position
+        );
+
+    float rotationDistance =
+        glm::length(
+            a.rotation -
+            b.rotation
+        );
+
+    float scaleDistance =
+        glm::length(
+            a.scale -
+            b.scale
+        );
+
+    return
+        positionDistance > 0.001f ||
+        rotationDistance > 0.001f ||
+        scaleDistance > 0.001f;
+}
+
+bool SceneStillContainsObject(
+    Scene& scene,
+    SceneObject* object
+)
+{
+    if (object == nullptr)
+        return false;
+
+    for (SceneObject* sceneObject : scene.objects)
+    {
+        if (sceneObject == object)
+            return true;
+    }
+
+    return false;
+}
+
+void ResetTransformHistoryTracking(
+    SceneObject* selectedObject
+)
+{
+    transformTrackingObject =
+        selectedObject;
+
+    transformTrackingInitialized =
+        selectedObject != nullptr;
+
+    if (selectedObject != nullptr)
+    {
+        transformTrackingState =
+            CaptureTransformHistoryState(
+                selectedObject
+            );
+    }
+}
+
+void PushTransformHistoryEntry(
+    SceneObject* object,
+    const TransformHistoryState& beforeState,
+    const TransformHistoryState& afterState
+)
+{
+    if (object == nullptr)
+        return;
+
+    if (
+        !TransformHistoryStateChanged(
+            beforeState,
+            afterState
+        )
+        )
+    {
+        return;
+    }
+
+    TransformHistoryEntry entry;
+
+    entry.object =
+        object;
+
+    entry.objectName =
+        object->name;
+
+    entry.beforeState =
+        beforeState;
+
+    entry.afterState =
+        afterState;
+
+    undoTransformStack.push_back(
+        entry
+    );
+
+    redoTransformStack.clear();
+
+    if (
+        static_cast<int>(
+            undoTransformStack.size()
+            ) > maxTransformHistoryCount
+        )
+    {
+        undoTransformStack.erase(
+            undoTransformStack.begin()
+        );
+    }
+
+    std::cout
+        << "Undo history saved for: "
+        << object->name
+        << std::endl;
+}
+
+bool IsEditorTransformInputActive(
+    GLFWwindow* window
+)
+{
+    if (window == nullptr)
+        return false;
+
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+        return true;
+
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+        return true;
+
+    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+        return true;
+
+    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+        return true;
+
+    if (glfwGetKey(window, GLFW_KEY_PAGE_UP) == GLFW_PRESS)
+        return true;
+
+    if (glfwGetKey(window, GLFW_KEY_PAGE_DOWN) == GLFW_PRESS)
+        return true;
+
+    if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS)
+        return true;
+
+    if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)
+        return true;
+
+    if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS)
+        return true;
+
+    if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS)
+        return true;
+
+    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
+        return true;
+
+    if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
+        return true;
+
+    if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS)
+        return true;
+
+    return false;
+}
+
+void UpdateTransformHistoryCapture(
+    GLFWwindow* window,
+    Scene& scene,
+    SceneObject* selectedObject,
+    bool isDragging
+)
+{
+    if (selectedObject == nullptr)
+    {
+        transformTrackingInitialized =
+            false;
+
+        transformTrackingObject =
+            nullptr;
+
+        return;
+    }
+
+    if (
+        !SceneStillContainsObject(
+            scene,
+            selectedObject
+        )
+        )
+    {
+        transformTrackingInitialized =
+            false;
+
+        transformTrackingObject =
+            nullptr;
+
+        return;
+    }
+
+    if (
+        !transformTrackingInitialized ||
+        transformTrackingObject != selectedObject
+        )
+    {
+        ResetTransformHistoryTracking(
+            selectedObject
+        );
+
+        return;
+    }
+
+    bool transformEditingActive =
+        isDragging ||
+        IsEditorTransformInputActive(
+            window
+        ) ||
+        ImGui::IsAnyItemActive();
+
+    if (transformEditingActive)
+        return;
+
+    TransformHistoryState currentState =
+        CaptureTransformHistoryState(
+            selectedObject
+        );
+
+    if (
+        TransformHistoryStateChanged(
+            transformTrackingState,
+            currentState
+        )
+        )
+    {
+        PushTransformHistoryEntry(
+            selectedObject,
+            transformTrackingState,
+            currentState
+        );
+
+        transformTrackingState =
+            currentState;
+    }
+}
+
+void UndoTransformChange(
+    Scene& scene,
+    SceneObject*& selectedObject
+)
+{
+    if (undoTransformStack.empty())
+    {
+        std::cout
+            << "Undo stack is empty."
+            << std::endl;
+
+        return;
+    }
+
+    TransformHistoryEntry entry =
+        undoTransformStack.back();
+
+    undoTransformStack.pop_back();
+
+    if (
+        !SceneStillContainsObject(
+            scene,
+            entry.object
+        )
+        )
+    {
+        std::cout
+            << "Undo skipped. Object no longer exists."
+            << std::endl;
+
+        return;
+    }
+
+    ApplyTransformHistoryState(
+        entry.object,
+        entry.beforeState
+    );
+
+    selectedObject =
+        entry.object;
+
+    redoTransformStack.push_back(
+        entry
+    );
+
+    ResetTransformHistoryTracking(
+        selectedObject
+    );
+
+    std::cout
+        << "Undo transform: "
+        << entry.objectName
+        << std::endl;
+}
+
+void RedoTransformChange(
+    Scene& scene,
+    SceneObject*& selectedObject
+)
+{
+    if (redoTransformStack.empty())
+    {
+        std::cout
+            << "Redo stack is empty."
+            << std::endl;
+
+        return;
+    }
+
+    TransformHistoryEntry entry =
+        redoTransformStack.back();
+
+    redoTransformStack.pop_back();
+
+    if (
+        !SceneStillContainsObject(
+            scene,
+            entry.object
+        )
+        )
+    {
+        std::cout
+            << "Redo skipped. Object no longer exists."
+            << std::endl;
+
+        return;
+    }
+
+    ApplyTransformHistoryState(
+        entry.object,
+        entry.afterState
+    );
+
+    selectedObject =
+        entry.object;
+
+    undoTransformStack.push_back(
+        entry
+    );
+
+    ResetTransformHistoryTracking(
+        selectedObject
+    );
+
+    std::cout
+        << "Redo transform: "
+        << entry.objectName
+        << std::endl;
+}
+
+void HandleTransformHistoryShortcuts(
+    GLFWwindow* window,
+    Scene& scene,
+    SceneObject*& selectedObject
+)
+{
+    if (window == nullptr)
+        return;
+
+    if (ImGui::GetIO().WantTextInput)
+        return;
+
+    bool ctrlDown =
+        glfwGetKey(
+            window,
+            GLFW_KEY_LEFT_CONTROL
+        ) == GLFW_PRESS ||
+        glfwGetKey(
+            window,
+            GLFW_KEY_RIGHT_CONTROL
+        ) == GLFW_PRESS;
+
+    bool zDown =
+        glfwGetKey(
+            window,
+            GLFW_KEY_Z
+        ) == GLFW_PRESS;
+
+    bool yDown =
+        glfwGetKey(
+            window,
+            GLFW_KEY_Y
+        ) == GLFW_PRESS;
+
+    if (
+        ctrlDown &&
+        zDown &&
+        !undoShortcutPressed
+        )
+    {
+        UndoTransformChange(
+            scene,
+            selectedObject
+        );
+
+        undoShortcutPressed =
+            true;
+    }
+
+    if (!zDown)
+    {
+        undoShortcutPressed =
+            false;
+    }
+
+    if (
+        ctrlDown &&
+        yDown &&
+        !redoShortcutPressed
+        )
+    {
+        RedoTransformChange(
+            scene,
+            selectedObject
+        );
+
+        redoShortcutPressed =
+            true;
+    }
+
+    if (!yDown)
+    {
+        redoShortcutPressed =
+            false;
+    }
+}
 Light* selectedLight = nullptr;
 Camera camera;
 bool editorCameraStartFixed =false;
@@ -10476,7 +10999,19 @@ ImGuiIO& io = ImGui::GetIO();
 
             ImGui::End();
         }
-       
+        // ================= UNDO / REDO SHORTCUTS =================
+
+        if (
+            !showMainMenu &&
+            appMode == AppMode::Editor
+            )
+        {
+            HandleTransformHistoryShortcuts(
+                window,
+                scene,
+                selectedObject
+            );
+        }
         if (appMode == AppMode::Play)
         {
             DrawRuntimeResultOverlay();
@@ -12028,7 +12563,43 @@ ImGuiIO& io = ImGui::GetIO();
                     showCollisionDebug =
                         true;
                 }
+                ImGui::Separator();
 
+                ImGui::Text(
+                    "Transform History"
+                );
+
+                if (ImGui::Button("Undo"))
+                {
+                    UndoTransformChange(
+                        scene,
+                        selectedObject
+                    );
+                }
+
+                ImGui::SameLine();
+
+                if (ImGui::Button("Redo"))
+                {
+                    RedoTransformChange(
+                        scene,
+                        selectedObject
+                    );
+                }
+
+                ImGui::Text(
+                    "Undo: %d | Redo: %d",
+                    static_cast<int>(
+                        undoTransformStack.size()
+                        ),
+                    static_cast<int>(
+                        redoTransformStack.size()
+                        )
+                );
+
+                ImGui::TextDisabled(
+                    "CTRL+Z / CTRL+Y"
+                );
                 ImGui::Separator();
 
                 ImGui::Checkbox(
@@ -12087,6 +12658,7 @@ ImGuiIO& io = ImGui::GetIO();
                     "Collision Debug",
                     &showCollisionDebug
                 );
+
                 ImGui::End();
             }
             if (showHierarchyPanel)
@@ -12877,39 +13449,47 @@ ImGuiIO& io = ImGui::GetIO();
                   collisionDebugLineWidth
               );
           }
-            if (selectedObject != nullptr)
-            {
-                glLineWidth(4.0f);
-                gizmoShader.use();
+          if (selectedObject != nullptr)
+          {
+              glLineWidth(4.0f);
+              gizmoShader.use();
 
-                glm::mat4 gizmoModel =
-                    glm::translate(
-                        glm::mat4(1.0f),
-                        selectedObject->transform.position
-                    );
+              glm::mat4 gizmoModel =
+                  glm::translate(
+                      glm::mat4(1.0f),
+                      selectedObject->transform.position
+                  );
 
-                gizmoShader.setMat4("model", glm::value_ptr(gizmoModel));
-                gizmoShader.setMat4("view", glm::value_ptr(view));
-                gizmoShader.setMat4("projection", glm::value_ptr(projection));
+              gizmoShader.setMat4("model", glm::value_ptr(gizmoModel));
+              gizmoShader.setMat4("view", glm::value_ptr(view));
+              gizmoShader.setMat4("projection", glm::value_ptr(projection));
 
-                glBindVertexArray(gizmoVAO);
+              glBindVertexArray(gizmoVAO);
 
-                gizmoShader.setVec3("axisColor", glm::vec3(1, 0, 0));
-                glDrawArrays(GL_LINES, 0, 2);
+              gizmoShader.setVec3("axisColor", glm::vec3(1, 0, 0));
+              glDrawArrays(GL_LINES, 0, 2);
 
-                gizmoShader.setVec3("axisColor", glm::vec3(0, 1, 0));
-                glDrawArrays(GL_LINES, 2, 2);
+              gizmoShader.setVec3("axisColor", glm::vec3(0, 1, 0));
+              glDrawArrays(GL_LINES, 2, 2);
 
-                gizmoShader.setVec3("axisColor", glm::vec3(0, 0, 1));
-                glDrawArrays(GL_LINES, 4, 2);
+              gizmoShader.setVec3("axisColor", glm::vec3(0, 0, 1));
+              glDrawArrays(GL_LINES, 4, 2);
 
-                glBindVertexArray(0);
-            }
+              glBindVertexArray(0);
+          }
+
+          // ================= UNDO / REDO CAPTURE =================
+
+          UpdateTransformHistoryCapture(
+              window,
+              scene,
+              selectedObject,
+              isDragging
+          );
         }
         else
         {
             EditorUI::DrawCrosshair();
-
             ImGui::Begin("Play Mode Info");
 
             ImGui::Text("PLAY MODE ACTIVE");

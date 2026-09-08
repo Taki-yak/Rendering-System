@@ -6918,7 +6918,23 @@ int main()
         std::cout << "Failed to initialize GLAD\n";
         return -1;
     }
+    // ================= DEFAULT STARTUP ATMOSPHERE =================
 
+    weatherSystem.enabled =
+        true;
+
+    // Foggy Forest
+    weatherSystem.presetIndex =
+        1;
+
+    weatherSystem.showOverlay =
+        true;
+
+    dayNightSystem.timeOfDay =
+        17.5f;
+
+    dayNightSystem.enabled =
+        false;
     Cubemap skybox(faces);
     glfwSetScrollCallback(window, scroll_callback);
     glfwSetCursorPosCallback(window, mouse_callback);

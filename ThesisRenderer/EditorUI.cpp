@@ -2229,7 +2229,7 @@ void EditorUI::DrawInspector(
     );
 
     ImGui::SetNextWindowSize(
-        ImVec2(rightWidth, 220.0f),
+        ImVec2(rightWidth, 520.0f),
         ImGuiCond_FirstUseEver
     );
     ImGui::Begin("Inspector");
@@ -2257,14 +2257,237 @@ void EditorUI::DrawInspector(
         {
             selectedObject->name = nameBuffer;
         }
+        // ================= SMART GAMEPLAY COMPONENT PANEL =================
+
+        ImGui::Separator();
+
+        ImGui::Text(
+            "Object Role"
+        );
+
         ImGui::Checkbox(
             "Visible",
             &selectedObject->visible
         );
+
         ImGui::Checkbox(
-            "Collider",
+            "Persistent",
+            &selectedObject->persistent
+        );
+
+        ImGui::Checkbox(
+            "Show In Hierarchy",
+            &selectedObject->showInHierarchy
+        );
+
+        ImGui::Separator();
+
+        ImGui::Text(
+            "Gameplay Component"
+        );
+
+        const char* gameplayTypes[] =
+        {
+            "None",
+            "Coin",
+            "TriggerZone",
+            "MonsterSpawn",
+            "MusicGate",
+            "MusicNPC",
+            "Obstacle"
+        };
+
+        int gameplayTypeIndex =
+            0;
+
+        if (selectedObject->editorGameplayType == "Coin")
+        {
+            gameplayTypeIndex =
+                1;
+        }
+        else if (selectedObject->editorGameplayType == "TriggerZone")
+        {
+            gameplayTypeIndex =
+                2;
+        }
+        else if (selectedObject->editorGameplayType == "MonsterSpawn")
+        {
+            gameplayTypeIndex =
+                3;
+        }
+        else if (selectedObject->editorGameplayType == "MusicGate")
+        {
+            gameplayTypeIndex =
+                4;
+        }
+        else if (selectedObject->editorGameplayType == "MusicNPC")
+        {
+            gameplayTypeIndex =
+                5;
+        }
+        else if (selectedObject->editorGameplayType == "Obstacle")
+        {
+            gameplayTypeIndex =
+                6;
+        }
+
+        if (
+            ImGui::Combo(
+                "Gameplay Type",
+                &gameplayTypeIndex,
+                gameplayTypes,
+                IM_ARRAYSIZE(gameplayTypes)
+            )
+            )
+        {
+            if (gameplayTypeIndex == 0)
+            {
+                selectedObject->editorGameplayType =
+                    "";
+            }
+            else
+            {
+                selectedObject->editorGameplayType =
+                    gameplayTypes[gameplayTypeIndex];
+            }
+
+            selectedObject->persistent =
+                true;
+        }
+
+        ImGui::Checkbox(
+            "Is Collider",
             &selectedObject->isCollider
         );
+
+        ImGui::DragFloat(
+            "Collider Radius",
+            &selectedObject->colliderRadius,
+            0.05f,
+            0.1f,
+            50.0f
+        );
+
+        ImGui::TextDisabled(
+            "Used by Play Mode, Collision Debug, and demo tools."
+        );
+
+        ImGui::Separator();
+
+        auto ApplyGameplayRole =
+            [&](
+                const std::string& type,
+                const std::string& newName,
+                bool collider,
+                float radius
+                )
+            {
+                selectedObject->editorGameplayType =
+                    type;
+
+                selectedObject->name =
+                    newName;
+
+                selectedObject->isCollider =
+                    collider;
+
+                selectedObject->colliderRadius =
+                    radius;
+
+                selectedObject->persistent =
+                    true;
+
+                selectedObject->visible =
+                    true;
+
+                selectedObject->showInHierarchy =
+                    true;
+
+                strcpy_s(
+                    nameBuffer,
+                    selectedObject->name.c_str()
+                );
+            };
+
+        if (ImGui::Button("Make Coin"))
+        {
+            ApplyGameplayRole(
+                "Coin",
+                "Coin",
+                false,
+                1.25f
+            );
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Make Trigger Zone"))
+        {
+            ApplyGameplayRole(
+                "TriggerZone",
+                "Trigger Zone",
+                false,
+                4.5f
+            );
+        }
+
+        if (ImGui::Button("Make Monster Spawn"))
+        {
+            ApplyGameplayRole(
+                "MonsterSpawn",
+                "Monster Spawn",
+                false,
+                2.4f
+            );
+        }
+
+        if (ImGui::Button("Make Music Gate"))
+        {
+            ApplyGameplayRole(
+                "MusicGate",
+                "Music Gate",
+                false,
+                4.5f
+            );
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Make Music NPC"))
+        {
+            ApplyGameplayRole(
+                "MusicNPC",
+                "Music NPC",
+                false,
+                2.0f
+            );
+        }
+
+        if (ImGui::Button("Make Obstacle"))
+        {
+            ApplyGameplayRole(
+                "Obstacle",
+                "Obstacle Collider",
+                true,
+                glm::max(
+                    selectedObject->transform.scale.x,
+                    selectedObject->transform.scale.z
+                ) * 0.8f
+            );
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Clear Role"))
+        {
+            selectedObject->editorGameplayType =
+                "";
+
+            selectedObject->isCollider =
+                false;
+        }
+
+        ImGui::Separator();
 
         ImGui::Separator();
         if (ImGui::CollapsingHeader("Editor Metadata"))
@@ -7014,6 +7237,335 @@ static void BuildDemoScene(
         << "Demo scene built successfully."
         << std::endl;
 }
+// ================= GAMEPLAY PRESET BUILDER V1 =================
+
+static void GetGameplayPresetDirections(
+    Camera& camera,
+    glm::vec3& forward,
+    glm::vec3& right
+)
+{
+    forward =
+        glm::vec3(
+            camera.Front.x,
+            0.0f,
+            camera.Front.z
+        );
+
+    if (glm::length(forward) < 0.001f)
+    {
+        forward =
+            glm::vec3(
+                0.0f,
+                0.0f,
+                -1.0f
+            );
+    }
+
+    forward =
+        glm::normalize(
+            forward
+        );
+
+    right =
+        glm::normalize(
+            glm::cross(
+                forward,
+                glm::vec3(
+                    0.0f,
+                    1.0f,
+                    0.0f
+                )
+            )
+        );
+}
+
+static void BuildCoinPathPreset(
+    Scene& scene,
+    SceneObject*& selectedObject,
+    Camera& camera,
+    Shader* shader
+)
+{
+    if (shader == nullptr)
+        return;
+
+    glm::vec3 forward;
+    glm::vec3 right;
+
+    GetGameplayPresetDirections(
+        camera,
+        forward,
+        right
+    );
+
+    glm::vec3 startPosition =
+        camera.Position +
+        forward * 8.0f;
+
+    startPosition =
+        SnapEditorPositionToTerrain(
+            startPosition,
+            0.18f
+        );
+
+    for (int i = 0; i < 15; i++)
+    {
+        SceneObject* coin =
+            SpawnCoinObject(
+                scene,
+                selectedObject,
+                camera,
+                shader
+            );
+
+        if (coin == nullptr)
+            continue;
+
+        float sideOffset =
+            std::sin((float)i * 0.75f) *
+            2.0f;
+
+        coin->name =
+            "Coin Path Coin " +
+            std::to_string(i + 1);
+
+        coin->transform.position =
+            startPosition +
+            forward * ((float)i * 2.8f) +
+            right * sideOffset;
+
+        PlaceCoinOnTerrain(
+            coin,
+            0.18f
+        );
+
+        coin->editorGameplayType =
+            "Coin";
+
+        coin->persistent =
+            true;
+
+        coin->showInHierarchy =
+            true;
+
+        selectedObject =
+            coin;
+    }
+
+    std::cout
+        << "Coin path preset created."
+        << std::endl;
+}
+
+static void BuildMonsterEncounterPreset(
+    Scene& scene,
+    SceneObject*& selectedObject,
+    Camera& camera,
+    Mesh* cubeMesh,
+    Shader* shader
+)
+{
+    if (
+        cubeMesh == nullptr ||
+        shader == nullptr
+        )
+    {
+        return;
+    }
+
+    glm::vec3 forward;
+    glm::vec3 right;
+
+    GetGameplayPresetDirections(
+        camera,
+        forward,
+        right
+    );
+
+    glm::vec3 basePosition =
+        camera.Position +
+        forward * 10.0f;
+
+    basePosition =
+        SnapEditorPositionToTerrain(
+            basePosition,
+            0.12f
+        );
+
+    SceneObject* trigger =
+        SpawnTriggerZoneObject(
+            scene,
+            selectedObject,
+            camera,
+            cubeMesh,
+            shader
+        );
+
+    if (trigger != nullptr)
+    {
+        trigger->name =
+            "Monster Encounter Trigger";
+
+        trigger->transform.position =
+            SnapEditorPositionToTerrain(
+                basePosition,
+                0.12f
+            );
+
+        trigger->transform.scale =
+            glm::vec3(
+                7.0f,
+                0.15f,
+                7.0f
+            );
+
+        trigger->editorGameplayType =
+            "TriggerZone";
+
+        trigger->persistent =
+            true;
+    }
+
+    SceneObject* monster =
+        SpawnMonsterSpawnObject(
+            scene,
+            selectedObject,
+            camera,
+            shader
+        );
+
+    if (monster != nullptr)
+    {
+        monster->name =
+            "Monster Encounter Spawn";
+
+        monster->transform.position =
+            SnapEditorPositionToTerrain(
+                basePosition +
+                forward * 16.0f,
+                2.0f
+            );
+
+        monster->editorGameplayType =
+            "MonsterSpawn";
+
+        monster->persistent =
+            true;
+
+        selectedObject =
+            monster;
+    }
+
+    std::cout
+        << "Monster encounter preset created."
+        << std::endl;
+}
+
+static void BuildMusicRescuePreset(
+    Scene& scene,
+    SceneObject*& selectedObject,
+    Camera& camera,
+    Mesh* cubeMesh,
+    Shader* shader
+)
+{
+    if (
+        cubeMesh == nullptr ||
+        shader == nullptr
+        )
+    {
+        return;
+    }
+
+    glm::vec3 forward;
+    glm::vec3 right;
+
+    GetGameplayPresetDirections(
+        camera,
+        forward,
+        right
+    );
+
+    glm::vec3 basePosition =
+        camera.Position +
+        forward * 10.0f;
+
+    basePosition =
+        SnapEditorPositionToTerrain(
+            basePosition,
+            0.0f
+        );
+
+    SceneObject* gate =
+        SpawnMusicGateObject(
+            scene,
+            selectedObject,
+            camera,
+            cubeMesh,
+            shader
+        );
+
+    if (gate != nullptr)
+    {
+        gate->name =
+            "Music Rescue Gate";
+
+        gate->transform.position =
+            SnapEditorPositionToTerrain(
+                basePosition +
+                right * 8.0f,
+                1.70f
+            );
+
+        gate->editorGameplayType =
+            "MusicGate";
+
+        gate->persistent =
+            true;
+    }
+
+    SceneObject* npc =
+        SpawnMusicNpcObject(
+            scene,
+            selectedObject,
+            camera,
+            shader
+        );
+
+    if (npc != nullptr)
+    {
+        npc->name =
+            "Music Rescue NPC";
+
+        npc->transform.position =
+            SnapEditorPositionToTerrain(
+                basePosition +
+                right * 11.0f,
+                0.15f
+            );
+
+        npc->transform.rotation =
+            glm::vec3(
+                90.0f,
+                180.0f,
+                0.0f
+            );
+
+        npc->editorGameplayType =
+            "MusicNPC";
+
+        npc->persistent =
+            true;
+
+        selectedObject =
+            npc;
+    }
+
+    std::cout
+        << "Music rescue preset created."
+        << std::endl;
+}
 // ================= WORLD PAINTER V1 + V2 =================
 
 static float WorldPainterRandomFloat(
@@ -8997,7 +9549,62 @@ void EditorUI::DrawAssetBrowser(
 
         if (ImGui::BeginTabItem("Gameplay"))
         {
-            ImGui::Text("Gameplay Objects");
+            ImGui::Text("Gameplay Presets");
+
+            if (ImGui::Button("Build Coin Path"))
+            {
+                BuildCoinPathPreset(
+                    scene,
+                    selectedObject,
+                    camera,
+                    shader
+                );
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("Build Monster Encounter"))
+            {
+                BuildMonsterEncounterPreset(
+                    scene,
+                    selectedObject,
+                    camera,
+                    cubeMesh,
+                    shader
+                );
+            }
+
+            if (ImGui::Button("Build Music Rescue Setup"))
+            {
+                BuildMusicRescuePreset(
+                    scene,
+                    selectedObject,
+                    camera,
+                    cubeMesh,
+                    shader
+                );
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("Build Full Demo Setup"))
+            {
+                BuildDemoScene(
+                    scene,
+                    selectedObject,
+                    camera,
+                    cubeMesh,
+                    shader
+                );
+            }
+
+            ImGui::TextDisabled(
+                "Preset tools create ready-to-test gameplay setups in front of the camera."
+            );
+
+            ImGui::Separator();
+
+            ImGui::Text("Single Gameplay Objects");
 
             if (ImGui::Button("Coin"))
             {
@@ -9142,9 +9749,9 @@ void EditorUI::DrawAssetBrowser(
             ImGui::Text("Music Rescue Event");
             ImGui::Separator();
 
-            ImGui::Text("Thesis Demo Tools");
+            ImGui::Text("Legacy Demo Tool");
 
-            if (ImGui::Button("Build Demo Scene"))
+            if (ImGui::Button("Build Basic Demo Scene"))
             {
                 BuildDemoScene(
                     scene,

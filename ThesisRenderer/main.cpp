@@ -2584,12 +2584,12 @@ MainMenuAction DrawMainMenuScreen(
             0.0f,
             0.0f
         ),
-        ImGuiCond_FirstUseEver
+        ImGuiCond_Always
     );
 
     ImGui::SetNextWindowSize(
         io.DisplaySize,
-        ImGuiCond_FirstUseEver
+        ImGuiCond_Always
     );
 
     ImGuiWindowFlags flags =
@@ -9612,10 +9612,9 @@ int main()
             );
            
             cinematicOverlay.Draw(
-                width,
-                height
+                menuWidth,
+                menuHeight
             );
-
             ImGui::Render();
 
             ImGui_ImplOpenGL3_RenderDrawData(
@@ -13424,6 +13423,199 @@ ImGuiIO& io = ImGui::GetIO();
                     "Collider: %s",
                     selectedObject->isCollider ? "ON" : "OFF"
                 );
+                ImGui::Separator();
+
+                ImGui::Text(
+                    "Gameplay Component"
+                );
+
+                const char* gameplayTypes[] =
+                {
+                    "None",
+                    "Coin",
+                    "TriggerZone",
+                    "MonsterSpawn",
+                    "MusicGate",
+                    "MusicNPC",
+                    "Obstacle"
+                };
+
+                int gameplayTypeIndex =
+                    0;
+
+                if (selectedObject->editorGameplayType == "Coin")
+                    gameplayTypeIndex = 1;
+
+                else if (selectedObject->editorGameplayType == "TriggerZone")
+                    gameplayTypeIndex = 2;
+
+                else if (selectedObject->editorGameplayType == "MonsterSpawn")
+                    gameplayTypeIndex = 3;
+
+                else if (selectedObject->editorGameplayType == "MusicGate")
+                    gameplayTypeIndex = 4;
+
+                else if (selectedObject->editorGameplayType == "MusicNPC")
+                    gameplayTypeIndex = 5;
+
+                else if (selectedObject->editorGameplayType == "Obstacle")
+                    gameplayTypeIndex = 6;
+
+                if (
+                    ImGui::Combo(
+                        "Gameplay Type",
+                        &gameplayTypeIndex,
+                        gameplayTypes,
+                        IM_ARRAYSIZE(gameplayTypes)
+                    )
+                    )
+                {
+                    if (gameplayTypeIndex == 0)
+                    {
+                        selectedObject->editorGameplayType =
+                            "";
+                    }
+                    else
+                    {
+                        selectedObject->editorGameplayType =
+                            gameplayTypes[gameplayTypeIndex];
+                    }
+
+                    std::cout
+                        << "Gameplay type changed to: "
+                        << selectedObject->editorGameplayType
+                        << std::endl;
+                }
+
+                ImGui::Checkbox(
+                    "Is Physical Collider",
+                    &selectedObject->isCollider
+                );
+
+                ImGui::DragFloat(
+                    "Collider Radius",
+                    &selectedObject->colliderRadius,
+                    0.05f,
+                    0.1f,
+                    50.0f
+                );
+
+                ImGui::TextDisabled(
+                    "Gameplay Type is used by Play Mode systems."
+                );
+
+                ImGui::Separator();
+
+                auto ApplyGameplayRole =
+                    [&](
+                        const std::string& type,
+                        const std::string& newName,
+                        bool collider,
+                        float radius
+                        )
+                    {
+                        selectedObject->editorGameplayType =
+                            type;
+
+                        selectedObject->name =
+                            newName;
+
+                        selectedObject->isCollider =
+                            collider;
+
+                        selectedObject->colliderRadius =
+                            radius;
+
+                        selectedObject->persistent =
+                            true;
+
+                        std::cout
+                            << "Applied gameplay role: "
+                            << type
+                            << std::endl;
+                    };
+
+                if (ImGui::Button("Make Coin"))
+                {
+                    ApplyGameplayRole(
+                        "Coin",
+                        "Coin",
+                        false,
+                        1.25f
+                    );
+                }
+
+                ImGui::SameLine();
+
+                if (ImGui::Button("Make Trigger"))
+                {
+                    ApplyGameplayRole(
+                        "TriggerZone",
+                        "Trigger Zone",
+                        false,
+                        4.5f
+                    );
+                }
+
+                if (ImGui::Button("Make Monster Spawn"))
+                {
+                    ApplyGameplayRole(
+                        "MonsterSpawn",
+                        "Monster Spawn",
+                        false,
+                        2.4f
+                    );
+                }
+
+                if (ImGui::Button("Make Music Gate"))
+                {
+                    ApplyGameplayRole(
+                        "MusicGate",
+                        "Music Gate",
+                        false,
+                        4.5f
+                    );
+                }
+
+                ImGui::SameLine();
+
+                if (ImGui::Button("Make Music NPC"))
+                {
+                    ApplyGameplayRole(
+                        "MusicNPC",
+                        "Music NPC",
+                        false,
+                        2.0f
+                    );
+                }
+
+                if (ImGui::Button("Make Obstacle"))
+                {
+                    ApplyGameplayRole(
+                        "Obstacle",
+                        "Obstacle Collider",
+                        true,
+                        glm::max(
+                            selectedObject->transform.scale.x,
+                            selectedObject->transform.scale.z
+                        ) * 0.8f
+                    );
+                }
+
+                ImGui::SameLine();
+
+                if (ImGui::Button("Clear Role"))
+                {
+                    selectedObject->editorGameplayType =
+                        "";
+
+                    selectedObject->isCollider =
+                        false;
+
+                    std::cout
+                        << "Gameplay role cleared."
+                        << std::endl;
+                }
             }
             else
             {

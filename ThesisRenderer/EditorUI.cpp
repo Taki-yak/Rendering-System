@@ -9798,6 +9798,319 @@ void EditorUI::DrawAssetBrowser(
 
     ImGui::End();
 }
+// ================= SELECTION TOOLS V1 =================
+
+static bool IsSelectionToolIgnoredObject(
+    SceneObject* object
+)
+{
+    if (object == nullptr)
+        return true;
+
+    if (object->name == "Procedural Terrain")
+        return true;
+
+    if (object->name == "Ground")
+        return true;
+
+    if (object->name == "World Painter Preview")
+        return true;
+
+    if (object->name.find("Generated") != std::string::npos)
+        return true;
+
+    return false;
+}
+
+static SceneObject* FindEditorPlayerObject(
+    Scene& scene
+)
+{
+    for (SceneObject* object : scene.objects)
+    {
+        if (object == nullptr)
+            continue;
+
+        if (object->name == "Player")
+            return object;
+
+        if (object->assetType == AssetType::Player)
+            return object;
+    }
+
+    return nullptr;
+}
+
+static SceneObject* FindNearestEditorObjectToCamera(
+    Scene& scene,
+    Camera& camera
+)
+{
+    SceneObject* nearestObject =
+        nullptr;
+
+    float nearestDistance =
+        99999999.0f;
+
+    for (SceneObject* object : scene.objects)
+    {
+        if (object == nullptr)
+            continue;
+
+        if (!object->visible)
+            continue;
+
+        if (IsSelectionToolIgnoredObject(object))
+            continue;
+
+        glm::vec3 delta =
+            object->transform.position -
+            camera.Position;
+
+        float distance =
+            glm::length(
+                delta
+            );
+
+        if (distance < nearestDistance)
+        {
+            nearestDistance =
+                distance;
+
+            nearestObject =
+                object;
+        }
+    }
+
+    return nearestObject;
+}
+
+static void FrameSelectedEditorObject(
+    SceneObject* selectedObject,
+    Camera& camera
+)
+{
+    if (selectedObject == nullptr)
+        return;
+
+    glm::vec3 forward =
+        camera.Front;
+
+    if (glm::length(forward) < 0.001f)
+    {
+        forward =
+            glm::vec3(
+                0.0f,
+                0.0f,
+                -1.0f
+            );
+    }
+
+    forward =
+        glm::normalize(
+            forward
+        );
+
+    float objectSize =
+        glm::length(
+            selectedObject->transform.scale
+        );
+
+    float distance =
+        glm::clamp(
+            objectSize * 3.0f,
+            5.0f,
+            22.0f
+        );
+
+    camera.Position =
+        selectedObject->transform.position -
+        forward * distance +
+        glm::vec3(
+            0.0f,
+            distance * 0.35f,
+            0.0f
+        );
+
+    std::cout
+        << "Camera framed selected object: "
+        << selectedObject->name
+        << std::endl;
+}
+
+static void MoveSelectedEditorObjectInFrontOfCamera(
+    SceneObject* selectedObject,
+    Camera& camera
+)
+{
+    if (selectedObject == nullptr)
+        return;
+
+    glm::vec3 forward =
+        glm::vec3(
+            camera.Front.x,
+            0.0f,
+            camera.Front.z
+        );
+
+    if (glm::length(forward) < 0.001f)
+    {
+        forward =
+            glm::vec3(
+                0.0f,
+                0.0f,
+                -1.0f
+            );
+    }
+
+    forward =
+        glm::normalize(
+            forward
+        );
+
+    glm::vec3 newPosition =
+        camera.Position +
+        forward * 6.0f;
+
+    float oldTerrainY =
+        GetTerrainHeight(
+            selectedObject->transform.position.x,
+            selectedObject->transform.position.z
+        );
+
+    float heightOffset =
+        selectedObject->transform.position.y -
+        oldTerrainY;
+
+    newPosition.y =
+        GetTerrainHeight(
+            newPosition.x,
+            newPosition.z
+        ) +
+        heightOffset;
+
+    selectedObject->transform.position =
+        newPosition;
+
+    std::cout
+        << "Moved selected object in front of camera."
+        << std::endl;
+}
+
+static void SnapSelectedEditorObjectToGround(
+    SceneObject* selectedObject
+)
+{
+    if (selectedObject == nullptr)
+        return;
+
+    selectedObject->transform.position =
+        SnapEditorPositionToTerrain(
+            selectedObject->transform.position,
+            0.10f
+        );
+
+    std::cout
+        << "Snapped selected object to terrain."
+        << std::endl;
+}
+
+static void DeleteSelectedEditorObjectSafe(
+    Scene& scene,
+    SceneObject*& selectedObject
+)
+{
+    if (selectedObject == nullptr)
+        return;
+
+    if (selectedObject->name == "Player")
+    {
+        std::cout
+            << "Delete skipped: Player object should not be deleted."
+            << std::endl;
+
+        return;
+    }
+
+    if (selectedObject->name == "Procedural Terrain")
+    {
+        std::cout
+            << "Delete skipped: Terrain object should not be deleted."
+            << std::endl;
+
+        return;
+    }
+
+    if (selectedObject->parent != nullptr)
+    {
+        auto& siblings =
+            selectedObject->parent->children;
+
+        siblings.erase(
+            std::remove(
+                siblings.begin(),
+                siblings.end(),
+                selectedObject
+            ),
+            siblings.end()
+        );
+    }
+
+    for (SceneObject* child : selectedObject->children)
+    {
+        if (child != nullptr)
+        {
+            child->parent =
+                nullptr;
+        }
+    }
+
+    selectedObject->children.clear();
+
+    if (selectedObject->attachedLight != nullptr)
+    {
+        Light* attachedLight =
+            selectedObject->attachedLight;
+
+        scene.lights.erase(
+            std::remove(
+                scene.lights.begin(),
+                scene.lights.end(),
+                attachedLight
+            ),
+            scene.lights.end()
+        );
+
+        delete attachedLight;
+
+        selectedObject->attachedLight =
+            nullptr;
+    }
+
+    for (auto it = scene.objects.begin();
+        it != scene.objects.end();
+        ++it)
+    {
+        if (*it == selectedObject)
+        {
+            std::cout
+                << "Deleted object: "
+                << selectedObject->name
+                << std::endl;
+
+            delete* it;
+
+            scene.objects.erase(
+                it
+            );
+
+            selectedObject =
+                nullptr;
+
+            break;
+        }
+    }
+}
 void EditorUI::DrawToolbar(
     Scene& scene,
     SceneObject*& selectedObject,
@@ -9999,27 +10312,73 @@ void EditorUI::DrawToolbar(
 
     if (ImGui::Button("Delete##Toolbar"))
     {
-        if (selectedObject)
-        {
-            for (auto it = scene.objects.begin();
-                it != scene.objects.end();
-                ++it)
-            {
-                if (*it == selectedObject)
-                {
-                    delete* it;
-
-                    scene.objects.erase(it);
-
-                    selectedObject = nullptr;
-
-                    break;
-                }
-            }
-        }
+        DeleteSelectedEditorObjectSafe(
+            scene,
+            selectedObject
+        );
     }
     ImGui::SameLine();
+    ImGui::SameLine();
 
+    ImGui::Text("| Selection:");
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Select Player##Toolbar"))
+    {
+        selectedObject =
+            FindEditorPlayerObject(
+                scene
+            );
+
+        selectedLight =
+            nullptr;
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Nearest##Toolbar"))
+    {
+        selectedObject =
+            FindNearestEditorObjectToCamera(
+                scene,
+                camera
+            );
+
+        selectedLight =
+            nullptr;
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Frame##Toolbar"))
+    {
+        FrameSelectedEditorObject(
+            selectedObject,
+            camera
+        );
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Move Front##Toolbar"))
+    {
+        MoveSelectedEditorObjectInFrontOfCamera(
+            selectedObject,
+            camera
+        );
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Snap Ground##Toolbar"))
+    {
+        SnapSelectedEditorObjectToGround(
+            selectedObject
+        );
+    }
+
+    ImGui::SameLine();
     if (ImGui::Button("Save Prefab"))
     {
         if (selectedObject)

@@ -1571,20 +1571,107 @@ void EditorUI::DrawHierarchy(
 
     ImGui::Text("Prefabs");
 
-    for (auto& prefab :
-        PrefabManager::prefabs)
+    if (PrefabManager::prefabs.empty())
     {
-        if (ImGui::TreeNode("Models"))
-        {
-            for (auto& asset :
-                AssetDatabase::assets)
-            {
-                ImGui::Selectable(
-                    asset.name.c_str()
-                );
-            }
+        ImGui::TextDisabled(
+            "No saved prefabs yet."
+        );
+    }
+    else
+    {
+        static int selectedPrefabIndex =
+            -1;
 
-            ImGui::TreePop();
+        ImGui::Text(
+            "Saved Prefabs: %d",
+            static_cast<int>(
+                PrefabManager::prefabs.size()
+                )
+        );
+
+        if (
+            ImGui::CollapsingHeader(
+                "Saved Prefabs",
+                ImGuiTreeNodeFlags_DefaultOpen
+            )
+            )
+        {
+            for (
+                int i = 0;
+                i < static_cast<int>(
+                    PrefabManager::prefabs.size()
+                    );
+                    i++
+                )
+            {
+                Prefab& prefab =
+                    PrefabManager::prefabs[i];
+
+                bool selected =
+                    selectedPrefabIndex == i;
+
+                std::string label =
+                    prefab.name +
+                    "##Prefab_" +
+                    std::to_string(i);
+
+                if (
+                    ImGui::Selectable(
+                        label.c_str(),
+                        selected
+                    )
+                    )
+                {
+                    selectedPrefabIndex =
+                        i;
+                }
+            }
+        }
+
+        if (
+            selectedPrefabIndex >= 0 &&
+            selectedPrefabIndex <
+            static_cast<int>(
+                PrefabManager::prefabs.size()
+                )
+            )
+        {
+            Prefab& selectedPrefab =
+                PrefabManager::prefabs[
+                    selectedPrefabIndex
+                ];
+
+            ImGui::Separator();
+
+            ImGui::Text(
+                "Selected Prefab:"
+            );
+
+            ImGui::TextWrapped(
+                "%s",
+                selectedPrefab.name.c_str()
+            );
+
+            ImGui::Text(
+                "Position: %.2f %.2f %.2f",
+                selectedPrefab.position.x,
+                selectedPrefab.position.y,
+                selectedPrefab.position.z
+            );
+
+            ImGui::Text(
+                "Rotation: %.2f %.2f %.2f",
+                selectedPrefab.rotation.x,
+                selectedPrefab.rotation.y,
+                selectedPrefab.rotation.z
+            );
+
+            ImGui::Text(
+                "Scale: %.2f %.2f %.2f",
+                selectedPrefab.scale.x,
+                selectedPrefab.scale.y,
+                selectedPrefab.scale.z
+            );
         }
     }
     ImGui::End();
@@ -10684,7 +10771,7 @@ void EditorUI::DrawToolbar(
     }
 
     ImGui::SameLine();
-    if (ImGui::Button("Save Prefab"))
+    if (ImGui::Button("Save Selected Prefab"))
     {
         if (selectedObject)
         {

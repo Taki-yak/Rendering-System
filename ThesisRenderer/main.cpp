@@ -6257,34 +6257,30 @@ void DrawSceneHealthValidator(
 {
     ImGui::SetNextWindowPos(
         ImVec2(
-            880.0f,
-            70.0f
+            centerX + 520.0f,
+            topY
         ),
-        ImGuiCond_Once
+        ImGuiCond_FirstUseEver
     );
 
     ImGui::SetNextWindowSize(
         ImVec2(
-            430.0f,
-            430.0f
+            440.0f,
+            460.0f
         ),
-        ImGuiCond_Once
-    );
-    ImGui::SetNextWindowPos(
-        ImVec2(centerX + 620.0f, topY),
         ImGuiCond_FirstUseEver
     );
 
-    ImGui::SetNextWindowSize(
-        ImVec2(380.0f, 270.0f),
-        ImGuiCond_FirstUseEver
-    );
     ImGui::Begin(
-        "Scene Health Validator"
+        "Playability Validator"
     );
 
     ImGui::Text(
-        "Playable Scene Check"
+        "Live Edit-Test Scene Check"
+    );
+
+    ImGui::TextDisabled(
+        "Checks if the current scene is ready for Play Mode."
     );
 
     ImGui::Separator();
@@ -6295,6 +6291,223 @@ void DrawSceneHealthValidator(
             playerObject,
             useAnimatedPlayerVisual
         );
+
+    int coinCount =
+        0;
+
+    int triggerZoneCount =
+        0;
+
+    int monsterSpawnCount =
+        0;
+
+    int musicGateCount =
+        0;
+
+    int musicNpcCount =
+        0;
+
+    int colliderCount =
+        0;
+
+    int visibleObjectCount =
+        0;
+
+    for (SceneObject* object : scene.objects)
+    {
+        if (object == nullptr)
+            continue;
+
+        if (object->visible)
+        {
+            visibleObjectCount++;
+        }
+
+        if (object->isCollider)
+        {
+            colliderCount++;
+        }
+
+        if (IsCoinObject(object))
+        {
+            coinCount++;
+        }
+
+        if (IsTriggerZoneObject(object))
+        {
+            triggerZoneCount++;
+        }
+
+        if (IsMonsterSpawnObject(object))
+        {
+            monsterSpawnCount++;
+        }
+
+        if (IsMusicGateObject(object))
+        {
+            musicGateCount++;
+        }
+
+        if (IsMusicNpcObject(object))
+        {
+            musicNpcCount++;
+        }
+    }
+
+    bool hasPlayer =
+        playerObject != nullptr ||
+        FindPlayerObject(scene) != nullptr;
+
+    bool hasCoinObjective =
+        coinCount > 0;
+
+    bool hasMonsterObjective =
+        triggerZoneCount > 0 &&
+        monsterSpawnCount > 0;
+
+    bool hasMusicObjective =
+        musicGateCount > 0 &&
+        musicNpcCount > 0;
+
+    bool scenePlayable =
+        hasPlayer &&
+        (
+            hasCoinObjective ||
+            hasMonsterObjective ||
+            hasMusicObjective
+            );
+
+    auto DrawStatusLine =
+        [](
+            const char* label,
+            bool ok,
+            const char* detail
+            )
+        {
+            ImGui::TextColored(
+                ok
+                ? ImVec4(0.35f, 1.0f, 0.45f, 1.0f)
+                : ImVec4(1.0f, 0.35f, 0.25f, 1.0f),
+                "%s",
+                ok ? "[OK]" : "[MISS]"
+            );
+
+            ImGui::SameLine();
+
+            ImGui::Text(
+                "%s",
+                label
+            );
+
+            ImGui::SameLine();
+
+            ImGui::TextDisabled(
+                "%s",
+                detail
+            );
+        };
+
+    ImGui::Text(
+        "Gameplay Readiness"
+    );
+
+    DrawStatusLine(
+        "Player",
+        hasPlayer,
+        hasPlayer ? "ready" : "missing"
+    );
+
+    DrawStatusLine(
+        "Coin Objective",
+        hasCoinObjective,
+        hasCoinObjective ? "coins found" : "no coins"
+    );
+
+    DrawStatusLine(
+        "Monster Objective",
+        hasMonsterObjective,
+        hasMonsterObjective ? "trigger + spawn" : "needs trigger + spawn"
+    );
+
+    DrawStatusLine(
+        "Music Objective",
+        hasMusicObjective,
+        hasMusicObjective ? "gate + NPC" : "needs gate + NPC"
+    );
+
+    ImGui::Separator();
+
+    if (scenePlayable)
+    {
+        ImGui::TextColored(
+            ImVec4(
+                0.35f,
+                1.0f,
+                0.45f,
+                1.0f
+            ),
+            "SCENE STATUS: PLAYABLE"
+        );
+    }
+    else
+    {
+        ImGui::TextColored(
+            ImVec4(
+                1.0f,
+                0.35f,
+                0.25f,
+                1.0f
+            ),
+            "SCENE STATUS: NOT PLAYABLE"
+        );
+    }
+
+    ImGui::TextDisabled(
+        "Fix missing gameplay objects, then press TAB to test."
+    );
+
+    ImGui::Separator();
+
+    ImGui::Text(
+        "Scene Counts"
+    );
+
+    ImGui::Text(
+        "Visible Objects: %d",
+        visibleObjectCount
+    );
+
+    ImGui::Text(
+        "Colliders: %d",
+        colliderCount
+    );
+
+    ImGui::Text(
+        "Coins: %d",
+        coinCount
+    );
+
+    ImGui::Text(
+        "Trigger Zones: %d",
+        triggerZoneCount
+    );
+
+    ImGui::Text(
+        "Monster Spawns: %d",
+        monsterSpawnCount
+    );
+
+    ImGui::Text(
+        "Music Gates: %d",
+        musicGateCount
+    );
+
+    ImGui::Text(
+        "Music NPCs: %d",
+        musicNpcCount
+    );
+
+    ImGui::Separator();
 
     int errorCount =
         0;
@@ -6321,82 +6534,40 @@ void DrawSceneHealthValidator(
         }
     }
 
-    if (errorCount > 0)
-    {
-        ImGui::TextColored(
-            ImVec4(
-                1.0f,
-                0.25f,
-                0.25f,
-                1.0f
-            ),
-            "Scene Ready: NO"
-        );
-    }
-    else if (warningCount > 0)
-    {
-        ImGui::TextColored(
-            ImVec4(
-                1.0f,
-                0.75f,
-                0.20f,
-                1.0f
-            ),
-            "Scene Ready: YES, with warnings"
-        );
-    }
-    else
-    {
-        ImGui::TextColored(
-            ImVec4(
-                0.35f,
-                1.0f,
-                0.45f,
-                1.0f
-            ),
-            "Scene Ready: YES"
-        );
-    }
-
     ImGui::Text(
-        "Errors: %d  Warnings: %d  OK: %d",
+        "Detailed Check: %d errors | %d warnings | %d OK",
         errorCount,
         warningCount,
         infoCount
     );
 
-    ImGui::Separator();
-
-    ImGui::Text(
-        "Validation Results"
-    );
-
-    ImGui::Separator();
-
-    for (const SceneHealthEntry& entry : entries)
+    if (ImGui::CollapsingHeader("Detailed Validation"))
     {
-        ImGui::TextColored(
-            GetSceneHealthColor(
-                entry.level
-            ),
-            "%s",
-            GetSceneHealthPrefix(
-                entry.level
-            )
-        );
+        for (const SceneHealthEntry& entry : entries)
+        {
+            ImGui::TextColored(
+                GetSceneHealthColor(
+                    entry.level
+                ),
+                "%s",
+                GetSceneHealthPrefix(
+                    entry.level
+                )
+            );
 
-        ImGui::SameLine();
+            ImGui::SameLine();
 
-        ImGui::TextWrapped(
-            "%s",
-            entry.message.c_str()
-        );
+            ImGui::TextWrapped(
+                "%s",
+                entry.message.c_str()
+            );
+        }
     }
 
     ImGui::Separator();
 
     ImGui::TextDisabled(
-        "This panel updates automatically while editing the scene."
+        "This validator updates live while editing the scene."
     );
 
     ImGui::End();
@@ -12659,12 +12830,10 @@ ImGuiIO& io = ImGui::GetIO();
                     "Animation Preview",
                     &showAnimationPreviewWindow
                 );
-
                 ImGui::Checkbox(
-                    "Scene Health",
+                    "Playability Validator",
                     &showSceneHealthValidator
                 );
-
                 ImGui::Checkbox(
                     "Selected Tools",
                     &showSelectedObjectToolsPanel

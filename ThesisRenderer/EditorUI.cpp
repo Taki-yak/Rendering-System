@@ -1082,6 +1082,288 @@ void DrawHierarchyNode(
         ImGui::TreePop();
     }
 }
+// ================= HIERARCHY OBJECT GROUPING V1 =================
+
+enum class EditorHierarchyGroup
+{
+    Player,
+    Gameplay,
+    Environment,
+    Generated,
+    Other
+};
+
+static bool HierarchyNameContains(
+    SceneObject* object,
+    const std::string& token
+)
+{
+    if (object == nullptr)
+        return false;
+
+    return
+        object->name.find(token) != std::string::npos;
+}
+
+static bool IsHierarchyPlayerObject(
+    SceneObject* object
+)
+{
+    if (object == nullptr)
+        return false;
+
+    if (object->name == "Player")
+        return true;
+
+    if (object->assetType == AssetType::Player)
+        return true;
+
+    return false;
+}
+
+static bool IsHierarchyGeneratedObject(
+    SceneObject* object
+)
+{
+    if (object == nullptr)
+        return false;
+
+    if (object->spawnSource == SpawnSource::Procedural)
+        return true;
+
+    if (HierarchyNameContains(object, "Generated"))
+        return true;
+
+    if (HierarchyNameContains(object, "Painted"))
+        return true;
+
+    if (HierarchyNameContains(object, "World Painter"))
+        return true;
+
+    return false;
+}
+
+static bool IsHierarchyGameplayObject(
+    SceneObject* object
+)
+{
+    if (object == nullptr)
+        return false;
+
+    if (
+        !object->editorGameplayType.empty() &&
+        object->editorGameplayType != "None"
+        )
+    {
+        return true;
+    }
+
+    if (object->assetType == AssetType::Gameplay)
+        return true;
+
+    if (HierarchyNameContains(object, "Coin"))
+        return true;
+
+    if (HierarchyNameContains(object, "Trigger"))
+        return true;
+
+    if (HierarchyNameContains(object, "Monster"))
+        return true;
+
+    if (HierarchyNameContains(object, "Music"))
+        return true;
+
+    if (HierarchyNameContains(object, "NPC"))
+        return true;
+
+    return false;
+}
+
+static bool IsHierarchyEnvironmentObject(
+    SceneObject* object
+)
+{
+    if (object == nullptr)
+        return false;
+
+    if (object->assetType == AssetType::Terrain)
+        return true;
+
+    if (object->assetType == AssetType::Tree)
+        return true;
+
+    if (object->assetType == AssetType::Rock)
+        return true;
+
+    if (object->assetType == AssetType::Grass)
+        return true;
+
+    if (object->assetType == AssetType::Flower)
+        return true;
+
+    if (object->assetType == AssetType::Bush)
+        return true;
+
+    if (object->assetType == AssetType::House)
+        return true;
+
+    if (object->assetType == AssetType::Mountain)
+        return true;
+
+    if (object->assetType == AssetType::Fence)
+        return true;
+
+    if (HierarchyNameContains(object, "Tree"))
+        return true;
+
+    if (HierarchyNameContains(object, "Rock"))
+        return true;
+
+    if (HierarchyNameContains(object, "Bush"))
+        return true;
+
+    if (HierarchyNameContains(object, "Grass"))
+        return true;
+
+    if (HierarchyNameContains(object, "House"))
+        return true;
+
+    if (HierarchyNameContains(object, "Wall"))
+        return true;
+
+    return false;
+}
+
+static EditorHierarchyGroup GetEditorHierarchyGroup(
+    SceneObject* object
+)
+{
+    if (IsHierarchyPlayerObject(object))
+        return EditorHierarchyGroup::Player;
+
+    if (IsHierarchyGeneratedObject(object))
+        return EditorHierarchyGroup::Generated;
+
+    if (IsHierarchyGameplayObject(object))
+        return EditorHierarchyGroup::Gameplay;
+
+    if (IsHierarchyEnvironmentObject(object))
+        return EditorHierarchyGroup::Environment;
+
+    return EditorHierarchyGroup::Other;
+}
+
+static bool ShouldDrawObjectInHierarchyFolder(
+    SceneObject* object,
+    bool showGeneratedObjects,
+    const char* searchBuffer
+)
+{
+    if (object == nullptr)
+        return false;
+
+    if (!object->showInHierarchy && !showGeneratedObjects)
+        return false;
+
+    if (object->parent != nullptr)
+        return false;
+
+    if (
+        searchBuffer != nullptr &&
+        strlen(searchBuffer) > 0
+        )
+    {
+        std::string objectName =
+            object->name;
+
+        if (
+            objectName.find(searchBuffer) ==
+            std::string::npos
+            )
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+static void DrawHierarchyFolder(
+    Scene& scene,
+    SceneObject*& selectedObject,
+    EditorHierarchyGroup group,
+    const char* folderName,
+    bool showGeneratedObjects,
+    const char* searchBuffer,
+    bool openByDefault
+)
+{
+    int count =
+        0;
+
+    for (SceneObject* object : scene.objects)
+    {
+        if (
+            !ShouldDrawObjectInHierarchyFolder(
+                object,
+                showGeneratedObjects,
+                searchBuffer
+            )
+            )
+        {
+            continue;
+        }
+
+        if (GetEditorHierarchyGroup(object) == group)
+        {
+            count++;
+        }
+    }
+
+    if (count == 0)
+        return;
+
+    std::string title =
+        std::string(folderName) +
+        " (" +
+        std::to_string(count) +
+        ")";
+
+    ImGuiTreeNodeFlags flags =
+        openByDefault
+        ? ImGuiTreeNodeFlags_DefaultOpen
+        : 0;
+
+    if (
+        ImGui::CollapsingHeader(
+            title.c_str(),
+            flags
+        )
+        )
+    {
+        for (SceneObject* object : scene.objects)
+        {
+            if (
+                !ShouldDrawObjectInHierarchyFolder(
+                    object,
+                    showGeneratedObjects,
+                    searchBuffer
+                )
+                )
+            {
+                continue;
+            }
+
+            if (GetEditorHierarchyGroup(object) != group)
+                continue;
+
+            DrawHierarchyNode(
+                object,
+                selectedObject
+            );
+        }
+    }
+}
 void EditorUI::DrawHierarchy(
 
     Scene& scene,
@@ -1112,7 +1394,7 @@ void EditorUI::DrawHierarchy(
     );
 
     ImGui::SetNextWindowSize(
-        ImVec2(leftWidth, 380.0f),
+        ImVec2(leftWidth, 520.0f),
         ImGuiCond_FirstUseEver
     );
     ImGui::Begin("Hierarchy");
@@ -1200,34 +1482,57 @@ void EditorUI::DrawHierarchy(
     );
 
     ImGui::Separator();
-    for (SceneObject* obj : scene.objects)
-    {
-        if (obj == nullptr)
-            continue;
+    // ================= VIRTUAL HIERARCHY FOLDERS =================
 
-        if (!obj->showInHierarchy && !showGeneratedObjects)
-            continue;
-        std::string objectName = obj->name;
+    DrawHierarchyFolder(
+        scene,
+        selectedObject,
+        EditorHierarchyGroup::Player,
+        "Player",
+        showGeneratedObjects,
+        searchBuffer,
+        true
+    );
 
-        if (strlen(searchBuffer) > 0)
-        {
-            if (
-                objectName.find(searchBuffer)
-                == std::string::npos
-                )
-            {
-                continue;
-            }
-        }
+    DrawHierarchyFolder(
+        scene,
+        selectedObject,
+        EditorHierarchyGroup::Gameplay,
+        "Gameplay",
+        showGeneratedObjects,
+        searchBuffer,
+        true
+    );
 
-        if (obj->parent == nullptr)
-        {
-            DrawHierarchyNode(
-                obj,
-                selectedObject
-            );
-        }
-    }
+    DrawHierarchyFolder(
+        scene,
+        selectedObject,
+        EditorHierarchyGroup::Environment,
+        "Environment",
+        showGeneratedObjects,
+        searchBuffer,
+        true
+    );
+
+    DrawHierarchyFolder(
+        scene,
+        selectedObject,
+        EditorHierarchyGroup::Generated,
+        "Generated Objects",
+        showGeneratedObjects,
+        searchBuffer,
+        false
+    );
+
+    DrawHierarchyFolder(
+        scene,
+        selectedObject,
+        EditorHierarchyGroup::Other,
+        "Other",
+        showGeneratedObjects,
+        searchBuffer,
+        false
+    );
 
     ImGui::Separator();
 
@@ -2229,7 +2534,7 @@ void EditorUI::DrawInspector(
     );
 
     ImGui::SetNextWindowSize(
-        ImVec2(rightWidth, 520.0f),
+        ImVec2(rightWidth, 320.0f),
         ImGuiCond_FirstUseEver
     );
     ImGui::Begin("Inspector");

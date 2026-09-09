@@ -1364,6 +1364,115 @@ static void DrawHierarchyFolder(
         }
     }
 }
+// ================= PREFAB TOOLS V2 =================
+
+static int editorSelectedPrefabIndex =
+-1;
+
+static bool IsValidEditorPrefabIndex(
+    int index
+)
+{
+    return
+        index >= 0 &&
+        index < static_cast<int>(
+            PrefabManager::prefabs.size()
+            );
+}
+
+static Prefab* GetSelectedEditorPrefab()
+{
+    if (
+        !IsValidEditorPrefabIndex(
+            editorSelectedPrefabIndex
+        )
+        )
+    {
+        return nullptr;
+    }
+
+    return
+        &PrefabManager::prefabs[
+            editorSelectedPrefabIndex
+        ];
+}
+
+static void ApplyPrefabTransformToSelectedObject(
+    SceneObject* selectedObject
+)
+{
+    if (selectedObject == nullptr)
+    {
+        std::cout
+            << "Apply prefab failed: no object selected."
+            << std::endl;
+
+        return;
+    }
+
+    Prefab* prefab =
+        GetSelectedEditorPrefab();
+
+    if (prefab == nullptr)
+    {
+        std::cout
+            << "Apply prefab failed: no prefab selected."
+            << std::endl;
+
+        return;
+    }
+
+    selectedObject->transform.position =
+        prefab->position;
+
+    selectedObject->transform.rotation =
+        prefab->rotation;
+
+    selectedObject->transform.scale =
+        prefab->scale;
+
+    std::cout
+        << "Applied prefab transform to: "
+        << selectedObject->name
+        << std::endl;
+}
+
+static void DeleteSelectedEditorPrefab()
+{
+    if (
+        !IsValidEditorPrefabIndex(
+            editorSelectedPrefabIndex
+        )
+        )
+    {
+        return;
+    }
+
+    std::cout
+        << "Deleted prefab: "
+        << PrefabManager::prefabs[
+            editorSelectedPrefabIndex
+        ].name
+        << std::endl;
+
+            PrefabManager::prefabs.erase(
+                PrefabManager::prefabs.begin() +
+                editorSelectedPrefabIndex
+            );
+
+            if (
+                editorSelectedPrefabIndex >=
+                static_cast<int>(
+                    PrefabManager::prefabs.size()
+                    )
+                )
+            {
+                editorSelectedPrefabIndex =
+                    static_cast<int>(
+                        PrefabManager::prefabs.size()
+                        ) - 1;
+            }
+}
 void EditorUI::DrawHierarchy(
 
     Scene& scene,
@@ -1579,9 +1688,6 @@ void EditorUI::DrawHierarchy(
     }
     else
     {
-        static int selectedPrefabIndex =
-            -1;
-
         ImGui::Text(
             "Saved Prefabs: %d",
             static_cast<int>(
@@ -1608,7 +1714,7 @@ void EditorUI::DrawHierarchy(
                     PrefabManager::prefabs[i];
 
                 bool selected =
-                    selectedPrefabIndex == i;
+                    editorSelectedPrefabIndex == i;
 
                 std::string label =
                     prefab.name +
@@ -1622,25 +1728,17 @@ void EditorUI::DrawHierarchy(
                     )
                     )
                 {
-                    selectedPrefabIndex =
+                    editorSelectedPrefabIndex =
                         i;
                 }
             }
         }
 
-        if (
-            selectedPrefabIndex >= 0 &&
-            selectedPrefabIndex <
-            static_cast<int>(
-                PrefabManager::prefabs.size()
-                )
-            )
-        {
-            Prefab& selectedPrefab =
-                PrefabManager::prefabs[
-                    selectedPrefabIndex
-                ];
+        Prefab* selectedPrefab =
+            GetSelectedEditorPrefab();
 
+        if (selectedPrefab != nullptr)
+        {
             ImGui::Separator();
 
             ImGui::Text(
@@ -1649,28 +1747,46 @@ void EditorUI::DrawHierarchy(
 
             ImGui::TextWrapped(
                 "%s",
-                selectedPrefab.name.c_str()
+                selectedPrefab->name.c_str()
             );
 
             ImGui::Text(
                 "Position: %.2f %.2f %.2f",
-                selectedPrefab.position.x,
-                selectedPrefab.position.y,
-                selectedPrefab.position.z
+                selectedPrefab->position.x,
+                selectedPrefab->position.y,
+                selectedPrefab->position.z
             );
 
             ImGui::Text(
                 "Rotation: %.2f %.2f %.2f",
-                selectedPrefab.rotation.x,
-                selectedPrefab.rotation.y,
-                selectedPrefab.rotation.z
+                selectedPrefab->rotation.x,
+                selectedPrefab->rotation.y,
+                selectedPrefab->rotation.z
             );
 
             ImGui::Text(
                 "Scale: %.2f %.2f %.2f",
-                selectedPrefab.scale.x,
-                selectedPrefab.scale.y,
-                selectedPrefab.scale.z
+                selectedPrefab->scale.x,
+                selectedPrefab->scale.y,
+                selectedPrefab->scale.z
+            );
+
+            if (ImGui::Button("Apply To Selected"))
+            {
+                ApplyPrefabTransformToSelectedObject(
+                    selectedObject
+                );
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("Delete Prefab"))
+            {
+                DeleteSelectedEditorPrefab();
+            }
+
+            ImGui::TextDisabled(
+                "V2 stores transform only. Full spawning comes later."
             );
         }
     }

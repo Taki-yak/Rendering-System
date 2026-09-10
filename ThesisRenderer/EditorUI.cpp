@@ -1770,7 +1770,47 @@ void EditorUI::DrawHierarchy(
                 selectedPrefab->scale.y,
                 selectedPrefab->scale.z
             );
+            ImGui::Separator();
 
+            ImGui::Text(
+                "Mesh Type: %s",
+                selectedPrefab->meshType.c_str()
+            );
+
+            ImGui::Text(
+                "Gameplay Type: %s",
+                selectedPrefab->gameplayType.empty()
+                ? "None"
+                : selectedPrefab->gameplayType.c_str()
+            );
+
+            if (!selectedPrefab->modelPath.empty())
+            {
+                ImGui::TextWrapped(
+                    "Model Path: %s",
+                    selectedPrefab->modelPath.c_str()
+                );
+            }
+
+            if (!selectedPrefab->texturePath.empty())
+            {
+                ImGui::TextWrapped(
+                    "Texture Path: %s",
+                    selectedPrefab->texturePath.c_str()
+                );
+            }
+
+            ImGui::Text(
+                "Collider: %s",
+                selectedPrefab->isCollider
+                ? "Yes"
+                : "No"
+            );
+
+            ImGui::Text(
+                "Collider Radius: %.2f",
+                selectedPrefab->colliderRadius
+            );
             if (ImGui::Button("Apply To Selected"))
             {
                 ApplyPrefabTransformToSelectedObject(
@@ -1784,10 +1824,10 @@ void EditorUI::DrawHierarchy(
             {
                 DeleteSelectedEditorPrefab();
             }
-
             ImGui::TextDisabled(
-                "V2 stores transform only. Full spawning comes later."
+                "V3 stores object metadata. Prefab spawning is next."
             );
+           
         }
     }
     ImGui::End();
@@ -10889,12 +10929,31 @@ void EditorUI::DrawToolbar(
     ImGui::SameLine();
     if (ImGui::Button("Save Selected Prefab"))
     {
-        if (selectedObject)
+        if (selectedObject != nullptr)
         {
             Prefab prefab;
 
             prefab.name =
                 selectedObject->name;
+
+            // ================= IDENTITY =================
+
+            prefab.meshType =
+                selectedObject->editorMeshType;
+
+            prefab.modelPath =
+                selectedObject->editorModelPath;
+
+            prefab.modelDirectory =
+                selectedObject->editorModelDirectory;
+
+            prefab.texturePath =
+                selectedObject->editorTexturePath;
+
+            prefab.gameplayType =
+                selectedObject->editorGameplayType;
+
+            // ================= TRANSFORM =================
 
             prefab.position =
                 selectedObject->transform.position;
@@ -10905,9 +10964,22 @@ void EditorUI::DrawToolbar(
             prefab.scale =
                 selectedObject->transform.scale;
 
+            // ================= COLLISION =================
+
+            prefab.isCollider =
+                selectedObject->isCollider;
+
+            prefab.colliderRadius =
+                selectedObject->colliderRadius;
+
             PrefabManager::SavePrefab(
                 prefab
             );
+
+            std::cout
+                << "Prefab saved: "
+                << prefab.name
+                << std::endl;
         }
     }
     ImGui::SameLine();

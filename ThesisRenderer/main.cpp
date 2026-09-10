@@ -12850,7 +12850,9 @@ ImGuiIO& io = ImGui::GetIO();
                 EditorUI::DrawHierarchy(
                     scene,
                     selectedObject,
-                    selectedLight
+                    selectedLight,
+                    &shader,
+                    camera
                 );
             }
 

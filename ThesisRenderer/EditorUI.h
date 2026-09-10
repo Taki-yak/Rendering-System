@@ -38,7 +38,9 @@ public:
     static void DrawHierarchy(
         Scene& scene,
         SceneObject*& selectedObject,
-        Light*& selectedLight
+        Light*& selectedLight,
+        Shader* shader,
+        Camera& camera
     );
 
     static void DrawInspector(

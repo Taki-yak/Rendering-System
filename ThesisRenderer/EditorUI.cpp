@@ -1473,11 +1473,181 @@ static void DeleteSelectedEditorPrefab()
                         ) - 1;
             }
 }
-void EditorUI::DrawHierarchy(
-
+static SceneObject* SpawnSelectedEditorPrefab(
     Scene& scene,
     SceneObject*& selectedObject,
-    Light*& selectedLight
+    Shader* shader,
+    Camera& camera
+)
+{
+    Prefab* prefab =
+        GetSelectedEditorPrefab();
+
+    if (prefab == nullptr)
+    {
+        std::cout
+            << "Prefab spawn failed: no prefab selected."
+            << std::endl;
+
+        return nullptr;
+    }
+
+    if (shader == nullptr)
+    {
+        std::cout
+            << "Prefab spawn failed: shader is null."
+            << std::endl;
+
+        return nullptr;
+    }
+
+    SceneObject* object =
+        nullptr;
+
+    // ================= MODEL PREFAB =================
+
+    if (
+        prefab->meshType == "Model" &&
+        !prefab->modelPath.empty()
+        )
+    {
+        Model* prefabModel =
+            new Model(
+                prefab->modelPath,
+                prefab->modelDirectory
+            );
+
+        object =
+            new SceneObject(
+                prefabModel,
+                shader
+            );
+    }
+
+    // ================= UNSUPPORTED FOR NOW =================
+
+    if (object == nullptr)
+    {
+        std::cout
+            << "Prefab spawn failed: unsupported prefab mesh type: "
+            << prefab->meshType
+            << std::endl;
+
+        return nullptr;
+    }
+
+    object->name =
+        prefab->name + " Instance";
+
+    // ================= SPAWN IN FRONT OF CAMERA =================
+
+    glm::vec3 forward =
+        glm::vec3(
+            camera.Front.x,
+            0.0f,
+            camera.Front.z
+        );
+
+    if (glm::length(forward) < 0.001f)
+    {
+        forward =
+            glm::vec3(
+                0.0f,
+                0.0f,
+                -1.0f
+            );
+    }
+
+    forward =
+        glm::normalize(
+            forward
+        );
+
+    glm::vec3 spawnPosition =
+        camera.Position +
+        forward * 7.0f;
+
+    spawnPosition =
+        SnapEditorPositionToTerrain(
+            spawnPosition,
+            0.20f
+        );
+
+    object->transform.position =
+        spawnPosition;
+
+    object->transform.rotation =
+        prefab->rotation;
+
+    object->transform.scale =
+        prefab->scale;
+
+    // ================= PREFAB METADATA =================
+
+    SetEditorSaveMetadata(
+        object,
+        prefab->meshType,
+        prefab->gameplayType,
+        prefab->modelPath,
+        prefab->modelDirectory
+    );
+
+    object->editorTexturePath =
+        prefab->texturePath;
+
+    object->assetId =
+        prefab->name;
+
+    object->assetType =
+        AssetType::Prop;
+
+    object->spawnSource =
+        SpawnSource::Manual;
+
+    object->persistent =
+        true;
+
+    object->showInHierarchy =
+        true;
+
+    object->isCollider =
+        prefab->isCollider;
+
+    object->colliderRadius =
+        prefab->colliderRadius;
+
+    object->boundingRadius =
+        50.0f;
+
+    scene.AddObject(
+        object
+    );
+
+    if (selectedObject != nullptr)
+    {
+        selectedObject->isSelected =
+            false;
+    }
+
+    selectedObject =
+        object;
+
+    selectedObject->isSelected =
+        true;
+
+    std::cout
+        << "Prefab spawned: "
+        << prefab->name
+        << std::endl;
+
+    return object;
+}
+void EditorUI::DrawHierarchy(
+    Scene& scene,
+    SceneObject*& selectedObject,
+    Light*& selectedLight,
+    Shader* shader,
+    Camera& camera
 )
 {
     ImGui::SetNextWindowPos(ImVec2(0, 20), ImGuiCond_Once);
@@ -1811,6 +1981,18 @@ void EditorUI::DrawHierarchy(
                 "Collider Radius: %.2f",
                 selectedPrefab->colliderRadius
             );
+            if (ImGui::Button("Spawn Prefab"))
+            {
+                SpawnSelectedEditorPrefab(
+                    scene,
+                    selectedObject,
+                    shader,
+                    camera
+                );
+            }
+
+            ImGui::SameLine();
+
             if (ImGui::Button("Apply To Selected"))
             {
                 ApplyPrefabTransformToSelectedObject(
@@ -1825,7 +2007,7 @@ void EditorUI::DrawHierarchy(
                 DeleteSelectedEditorPrefab();
             }
             ImGui::TextDisabled(
-                "V3 stores object metadata. Prefab spawning is next."
+                "V4 can spawn saved model prefabs into the scene."
             );
            
         }

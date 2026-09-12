@@ -1667,7 +1667,6 @@ void EditorUI::DrawHierarchy(
     );
 
     ImGui::Begin("Hierarchy");
-    ImGui::Begin("Hierarchy");
     int visibleHierarchyCount =
         0;
 
@@ -2945,7 +2944,6 @@ void EditorUI::DrawInspector(
     );
 
     ImGui::Begin("Inspector");
-    ImGui::Begin("Inspector");
 
     if (selectedObject != nullptr)
     {
@@ -3633,13 +3631,6 @@ if (selectedObject != nullptr)
         {
             ImGui::SameLine();
         }
-    }
-
-    if (ImGui::Button("Remove Texture"))
-    {
-        RemoveTextureFromObject(
-            selectedObject
-        );
     }
 
     if (ImGui::Button("Remove Texture"))

@@ -7295,7 +7295,7 @@ int main()
             glm::vec3(-0.2f, -1.0f, -0.3f));
 
     scene.AddLight(sun);
-    Model myModel("character-a.obj");
+    Model myModel("character-human.obj");
     AnimatedModel testAnimatedPlayer(
         "Assets/Models/Characters/Player/Idle.fbx"
     );
@@ -8400,12 +8400,11 @@ int main()
 
             glm::vec3 selectedHouseScale =
                 useNewHouse
-                ? glm::vec3(0.01f)
+                ? glm::vec3(0.00434f)
                 : glm::vec3(0.8f);
-
             float selectedHouseTerrainOffset =
                 useNewHouse
-                ? -0.55f
+                ? 0.81f
                 : 0.05f;
 
             std::string selectedHouseAssetId =
@@ -12441,7 +12440,7 @@ ImGuiIO& io = ImGui::GetIO();
 
             shader.setBool(
                 "useTexture",
-                false
+                true
             );
 
             shader.setBool(
@@ -12930,12 +12929,11 @@ ImGuiIO& io = ImGui::GetIO();
 
                     glm::vec3 selectedScale =
                         useHouse2
-                        ? glm::vec3(0.01f)
+                        ? glm::vec3(0.00434f)
                         : glm::vec3(0.8f);
-
                     float terrainOffset =
                         useHouse2
-                        ? -0.65f
+                        ? 0.81f
                         : 0.05f;
 
                     std::string houseName =

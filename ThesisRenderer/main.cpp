@@ -3905,18 +3905,43 @@ layout (location = 2) in vec2 aTexCoord;
 out vec3 FragPos;
 out vec3 Normal;
 out vec2 TexCoord;
-
+out vec4 FragPosLightSpace;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
+uniform mat4 lightSpaceMatrix;
 
 void main()
 {
-    FragPos = vec3(model * vec4(aPos, 1.0));
-    Normal = mat3(transpose(inverse(model))) * aNormal;
-    TexCoord = aTexCoord;
+    vec4 worldPosition =
+    model *
+    vec4(
+        aPos,
+        1.0
+    );
 
-    gl_Position = projection * view * model * vec4(aPos, 1.0);
+FragPos =
+    worldPosition.xyz;
+
+Normal =
+    mat3(
+        transpose(
+            inverse(model)
+        )
+    ) *
+    aNormal;
+
+TexCoord =
+    aTexCoord;
+
+FragPosLightSpace =
+    lightSpaceMatrix *
+    worldPosition;
+
+gl_Position =
+    projection *
+    view *
+    worldPosition;
 }
 
 )";
@@ -3931,12 +3956,14 @@ uniform vec3 sunColor;
 in vec3 FragPos;
 in vec3 Normal;
 in vec2 TexCoord;
+in vec4 FragPosLightSpace;
 
 uniform bool isSelected;
 uniform sampler2D texture1;
 uniform sampler2D terrainGrassTex;
 uniform sampler2D terrainDirtTex;
 uniform sampler2D terrainCliffTex;
+uniform sampler2D shadowMap;
 uniform vec3 materialTint;
 uniform vec3 viewPos;
 uniform bool isProceduralTerrain;
@@ -3953,6 +3980,110 @@ uniform vec3 atmosphereFogColor;
 uniform float atmosphereFogStart;
 uniform float atmosphereFogEnd;
 uniform float atmosphereFogStrength;
+
+
+// ================= SHADOW CALCULATION =================
+
+float CalculateShadow(
+    vec4 fragPosLightSpace,
+    vec3 normal,
+    vec3 lightDirection
+)
+{
+    vec3 projectedCoords =
+        fragPosLightSpace.xyz /
+        fragPosLightSpace.w;
+
+    projectedCoords =
+        projectedCoords *
+        0.5 +
+        0.5;
+
+    // Outside shadow camera depth range.
+    if (projectedCoords.z > 1.0)
+    {
+        return 0.0;
+    }
+
+    // Outside shadow texture area.
+    if (
+        projectedCoords.x < 0.0 ||
+        projectedCoords.x > 1.0 ||
+        projectedCoords.y < 0.0 ||
+        projectedCoords.y > 1.0
+        )
+    {
+        return 0.0;
+    }
+
+    float currentDepth =
+        projectedCoords.z;
+
+    float bias =
+        max(
+            0.003 *
+            (
+                1.0 -
+                dot(
+                    normal,
+                    lightDirection
+                )
+            ),
+            0.0008
+        );
+
+    vec2 texelSize =
+        1.0 /
+        vec2(
+            textureSize(
+                shadowMap,
+                0
+            )
+        );
+
+    float shadow =
+        0.0;
+
+    // 3x3 PCF = softer shadow edges.
+    for (
+        int x = -1;
+        x <= 1;
+        ++x
+        )
+    {
+        for (
+            int y = -1;
+            y <= 1;
+            ++y
+            )
+        {
+            float closestDepth =
+                texture(
+                    shadowMap,
+                    projectedCoords.xy +
+                    vec2(
+                        x,
+                        y
+                    ) *
+                    texelSize
+                ).r;
+
+            shadow +=
+                currentDepth -
+                bias >
+                closestDepth
+                ? 1.0
+                : 0.0;
+        }
+    }
+
+    shadow /=
+        9.0;
+
+    return shadow;
+}
+
+
 void main()
 {
     vec3 textureColor;
@@ -4142,14 +4273,26 @@ dirSpec *
 sunColor;
 
 vec3 dirAmbient =
-materialAmbient *
-textureColor *
-0.34;
+    materialAmbient *
+    textureColor *
+    0.34;
+float shadow =
+    CalculateShadow(
+        FragPosLightSpace,
+        norm,
+        dirLight
+    );
 
 result +=
     dirAmbient +
-    dirDiffuse +
-    dirSpecular;
+    (
+        1.0 -
+        shadow
+    ) *
+    (
+        dirDiffuse +
+        dirSpecular
+    );
 
 float hemi =
     clamp(norm.y * 0.5 + 0.5, 0.0, 1.0);
@@ -12115,6 +12258,30 @@ ImGuiIO& io = ImGui::GetIO();
             shadowScreenHeight
         );
         shader.use();
+        shader.setMat4(
+            "lightSpaceMatrix",
+            glm::value_ptr(
+                lightSpaceMatrix
+            )
+        );
+        shader.setInt(
+            "shadowMap",
+            7
+        );
+
+        glActiveTexture(
+            GL_TEXTURE7
+        );
+
+        glBindTexture(
+            GL_TEXTURE_2D,
+            shadowDepthTexture
+        );
+
+        // Return normal object rendering to texture unit 0.
+        glActiveTexture(
+            GL_TEXTURE0
+        );
         glActiveTexture(
             GL_TEXTURE0
         );

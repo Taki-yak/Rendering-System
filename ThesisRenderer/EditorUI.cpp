@@ -1650,32 +1650,23 @@ void EditorUI::DrawHierarchy(
     Camera& camera
 )
 {
-    ImGui::SetNextWindowPos(ImVec2(0, 20), ImGuiCond_Once);
-    ImGui::SetNextWindowSize(ImVec2(250, 500), ImGuiCond_Once);
     ImGui::SetNextWindowPos(
         ImVec2(
-            10.0f,
-            70.0f
+            leftX,
+            topY
         ),
-        ImGuiCond_Once
+        ImGuiCond_Always
     );
 
     ImGui::SetNextWindowSize(
         ImVec2(
-            260.0f,
-            360.0f
+            leftWidth,
+            hierarchyHeight
         ),
-        ImGuiCond_Once
-    );
-    ImGui::SetNextWindowPos(
-        ImVec2(leftX, topY),
-        ImGuiCond_FirstUseEver
+        ImGuiCond_Always
     );
 
-    ImGui::SetNextWindowSize(
-        ImVec2(leftWidth, 520.0f),
-        ImGuiCond_FirstUseEver
-    );
+    ImGui::Begin("Hierarchy");
     ImGui::Begin("Hierarchy");
     int visibleHierarchyCount =
         0;
@@ -2936,32 +2927,24 @@ void EditorUI::DrawInspector(
     SceneObject* selectedObject
 )
 {
-    ImGui::SetNextWindowPos(ImVec2(550, 20), ImGuiCond_Once);
-    ImGui::SetNextWindowSize(ImVec2(250, 500), ImGuiCond_Once);
+  
     ImGui::SetNextWindowPos(
         ImVec2(
-            1240.0f,
-            70.0f
+            rightX,
+            topY
         ),
-        ImGuiCond_Once
+        ImGuiCond_Always
     );
 
     ImGui::SetNextWindowSize(
         ImVec2(
-            340.0f,
-            280.0f
+            rightWidth,
+            inspectorHeight
         ),
-        ImGuiCond_Once
-    );
-    ImGui::SetNextWindowPos(
-        ImVec2(rightX, topY),
-        ImGuiCond_FirstUseEver
+        ImGuiCond_Always
     );
 
-    ImGui::SetNextWindowSize(
-        ImVec2(rightWidth, 320.0f),
-        ImGuiCond_FirstUseEver
-    );
+    ImGui::Begin("Inspector");
     ImGui::Begin("Inspector");
 
     if (selectedObject != nullptr)
@@ -3675,28 +3658,22 @@ void EditorUI::DrawLightInspector(
 
     ImGui::SetNextWindowPos(
         ImVec2(
-            930.0f,
-            70.0f
+            rightX,
+            topY +
+            inspectorHeight +
+            layoutGap
         ),
-        ImGuiCond_Once
+        ImGuiCond_Always
     );
 
     ImGui::SetNextWindowSize(
         ImVec2(
-            360.0f,
-            520.0f
+            rightWidth,
+            secondaryRightHeight
         ),
-        ImGuiCond_Once
-    );
-    ImGui::SetNextWindowPos(
-        ImVec2(rightX, topY + 230.0f),
-        ImGuiCond_FirstUseEver
+        ImGuiCond_Always
     );
 
-    ImGui::SetNextWindowSize(
-        ImVec2(rightWidth, 180.0f),
-        ImGuiCond_FirstUseEver
-    );
     ImGui::Begin("Light Inspector");
 
     if (selectedLight)
@@ -3755,33 +3732,24 @@ void EditorUI::DrawDebug(
     SceneObject* selectedObject
 )
 {
-    ImGui::SetNextWindowPos(ImVec2(260, 20), ImGuiCond_Once);
-    ImGui::SetNextWindowSize(ImVec2(280, 200), ImGuiCond_Once);
     ImGui::SetNextWindowPos(
         ImVec2(
-            10.0f,
-            440.0f
+            centerX + 10.0f,
+            topY + 185.0f
         ),
-        ImGuiCond_Once
+        ImGuiCond_Always
     );
 
     ImGui::SetNextWindowSize(
         ImVec2(
-            260.0f,
-            190.0f
+            230.0f,
+            145.0f
         ),
-        ImGuiCond_Once
-    );
-    ImGui::SetNextWindowPos(
-        ImVec2(leftX, topY + 390.0f),
-        ImGuiCond_FirstUseEver
+        ImGuiCond_Always
     );
 
-    ImGui::SetNextWindowSize(
-        ImVec2(leftWidth, 150.0f),
-        ImGuiCond_FirstUseEver
-    );
     ImGui::Begin("Debug");
+
 
     ImGui::Text(
         "FPS: %.1f",
@@ -8895,30 +8863,21 @@ void EditorUI::DrawAssetBrowser(
 {
     ImGui::SetNextWindowPos(
         ImVec2(
-            10.0f,
-            650.0f
+            leftX,
+            bottomY
         ),
-        ImGuiCond_Once
+        ImGuiCond_Always
     );
 
     ImGui::SetNextWindowSize(
         ImVec2(
-            900.0f,
-            230.0f
+            assetBrowserWidth,
+            bottomHeight
         ),
-        ImGuiCond_Once
-    );
-    ImGui::SetNextWindowPos(
-        ImVec2(leftX, topY + 550.0f),
-        ImGuiCond_FirstUseEver
+        ImGuiCond_Always
     );
 
-    ImGui::SetNextWindowSize(
-        ImVec2(leftWidth + 650.0f, 220.0f),
-        ImGuiCond_FirstUseEver
-    );
     ImGui::Begin("Asset Browser");
-
     auto GetSpawnPosition =
         [&](float distance, float yPosition)
         {
@@ -11243,30 +11202,21 @@ void EditorUI::DrawStatistics(
 {
     ImGui::SetNextWindowPos(
         ImVec2(
-            280.0f,
-            70.0f
+            centerX + 10.0f,
+            topY + 10.0f
         ),
-        ImGuiCond_Once
+        ImGuiCond_Always
     );
 
     ImGui::SetNextWindowSize(
         ImVec2(
-            260.0f,
-            160.0f
+            230.0f,
+            165.0f
         ),
-        ImGuiCond_Once
-    );
-    ImGui::SetNextWindowPos(
-        ImVec2(centerX, topY),
-        ImGuiCond_FirstUseEver
+        ImGuiCond_Always
     );
 
-    ImGui::SetNextWindowSize(
-        ImVec2(260.0f, 170.0f),
-        ImGuiCond_FirstUseEver
-    );
     ImGui::Begin("Statistics");
-
     ImGui::Text(
         "Objects : %d",
         (int)scene.objects.size()

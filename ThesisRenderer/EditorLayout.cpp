@@ -5,28 +5,43 @@ float leftX =
 10.0f;
 
 float topY =
-70.0f;
+62.0f;
 
 float leftWidth =
-260.0f;
+270.0f;
 
 float rightX =
-1240.0f;
+1260.0f;
 
 float rightWidth =
-340.0f;
+330.0f;
 
 float centerX =
-280.0f;
+290.0f;
 
 float centerWidth =
-940.0f;
+950.0f;
 
 float bottomY =
 650.0f;
 
 float bottomHeight =
+230.0f;
+
+float layoutGap =
+10.0f;
+
+float hierarchyHeight =
+560.0f;
+
+float inspectorHeight =
+430.0f;
+
+float secondaryRightHeight =
 220.0f;
+
+float assetBrowserWidth =
+1150.0f;
 
 float ClampLayoutFloat(
     float value,
@@ -55,37 +70,41 @@ void UpdateResponsiveEditorLayout()
         displaySize.y;
 
     if (screenWidth < 800.0f)
-        screenWidth =
-        1600.0f;
+        screenWidth = 1600.0f;
 
     if (screenHeight < 500.0f)
-        screenHeight =
-        900.0f;
+        screenHeight = 900.0f;
 
     float margin =
         10.0f;
 
-    float gap =
+    layoutGap =
         10.0f;
+
+    // ================= TOP =================
+
+    topY =
+        62.0f;
+
+    // ================= LEFT PANEL =================
 
     leftX =
         margin;
 
-    topY =
-        55.0f;
-
     leftWidth =
         ClampLayoutFloat(
-            screenWidth * 0.16f,
-            240.0f,
-            310.0f
+            screenWidth * 0.17f,
+            250.0f,
+            320.0f
         );
+
+    // ================= RIGHT PANEL =================
 
     rightWidth =
         ClampLayoutFloat(
-            screenWidth * 0.21f,
+            screenWidth * 0.20f,
             320.0f,
-            430.0f
+            400.0f
         );
 
     rightX =
@@ -93,31 +112,76 @@ void UpdateResponsiveEditorLayout()
         rightWidth -
         margin;
 
+    // ================= CENTER VIEWPORT =================
+
     centerX =
         leftX +
         leftWidth +
-        gap;
+        layoutGap;
 
     centerWidth =
         rightX -
         centerX -
-        gap;
+        layoutGap;
 
-    if (centerWidth < 420.0f)
+    if (centerWidth < 400.0f)
     {
         centerWidth =
-            420.0f;
+            400.0f;
     }
+
+    // ================= BOTTOM PANEL =================
 
     bottomHeight =
         ClampLayoutFloat(
-            screenHeight * 0.24f,
-            190.0f,
-            260.0f
+            screenHeight * 0.25f,
+            210.0f,
+            280.0f
         );
 
     bottomY =
         screenHeight -
         bottomHeight -
         margin;
+
+    // ================= HIERARCHY =================
+
+    hierarchyHeight =
+        bottomY -
+        topY -
+        layoutGap;
+
+    if (hierarchyHeight < 300.0f)
+    {
+        hierarchyHeight =
+            300.0f;
+    }
+
+    // ================= RIGHT SIDE =================
+
+    float availableRightHeight =
+        bottomY -
+        topY -
+        layoutGap;
+
+    inspectorHeight =
+        availableRightHeight * 0.62f;
+
+    secondaryRightHeight =
+        availableRightHeight -
+        inspectorHeight -
+        layoutGap;
+
+    // ================= ASSET BROWSER =================
+
+    assetBrowserWidth =
+        rightX -
+        leftX -
+        layoutGap;
+
+    if (assetBrowserWidth < 650.0f)
+    {
+        assetBrowserWidth =
+            650.0f;
+    }
 }

@@ -1655,7 +1655,7 @@ void EditorUI::DrawHierarchy(
             leftX,
             topY
         ),
-        ImGuiCond_Always
+        ImGuiCond_FirstUseEver
     );
 
     ImGui::SetNextWindowSize(
@@ -1663,7 +1663,7 @@ void EditorUI::DrawHierarchy(
             leftWidth,
             hierarchyHeight
         ),
-        ImGuiCond_Always
+        ImGuiCond_FirstUseEver
     );
 
     ImGui::Begin("Hierarchy");
@@ -2932,7 +2932,7 @@ void EditorUI::DrawInspector(
             rightX,
             topY
         ),
-        ImGuiCond_Always
+        ImGuiCond_FirstUseEver
     );
 
     ImGui::SetNextWindowSize(
@@ -2940,7 +2940,7 @@ void EditorUI::DrawInspector(
             rightWidth,
             inspectorHeight
         ),
-        ImGuiCond_Always
+        ImGuiCond_FirstUseEver
     );
 
     ImGui::Begin("Inspector");
@@ -3654,7 +3654,7 @@ void EditorUI::DrawLightInspector(
             inspectorHeight +
             layoutGap
         ),
-        ImGuiCond_Always
+        ImGuiCond_FirstUseEver
     );
 
     ImGui::SetNextWindowSize(
@@ -3662,7 +3662,7 @@ void EditorUI::DrawLightInspector(
             rightWidth,
             secondaryRightHeight
         ),
-        ImGuiCond_Always
+        ImGuiCond_FirstUseEver
     );
 
     ImGui::Begin("Light Inspector");
@@ -3728,7 +3728,7 @@ void EditorUI::DrawDebug(
             centerX + 10.0f,
             topY + 185.0f
         ),
-        ImGuiCond_Always
+        ImGuiCond_FirstUseEver
     );
 
     ImGui::SetNextWindowSize(
@@ -3736,7 +3736,7 @@ void EditorUI::DrawDebug(
             230.0f,
             145.0f
         ),
-        ImGuiCond_Always
+        ImGuiCond_FirstUseEver
     );
 
     ImGui::Begin("Debug");
@@ -8857,7 +8857,7 @@ void EditorUI::DrawAssetBrowser(
             leftX,
             bottomY
         ),
-        ImGuiCond_Always
+        ImGuiCond_FirstUseEver
     );
 
     ImGui::SetNextWindowSize(
@@ -8865,7 +8865,7 @@ void EditorUI::DrawAssetBrowser(
             assetBrowserWidth,
             bottomHeight
         ),
-        ImGuiCond_Always
+        ImGuiCond_FirstUseEver
     );
 
     ImGui::Begin("Asset Browser");
@@ -11196,7 +11196,7 @@ void EditorUI::DrawStatistics(
             centerX + 10.0f,
             topY + 10.0f
         ),
-        ImGuiCond_Always
+        ImGuiCond_FirstUseEver
     );
 
     ImGui::SetNextWindowSize(
@@ -11204,7 +11204,7 @@ void EditorUI::DrawStatistics(
             230.0f,
             165.0f
         ),
-        ImGuiCond_Always
+        ImGuiCond_FirstUseEver
     );
 
     ImGui::Begin("Statistics");

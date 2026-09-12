@@ -58,12 +58,43 @@
 #ifdef min
 #undef min
 #endif
-// ================= CAMERA VARIABLES =================
-//glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-//glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-//glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-//float yaw = -90.0f;
-//float pitch = 0.0f;
+static void DrawObjectShadowDepth(
+    SceneObject* object,
+    Shader& depthShader
+)
+{
+    if (object == nullptr)
+        return;
+
+    if (!object->visible)
+        return;
+
+    glm::mat4 modelMatrix =
+        object->transform.GetModelMatrix();
+
+    depthShader.setMat4(
+        "model",
+        glm::value_ptr(
+            modelMatrix
+        )
+    );
+
+    if (
+        object->useModel &&
+        object->model != nullptr
+        )
+    {
+        object->model->Draw(
+            depthShader
+        );
+    }
+    else if (
+        object->mesh != nullptr
+        )
+    {
+        object->mesh->Draw();
+    }
+}
 float LerpAngleDegrees(
     float current,
     float target,
@@ -2584,12 +2615,12 @@ MainMenuAction DrawMainMenuScreen(
             0.0f,
             0.0f
         ),
-        ImGuiCond_Always
+        ImGuiCond_FirstUseEver
     );
 
     ImGui::SetNextWindowSize(
         io.DisplaySize,
-        ImGuiCond_Always
+        ImGuiCond_FirstUseEver
     );
 
     ImGuiWindowFlags flags =
@@ -4348,6 +4379,37 @@ uniform vec3 axisColor;
 void main()
 {
     FragColor = vec4(axisColor, 1.0);
+}
+
+)";
+// ================= SHADOW DEPTH SHADERS =================
+
+const char* shadowDepthVertexShader = R"(
+
+#version 330 core
+
+layout (location = 0) in vec3 aPos;
+
+uniform mat4 model;
+uniform mat4 lightSpaceMatrix;
+
+void main()
+{
+    gl_Position =
+        lightSpaceMatrix *
+        model *
+        vec4(aPos, 1.0);
+}
+
+)";
+
+const char* shadowDepthFragmentShader = R"(
+
+#version 330 core
+
+void main()
+{
+    // Depth only.
 }
 
 )";
@@ -7233,6 +7295,132 @@ int main()
 
     glBindVertexArray(0);
     Shader shader(vertexShaderSource, fragmentShaderSource);
+    Shader shadowDepthShader(
+        shadowDepthVertexShader,
+        shadowDepthFragmentShader
+    );
+    // ================= SHADOW MAP SETUP =================
+
+    const unsigned int SHADOW_WIDTH =
+        2048;
+
+    const unsigned int SHADOW_HEIGHT =
+        2048;
+
+    unsigned int shadowFBO =
+        0;
+
+    unsigned int shadowDepthTexture =
+        0;
+
+    glGenFramebuffers(
+        1,
+        &shadowFBO
+    );
+
+    glGenTextures(
+        1,
+        &shadowDepthTexture
+    );
+
+    glBindTexture(
+        GL_TEXTURE_2D,
+        shadowDepthTexture
+    );
+
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0,
+        GL_DEPTH_COMPONENT,
+        SHADOW_WIDTH,
+        SHADOW_HEIGHT,
+        0,
+        GL_DEPTH_COMPONENT,
+        GL_FLOAT,
+        nullptr
+    );
+
+    glTexParameteri(
+        GL_TEXTURE_2D,
+        GL_TEXTURE_MIN_FILTER,
+        GL_NEAREST
+    );
+
+    glTexParameteri(
+        GL_TEXTURE_2D,
+        GL_TEXTURE_MAG_FILTER,
+        GL_NEAREST
+    );
+
+    glTexParameteri(
+        GL_TEXTURE_2D,
+        GL_TEXTURE_WRAP_S,
+        GL_CLAMP_TO_BORDER
+    );
+
+    glTexParameteri(
+        GL_TEXTURE_2D,
+        GL_TEXTURE_WRAP_T,
+        GL_CLAMP_TO_BORDER
+    );
+
+    float shadowBorderColor[] =
+    {
+        1.0f,
+        1.0f,
+        1.0f,
+        1.0f
+    };
+
+    glTexParameterfv(
+        GL_TEXTURE_2D,
+        GL_TEXTURE_BORDER_COLOR,
+        shadowBorderColor
+    );
+
+    glBindFramebuffer(
+        GL_FRAMEBUFFER,
+        shadowFBO
+    );
+
+    glFramebufferTexture2D(
+        GL_FRAMEBUFFER,
+        GL_DEPTH_ATTACHMENT,
+        GL_TEXTURE_2D,
+        shadowDepthTexture,
+        0
+    );
+
+    glDrawBuffer(
+        GL_NONE
+    );
+
+    glReadBuffer(
+        GL_NONE
+    );
+
+    if (
+        glCheckFramebufferStatus(
+            GL_FRAMEBUFFER
+        ) !=
+        GL_FRAMEBUFFER_COMPLETE
+        )
+    {
+        std::cout
+            << "Shadow framebuffer incomplete!"
+            << std::endl;
+    }
+    else
+    {
+        std::cout
+            << "Shadow framebuffer ready."
+            << std::endl;
+    }
+
+    glBindFramebuffer(
+        GL_FRAMEBUFFER,
+        0
+    );
     glm::vec3 lightPositions[] = {
     glm::vec3(2.0f, 2.0f, 2.0f),
     glm::vec3(-2.0f, 2.0f, 2.0f),
@@ -11720,7 +11908,71 @@ ImGuiIO& io = ImGui::GetIO();
                     );
             }
         }
+        // ================= SHADOW PASS V1 =================
 
+        glm::vec3 shadowSunDirection =
+            dayNightSystem.sunDirection;
+
+        if (
+            glm::length(
+                shadowSunDirection
+            ) < 0.001f
+            )
+        {
+            shadowSunDirection =
+                glm::vec3(
+                    -0.3f,
+                    -1.0f,
+                    -0.25f
+                );
+        }
+
+        shadowSunDirection =
+            glm::normalize(
+                shadowSunDirection
+            );
+
+        float shadowArea =
+            180.0f;
+
+        glm::mat4 lightProjection =
+            glm::ortho(
+                -shadowArea,
+                shadowArea,
+                -shadowArea,
+                shadowArea,
+                1.0f,
+                400.0f
+            );
+
+        glm::vec3 shadowTarget =
+            camera.Position;
+
+        shadowTarget.y =
+            GetTerrainHeight(
+                camera.Position.x,
+                camera.Position.z
+            );
+
+        glm::vec3 shadowLightPosition =
+            shadowTarget -
+            shadowSunDirection *
+            150.0f;
+
+        glm::mat4 lightView =
+            glm::lookAt(
+                shadowLightPosition,
+                shadowTarget,
+                glm::vec3(
+                    0.0f,
+                    1.0f,
+                    0.0f
+                )
+            );
+
+        glm::mat4 lightSpaceMatrix =
+            lightProjection *
+            lightView;
         shader.use();
         shader.setInt( "texture1",0);
         shader.setInt(
@@ -11797,7 +12049,75 @@ ImGuiIO& io = ImGui::GetIO();
         );
         int pointLightIndex =
             0;
+        shadowDepthShader.use();
 
+        shadowDepthShader.setMat4(
+            "lightSpaceMatrix",
+            glm::value_ptr(
+                lightSpaceMatrix
+            )
+        );
+
+        glViewport(
+            0,
+            0,
+            SHADOW_WIDTH,
+            SHADOW_HEIGHT
+        );
+
+        glBindFramebuffer(
+            GL_FRAMEBUFFER,
+            shadowFBO
+        );
+
+        glClear(
+            GL_DEPTH_BUFFER_BIT
+        );
+
+        glCullFace(
+            GL_FRONT
+        );
+
+        for (
+            SceneObject* shadowObject :
+            scene.objects
+            )
+        {
+            DrawObjectShadowDepth(
+                shadowObject,
+                shadowDepthShader
+            );
+        }
+
+        glCullFace(
+            GL_BACK
+        );
+
+        glBindFramebuffer(
+            GL_FRAMEBUFFER,
+            0
+        );
+        int shadowScreenWidth =
+            0;
+
+        int shadowScreenHeight =
+            0;
+
+        glfwGetFramebufferSize(
+            window,
+            &shadowScreenWidth,
+            &shadowScreenHeight
+        );
+        glViewport(
+            0,
+            0,
+            shadowScreenWidth,
+            shadowScreenHeight
+        );
+        shader.use();
+        glActiveTexture(
+            GL_TEXTURE0
+        );
         for (Light* light : scene.lights)
         {
             if (light == nullptr)

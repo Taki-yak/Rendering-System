@@ -61,6 +61,250 @@ static void SetEditorSaveMetadata(
     object->editorModelDirectory =
         modelDirectory;
 }
+// ================= ASSET PREVIEW V1 =================
+
+struct AssetPreviewSelection
+{
+    bool valid =
+        false;
+
+    std::string name =
+        "";
+
+    std::string category =
+        "";
+
+    std::string assetType =
+        "";
+
+    std::string modelPath =
+        "";
+
+    std::string placementHint =
+        "";
+
+    glm::vec3 defaultScale =
+        glm::vec3(1.0f);
+
+    bool hasCollider =
+        false;
+
+    Model* model =
+        nullptr;
+};
+
+static AssetPreviewSelection selectedAssetPreview;
+
+static bool showAssetPreviewWindow =
+true;
+
+
+static void SelectAssetForPreview(
+    const std::string& name,
+    const std::string& category,
+    const std::string& assetType,
+    const std::string& modelPath,
+    const glm::vec3& defaultScale,
+    bool hasCollider,
+    const std::string& placementHint,
+    Model* model
+)
+{
+    selectedAssetPreview.valid =
+        true;
+
+    selectedAssetPreview.name =
+        name;
+
+    selectedAssetPreview.category =
+        category;
+
+    selectedAssetPreview.assetType =
+        assetType;
+
+    selectedAssetPreview.modelPath =
+        modelPath;
+
+    selectedAssetPreview.defaultScale =
+        defaultScale;
+
+    selectedAssetPreview.hasCollider =
+        hasCollider;
+
+    selectedAssetPreview.placementHint =
+        placementHint;
+
+    selectedAssetPreview.model =
+        model;
+
+    // Reopen window if user previously closed it.
+    showAssetPreviewWindow =
+        true;
+}
+static void DrawAssetPreviewWindow()
+{
+    if (!selectedAssetPreview.valid)
+        return;
+
+    if (!showAssetPreviewWindow)
+        return;
+
+    ImGui::SetNextWindowPos(
+        ImVec2(
+            centerX +
+            centerWidth -
+            350.0f,
+
+            topY +
+            280.0f
+        ),
+        ImGuiCond_FirstUseEver
+    );
+
+    ImGui::SetNextWindowSize(
+        ImVec2(
+            340.0f,
+            330.0f
+        ),
+        ImGuiCond_FirstUseEver
+    );
+
+    if (
+        !ImGui::Begin(
+            "Asset Preview",
+            &showAssetPreviewWindow
+        )
+        )
+    {
+        ImGui::End();
+        return;
+    }
+
+    ImGui::Text(
+        "%s",
+        selectedAssetPreview.name.c_str()
+    );
+
+    ImGui::Separator();
+
+    ImGui::Text(
+        "Category:"
+    );
+
+    ImGui::SameLine();
+
+    ImGui::TextDisabled(
+        "%s",
+        selectedAssetPreview.category.c_str()
+    );
+
+    ImGui::Text(
+        "Type:"
+    );
+
+    ImGui::SameLine();
+
+    ImGui::TextDisabled(
+        "%s",
+        selectedAssetPreview.assetType.c_str()
+    );
+
+    ImGui::Text(
+        "Default Scale:"
+    );
+
+    ImGui::SameLine();
+
+    ImGui::Text(
+        "%.3f  %.3f  %.3f",
+        selectedAssetPreview.defaultScale.x,
+        selectedAssetPreview.defaultScale.y,
+        selectedAssetPreview.defaultScale.z
+    );
+
+    ImGui::Text(
+        "Collider:"
+    );
+
+    ImGui::SameLine();
+
+    if (selectedAssetPreview.hasCollider)
+    {
+        ImGui::Text(
+            "Enabled"
+        );
+    }
+    else
+    {
+        ImGui::TextDisabled(
+            "None"
+        );
+    }
+
+    ImGui::Text(
+        "Placement:"
+    );
+
+    ImGui::SameLine();
+
+    ImGui::TextWrapped(
+        "%s",
+        selectedAssetPreview.placementHint.c_str()
+    );
+
+    ImGui::Separator();
+
+    ImGui::Text(
+        "Model"
+    );
+
+    ImGui::TextWrapped(
+        "%s",
+        selectedAssetPreview.modelPath.c_str()
+    );
+
+    ImGui::Separator();
+
+    // ================= FUTURE 3D PREVIEW AREA =================
+
+    ImGui::BeginChild(
+        "AssetPreview3D",
+        ImVec2(
+            0.0f,
+            100.0f
+        ),
+        true
+    );
+
+    ImGui::Spacing();
+
+    ImGui::TextDisabled(
+        "          3D ASSET PREVIEW"
+    );
+
+    ImGui::Spacing();
+
+    if (selectedAssetPreview.model != nullptr)
+    {
+        ImGui::TextDisabled(
+            "Model loaded and ready."
+        );
+    }
+    else
+    {
+        ImGui::TextDisabled(
+            "Preview model not directly available."
+        );
+    }
+
+    ImGui::TextDisabled(
+        "V2 will render the model here."
+    );
+
+    ImGui::EndChild();
+
+    ImGui::End();
+}
 static const char* GetAssetTypeName(
     AssetType assetType
 )
@@ -8978,7 +9222,43 @@ void EditorUI::DrawAssetBrowser(
             selectedObject =
                 object;
         };
+    auto DrawModelAssetButton =
+        [&](const char* buttonLabel,
+            const char* objectName,
+            const char* category,
+            Model* model,
+            glm::vec3 scale,
+            bool collider,
+            const char* modelPath,
+            const char* placementHint)
+        {
+            if (
+                ImGui::Button(
+                    buttonLabel
+                )
+                )
+            {
+                SelectAssetForPreview(
+                    objectName,
+                    category,
+                    "Imported Model",
+                    modelPath,
+                    scale,
+                    collider,
+                    placementHint,
+                    model
+                );
 
+                SpawnModelObject(
+                    objectName,
+                    model,
+                    scale,
+                    collider,
+                    modelPath,
+                    ""
+                );
+            }
+        };
     auto SpawnCubeObject =
         [&](const std::string& objectName,
             glm::vec3 scale,
@@ -9256,214 +9536,215 @@ void EditorUI::DrawAssetBrowser(
         }
         if (ImGui::BeginTabItem("Nature"))
         {
+            // ================= TREES =================
+
             ImGui::Text("Trees");
 
-            if (ImGui::Button("Pine Tree"))
-            {
-                SpawnModelObject(
-                    "Pine Tree",
-                    pineTreeModel,
-                    glm::vec3(1.4f),
-                    false,
-                    "Assets/Models/Environment/NaturePack/PineTree_1.obj",
-                    ""
-                );
-            }
+            DrawModelAssetButton(
+                "Pine Tree",
+                "Pine Tree",
+                "Nature / Trees",
+                pineTreeModel,
+                glm::vec3(1.4f),
+                false,
+                "Assets/Models/Environment/NaturePack/PineTree_1.obj",
+                "Grass terrain / forest areas"
+            );
 
             ImGui::SameLine();
 
-            if (ImGui::Button("Common Tree"))
-            {
-                SpawnModelObject(
-                    "Common Tree",
-                    commonTreeModel,
-                    glm::vec3(1.4f),
-                    false,
-                    "Assets/Models/Environment/NaturePack/CommonTree_1.obj",
-                    ""
-                );
-            }
-            ImGui::SameLine();
-
-            if (ImGui::Button("Small Pine"))
-            {
-                SpawnModelObject(
-                    "Small Pine",
-                    pineTreeModel,
-                    glm::vec3(0.9f),
-                    false,
-                    "Assets/Models/Environment/NaturePack/PineTree_1.obj",
-                    ""
-                );
-            }
+            DrawModelAssetButton(
+                "Common Tree",
+                "Common Tree",
+                "Nature / Trees",
+                commonTreeModel,
+                glm::vec3(1.4f),
+                false,
+                "Assets/Models/Environment/NaturePack/CommonTree_1.obj",
+                "Grass terrain / mixed forests"
+            );
 
             ImGui::SameLine();
 
-            if (ImGui::Button("Large Pine"))
-            {
-                SpawnModelObject(
-                    "Large Pine",
-                    pineTreeModel,
-                    glm::vec3(2.2f),
-                    true,
-                    "Assets/Models/Environment/NaturePack/PineTree_1.obj",
-                    ""
-                );
-            }
+            DrawModelAssetButton(
+                "Small Pine",
+                "Small Pine",
+                "Nature / Trees",
+                pineTreeModel,
+                glm::vec3(0.9f),
+                false,
+                "Assets/Models/Environment/NaturePack/PineTree_1.obj",
+                "Forest edges / small vegetation"
+            );
+
+            ImGui::SameLine();
+
+            DrawModelAssetButton(
+                "Large Pine",
+                "Large Pine",
+                "Nature / Trees",
+                pineTreeModel,
+                glm::vec3(2.2f),
+                true,
+                "Assets/Models/Environment/NaturePack/PineTree_1.obj",
+                "Open forest areas / landmark tree"
+            );
+
+
+            // ================= ROCKS / PLANTS =================
 
             ImGui::Separator();
 
-            ImGui::Text("Rocks / Plants");
+            ImGui::Text(
+                "Rocks / Plants"
+            );
 
-            if (ImGui::Button("Rock"))
-            {
-                SpawnModelObject(
-                    "Rock",
-                    rockModel,
-                    glm::vec3(1.3f),
-                    true,
-                    "Assets/Models/Environment/NaturePack/Rock_1.obj",
-                    ""
-                );
-            }
-
-            ImGui::SameLine();
-            ImGui::SameLine();
-
-            if (ImGui::Button("Bush"))
-            {
-                SpawnModelObject(
-                    "Bush",
-                    bushModel,
-                    glm::vec3(1.0f),
-                    false,
-                    "Assets/Models/Environment/NaturePack/Bush_1.obj",
-                    ""
-                );
-            }
+            DrawModelAssetButton(
+                "Rock",
+                "Rock",
+                "Nature / Rocks",
+                rockModel,
+                glm::vec3(1.3f),
+                true,
+                "Assets/Models/Environment/NaturePack/Rock_1.obj",
+                "Terrain / slopes / forest"
+            );
 
             ImGui::SameLine();
 
-            if (ImGui::Button("Grass"))
-            {
-                SpawnModelObject(
-                    "Grass",
-                    grassModel,
-                    glm::vec3(0.5f),
-                    false,
-                    "Assets/Models/Environment/NaturePack/Grass.obj",
-                    ""
-                );
-            }
-            ImGui::SameLine();
-
-            if (ImGui::Button("Small Rock"))
-            {
-                SpawnModelObject(
-                    "Small Rock",
-                    rockModel,
-                    glm::vec3(0.7f),
-                    true,
-                    "Assets/Models/Environment/NaturePack/Rock_1.obj",
-                    ""
-                );
-            }
-
-            if (ImGui::Button("Large Rock"))
-            {
-                SpawnModelObject(
-                    "Large Rock",
-                    rockModel,
-                    glm::vec3(2.0f),
-                    true,
-                    "Assets/Models/Environment/NaturePack/Rock_1.obj",
-                    ""
-                );
-            }
+            DrawModelAssetButton(
+                "Bush",
+                "Bush",
+                "Nature / Plants",
+                bushModel,
+                glm::vec3(1.0f),
+                false,
+                "Assets/Models/Environment/NaturePack/Bush_1.obj",
+                "Grass terrain / near trees"
+            );
 
             ImGui::SameLine();
 
-            if (ImGui::Button("Big Bush"))
-            {
-                SpawnModelObject(
-                    "Big Bush",
-                    bushModel,
-                    glm::vec3(1.6f),
-                    false,
-                    "Assets/Models/Environment/NaturePack/Bush_1.obj",
-                    ""
-                );
-            }
+            DrawModelAssetButton(
+                "Grass",
+                "Grass",
+                "Nature / Plants",
+                grassModel,
+                glm::vec3(0.5f),
+                false,
+                "Assets/Models/Environment/NaturePack/Grass.obj",
+                "Flat grass terrain"
+            );
 
             ImGui::SameLine();
 
-            if (ImGui::Button("Tall Grass"))
-            {
-                SpawnModelObject(
-                    "Tall Grass",
-                    grassModel,
-                    glm::vec3(0.9f),
-                    false,
-                    "Assets/Models/Environment/NaturePack/Grass.obj",
-                    ""
-                );
-            }
+            DrawModelAssetButton(
+                "Small Rock",
+                "Small Rock",
+                "Nature / Rocks",
+                rockModel,
+                glm::vec3(0.7f),
+                true,
+                "Assets/Models/Environment/NaturePack/Rock_1.obj",
+                "Paths / terrain decoration"
+            );
+
+            DrawModelAssetButton(
+                "Large Rock",
+                "Large Rock",
+                "Nature / Rocks",
+                rockModel,
+                glm::vec3(2.0f),
+                true,
+                "Assets/Models/Environment/NaturePack/Rock_1.obj",
+                "Terrain landmark / mountain areas"
+            );
+
+            ImGui::SameLine();
+
+            DrawModelAssetButton(
+                "Big Bush",
+                "Big Bush",
+                "Nature / Plants",
+                bushModel,
+                glm::vec3(1.6f),
+                false,
+                "Assets/Models/Environment/NaturePack/Bush_1.obj",
+                "Forest / building borders"
+            );
+
+            ImGui::SameLine();
+
+            DrawModelAssetButton(
+                "Tall Grass",
+                "Tall Grass",
+                "Nature / Plants",
+                grassModel,
+                glm::vec3(0.9f),
+                false,
+                "Assets/Models/Environment/NaturePack/Grass.obj",
+                "Wild terrain / forest edges"
+            );
+
+
+            // ================= FOREST PROPS =================
+
             ImGui::Separator();
 
-            ImGui::Text("Forest Props");
+            ImGui::Text(
+                "Forest Props"
+            );
 
-            if (ImGui::Button("Wood Log"))
-            {
-                SpawnModelObject(
-                    "Wood Log",
-                    woodLogModel,
-                    glm::vec3(1.0f),
-                    true,
-                    "Assets/Models/Environment/NaturePack/WoodLog.obj",
-                    ""
-                );
-            }
-
-            ImGui::SameLine();
-
-            if (ImGui::Button("Tree Stump"))
-            {
-                SpawnModelObject(
-                    "Tree Stump",
-                    treeStumpModel,
-                    glm::vec3(1.0f),
-                    true,
-                    "Assets/Models/Environment/NaturePack/TreeStump.obj",
-                    ""
-                );
-            }
-            ImGui::SameLine();
-
-            if (ImGui::Button("Large Log"))
-            {
-                SpawnModelObject(
-                    "Large Log",
-                    woodLogModel,
-                    glm::vec3(1.7f),
-                    true,
-                    "Assets/Models/Environment/NaturePack/WoodLog.obj",
-                    ""
-                );
-            }
+            DrawModelAssetButton(
+                "Wood Log",
+                "Wood Log",
+                "Nature / Forest Props",
+                woodLogModel,
+                glm::vec3(1.0f),
+                true,
+                "Assets/Models/Environment/NaturePack/WoodLog.obj",
+                "Forest floor / camps"
+            );
 
             ImGui::SameLine();
 
-            if (ImGui::Button("Large Stump"))
-            {
-                SpawnModelObject(
-                    "Large Stump",
-                    treeStumpModel,
-                    glm::vec3(1.6f),
-                    true,
-                    "Assets/Models/Environment/NaturePack/TreeStump.obj",
-                    ""
-                );
-            }
+            DrawModelAssetButton(
+                "Tree Stump",
+                "Tree Stump",
+                "Nature / Forest Props",
+                treeStumpModel,
+                glm::vec3(1.0f),
+                true,
+                "Assets/Models/Environment/NaturePack/TreeStump.obj",
+                "Forest floor"
+            );
+
+            ImGui::SameLine();
+
+            DrawModelAssetButton(
+                "Large Log",
+                "Large Log",
+                "Nature / Forest Props",
+                woodLogModel,
+                glm::vec3(1.7f),
+                true,
+                "Assets/Models/Environment/NaturePack/WoodLog.obj",
+                "Forest / camp decoration"
+            );
+
+            ImGui::SameLine();
+
+            DrawModelAssetButton(
+                "Large Stump",
+                "Large Stump",
+                "Nature / Forest Props",
+                treeStumpModel,
+                glm::vec3(1.6f),
+                true,
+                "Assets/Models/Environment/NaturePack/TreeStump.obj",
+                "Forest landmark"
+            );
+
             ImGui::EndTabItem();
         }
        
@@ -9474,15 +9755,36 @@ void EditorUI::DrawAssetBrowser(
 
             if (ImGui::Button("House 1"))
             {
+                SelectAssetForPreview(
+                    "House 1",
+                    "Structures / Houses",
+                    "Imported Model",
+                    "Assets/Models/Environment/WoodenHouse/WoodenHouse.obj",
+                    glm::vec3(0.8f),
+                    true,
+                    "Flat terrain recommended",
+                    woodenHouseModel
+                );
+
                 spawnHouseCallback(
                     false
                 );
             }
 
             ImGui::SameLine();
-
             if (ImGui::Button("House 2"))
             {
+                SelectAssetForPreview(
+                    "House 2",
+                    "Structures / Houses",
+                    "Imported Model",
+                    "Assets/Models/Environment/WoodenHouse/house2.obj",
+                    glm::vec3(0.00434f),
+                    true,
+                    "Flat terrain recommended",
+                    newHouseModel
+                );
+
                 spawnHouseCallback(
                     true
                 );
@@ -9513,6 +9815,17 @@ void EditorUI::DrawAssetBrowser(
 
             if (ImGui::Button("Campfire"))
             {
+                SelectAssetForPreview(
+                    "Campfire",
+                    "Structures / Fire Props",
+                    "Environment Prop",
+                    "Assets/Models/Environment/Campfire/campfire.obj",
+                    glm::vec3(1.0f),
+                    true,
+                    "Ground surface / camp area",
+                    nullptr
+                );
+
                 SpawnCampfire(
                     scene,
                     selectedObject,
@@ -9521,7 +9834,6 @@ void EditorUI::DrawAssetBrowser(
                     shader
                 );
             }
-
             ImGui::Text("World Zones");
 
             if (ImGui::Button("Forest Zone"))
@@ -10474,9 +10786,10 @@ void EditorUI::DrawAssetBrowser(
         }
 
         ImGui::EndTabBar();
-    }
+}
 
-    ImGui::End();
+ImGui::End();
+DrawAssetPreviewWindow();
 }
 // ================= SELECTION TOOLS V1 =================
 

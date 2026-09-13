@@ -1,6 +1,7 @@
 #include "EditorUI.h"
 #include "Light.h"
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include "SceneSerializer.h"
 #include <algorithm>
 #include "PrefabManager.h"
@@ -97,8 +98,40 @@ static AssetPreviewSelection selectedAssetPreview;
 
 static bool showAssetPreviewWindow =
 true;
+// ================= ASSET PREVIEW V2 =================
 
+static unsigned int assetPreviewFBO =
+0;
 
+static unsigned int assetPreviewTexture =
+0;
+
+static unsigned int assetPreviewDepthRBO =
+0;
+
+static const int ASSET_PREVIEW_WIDTH =
+512;
+
+static const int ASSET_PREVIEW_HEIGHT =
+512;
+
+static bool assetPreviewFramebufferReady =
+false;
+static float assetPreviewYaw =
+35.0f;
+
+static float assetPreviewDistance =
+9.0f;
+
+static float assetPreviewHeight =
+1.5f;
+
+static bool assetPreviewAutoRotate =
+true;
+
+static float assetPreviewRotationSpeed =
+25.0f;
+static void RenderSelectedAssetPreview(  Shader* shader);
 static void SelectAssetForPreview(
     const std::string& name,
     const std::string& category,
@@ -140,14 +173,526 @@ static void SelectAssetForPreview(
     // Reopen window if user previously closed it.
     showAssetPreviewWindow =
         true;
+  
 }
-static void DrawAssetPreviewWindow()
+static void EnsureAssetPreviewFramebuffer()
+{
+    if (assetPreviewFramebufferReady)
+        return;
+
+    // ================= FRAMEBUFFER =================
+
+    glGenFramebuffers(
+        1,
+        &assetPreviewFBO
+    );
+
+    glBindFramebuffer(
+        GL_FRAMEBUFFER,
+        assetPreviewFBO
+    );
+
+
+    // ================= COLOR TEXTURE =================
+
+    glGenTextures(
+        1,
+        &assetPreviewTexture
+    );
+
+    glBindTexture(
+        GL_TEXTURE_2D,
+        assetPreviewTexture
+    );
+
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0,
+        GL_RGBA,
+        ASSET_PREVIEW_WIDTH,
+        ASSET_PREVIEW_HEIGHT,
+        0,
+        GL_RGBA,
+        GL_UNSIGNED_BYTE,
+        nullptr
+    );
+
+    glTexParameteri(
+        GL_TEXTURE_2D,
+        GL_TEXTURE_MIN_FILTER,
+        GL_LINEAR
+    );
+
+    glTexParameteri(
+        GL_TEXTURE_2D,
+        GL_TEXTURE_MAG_FILTER,
+        GL_LINEAR
+    );
+
+    glTexParameteri(
+        GL_TEXTURE_2D,
+        GL_TEXTURE_WRAP_S,
+        GL_CLAMP_TO_EDGE
+    );
+
+    glTexParameteri(
+        GL_TEXTURE_2D,
+        GL_TEXTURE_WRAP_T,
+        GL_CLAMP_TO_EDGE
+    );
+
+    glFramebufferTexture2D(
+        GL_FRAMEBUFFER,
+        GL_COLOR_ATTACHMENT0,
+        GL_TEXTURE_2D,
+        assetPreviewTexture,
+        0
+    );
+
+
+    // ================= DEPTH BUFFER =================
+
+    glGenRenderbuffers(
+        1,
+        &assetPreviewDepthRBO
+    );
+
+    glBindRenderbuffer(
+        GL_RENDERBUFFER,
+        assetPreviewDepthRBO
+    );
+
+    glRenderbufferStorage(
+        GL_RENDERBUFFER,
+        GL_DEPTH24_STENCIL8,
+        ASSET_PREVIEW_WIDTH,
+        ASSET_PREVIEW_HEIGHT
+    );
+
+    glFramebufferRenderbuffer(
+        GL_FRAMEBUFFER,
+        GL_DEPTH_STENCIL_ATTACHMENT,
+        GL_RENDERBUFFER,
+        assetPreviewDepthRBO
+    );
+
+
+    // ================= CHECK =================
+
+    if (
+        glCheckFramebufferStatus(
+            GL_FRAMEBUFFER
+        ) ==
+        GL_FRAMEBUFFER_COMPLETE
+        )
+    {
+        assetPreviewFramebufferReady =
+            true;
+
+        std::cout
+            << "Asset Preview framebuffer ready."
+            << std::endl;
+    }
+    else
+    {
+        std::cout
+            << "Asset Preview framebuffer FAILED."
+            << std::endl;
+    }
+
+    glBindFramebuffer(
+        GL_FRAMEBUFFER,
+        0
+    );
+}
+static void RenderSelectedAssetPreview(
+    Shader* shader
+)
+{
+    if (shader == nullptr)
+        return;
+
+    if (!selectedAssetPreview.valid)
+        return;
+
+    if (selectedAssetPreview.model == nullptr)
+        return;
+
+    EnsureAssetPreviewFramebuffer();
+
+    if (!assetPreviewFramebufferReady)
+        return;
+
+
+    // ================= SAVE OPENGL STATE =================
+
+    GLint previousFramebuffer = 0;
+    GLint previousProgram = 0;
+
+    GLint previousViewport[4] =
+    {
+        0,
+        0,
+        0,
+        0
+    };
+
+    GLint previousActiveTexture = 0;
+
+    GLfloat previousClearColor[4] =
+    {
+        0.0f,
+        0.0f,
+        0.0f,
+        1.0f
+    };
+
+    GLboolean depthWasEnabled =
+        glIsEnabled(GL_DEPTH_TEST);
+
+    GLboolean cullWasEnabled =
+        glIsEnabled(GL_CULL_FACE);
+
+    glGetIntegerv(
+        GL_FRAMEBUFFER_BINDING,
+        &previousFramebuffer
+    );
+
+    glGetIntegerv(
+        GL_CURRENT_PROGRAM,
+        &previousProgram
+    );
+
+    glGetIntegerv(
+        GL_VIEWPORT,
+        previousViewport
+    );
+
+    glGetIntegerv(
+        GL_ACTIVE_TEXTURE,
+        &previousActiveTexture
+    );
+
+    glGetFloatv(
+        GL_COLOR_CLEAR_VALUE,
+        previousClearColor
+    );
+
+
+    // ================= PREVIEW FRAMEBUFFER =================
+
+    glBindFramebuffer(
+        GL_FRAMEBUFFER,
+        assetPreviewFBO
+    );
+
+    glViewport(
+        0,
+        0,
+        ASSET_PREVIEW_WIDTH,
+        ASSET_PREVIEW_HEIGHT
+    );
+
+    glEnable(GL_DEPTH_TEST);
+
+    glDisable(GL_CULL_FACE);
+
+    glPolygonMode(
+        GL_FRONT_AND_BACK,
+        GL_FILL
+    );
+
+    glClearColor(
+        0.055f,
+        0.070f,
+        0.090f,
+        1.0f
+    );
+
+    glClear(
+        GL_COLOR_BUFFER_BIT |
+        GL_DEPTH_BUFFER_BIT
+    );
+
+
+    // ================= AUTO ROTATION =================
+
+    if (assetPreviewAutoRotate)
+    {
+        assetPreviewYaw +=
+            ImGui::GetIO().DeltaTime *
+            assetPreviewRotationSpeed;
+
+        if (assetPreviewYaw > 360.0f)
+        {
+            assetPreviewYaw -= 360.0f;
+        }
+    }
+
+
+    // ================= PREVIEW CAMERA =================
+
+    glm::mat4 previewProjection =
+        glm::perspective(
+            glm::radians(45.0f),
+            1.0f,
+            0.1f,
+            1000.0f
+        );
+
+    glm::vec3 previewCameraPosition(
+        0.0f,
+        assetPreviewHeight,
+        assetPreviewDistance
+    );
+
+    glm::vec3 previewTarget(
+        0.0f,
+        assetPreviewHeight * 0.35f,
+        0.0f
+    );
+
+    glm::mat4 previewView =
+        glm::lookAt(
+            previewCameraPosition,
+            previewTarget,
+            glm::vec3(
+                0.0f,
+                1.0f,
+                0.0f
+            )
+        );
+
+
+    // ================= MODEL MATRIX =================
+
+    glm::mat4 previewModel =
+        glm::mat4(1.0f);
+
+    previewModel =
+        glm::rotate(
+            previewModel,
+            glm::radians(
+                assetPreviewYaw
+            ),
+            glm::vec3(
+                0.0f,
+                1.0f,
+                0.0f
+            )
+        );
+
+    previewModel =
+        glm::scale(
+            previewModel,
+            selectedAssetPreview.defaultScale
+        );
+
+
+    // ================= SHADER =================
+
+    shader->use();
+
+    shader->setMat4(
+        "model",
+        glm::value_ptr(
+            previewModel
+        )
+    );
+
+    shader->setMat4(
+        "view",
+        glm::value_ptr(
+            previewView
+        )
+    );
+
+    shader->setMat4(
+        "projection",
+        glm::value_ptr(
+            previewProjection
+        )
+    );
+
+
+    // Keep preview independent from scene shadows.
+
+    glm::mat4 previewLightSpace =
+        glm::mat4(1.0f);
+
+    shader->setMat4(
+        "lightSpaceMatrix",
+        glm::value_ptr(
+            previewLightSpace
+        )
+    );
+
+
+    // ================= PREVIEW LIGHTING =================
+
+    shader->setVec3(
+        "viewPos",
+        previewCameraPosition
+    );
+
+    shader->setVec3(
+        "sunDirection",
+        glm::normalize(
+            glm::vec3(
+                -0.6f,
+                -1.0f,
+                -0.4f
+            )
+        )
+    );
+
+    shader->setVec3(
+        "sunColor",
+        glm::vec3(
+            1.0f,
+            0.95f,
+            0.85f
+        )
+    );
+
+    shader->setVec3(
+        "materialTint",
+        glm::vec3(1.0f)
+    );
+
+    shader->setVec3(
+        "materialAmbient",
+        glm::vec3(0.35f)
+    );
+
+    shader->setVec3(
+        "materialDiffuse",
+        glm::vec3(1.0f)
+    );
+
+    shader->setVec3(
+        "materialSpecular",
+        glm::vec3(0.15f)
+    );
+
+    shader->setFloat(
+        "materialShininess",
+        16.0f
+    );
+
+    shader->setBool(
+        "isSelected",
+        false
+    );
+
+    shader->setBool(
+        "isProceduralTerrain",
+        false
+    );
+
+    shader->setBool(
+        "useAtmosphereFog",
+        false
+    );
+
+    shader->setBool(
+        "useTexture",
+        true
+    );
+
+    shader->setInt(
+        "texture1",
+        0
+    );
+
+
+    // Disable normal scene point lights.
+
+    for (int i = 0; i < 12; i++)
+    {
+        shader->setVec3(
+            "lightPositions[" +
+            std::to_string(i) +
+            "]",
+            glm::vec3(0.0f)
+        );
+
+        shader->setVec3(
+            "lightColors[" +
+            std::to_string(i) +
+            "]",
+            glm::vec3(0.0f)
+        );
+    }
+
+
+    // ================= DRAW =================
+
+    glActiveTexture(GL_TEXTURE0);
+
+    selectedAssetPreview.model->Draw(
+        *shader
+    );
+
+
+
+
+    glBindFramebuffer(
+        GL_FRAMEBUFFER,
+        previousFramebuffer
+    );
+
+    glViewport(
+        previousViewport[0],
+        previousViewport[1],
+        previousViewport[2],
+        previousViewport[3]
+    );
+
+    glUseProgram(
+        previousProgram
+    );
+
+    glActiveTexture(
+        previousActiveTexture
+    );
+
+    glClearColor(
+        previousClearColor[0],
+        previousClearColor[1],
+        previousClearColor[2],
+        previousClearColor[3]
+    );
+
+    if (depthWasEnabled)
+    {
+        glEnable(GL_DEPTH_TEST);
+    }
+    else
+    {
+        glDisable(GL_DEPTH_TEST);
+    }
+
+    if (cullWasEnabled)
+    {
+        glEnable(GL_CULL_FACE);
+    }
+    else
+    {
+        glDisable(GL_CULL_FACE);
+    }
+}
+static void DrawAssetPreviewWindow(Shader* shader)
 {
     if (!selectedAssetPreview.valid)
         return;
 
     if (!showAssetPreviewWindow)
         return;
+
+    RenderSelectedAssetPreview(
+        shader
+    );
 
     ImGui::SetNextWindowPos(
         ImVec2(
@@ -163,8 +708,8 @@ static void DrawAssetPreviewWindow()
 
     ImGui::SetNextWindowSize(
         ImVec2(
-            340.0f,
-            330.0f
+            380.0f,
+            620.0f
         ),
         ImGuiCond_FirstUseEver
     );
@@ -266,42 +811,107 @@ static void DrawAssetPreviewWindow()
     ImGui::Separator();
 
     // ================= FUTURE 3D PREVIEW AREA =================
+// ================= REAL 3D PREVIEW =================
 
-    ImGui::BeginChild(
-        "AssetPreview3D",
+    ImGui::Text(
+        "3D Preview"
+    );
+
+    ImGui::Separator();
+
+    float availableWidth =
+        ImGui::GetContentRegionAvail().x;
+
+    float previewSize =
+        availableWidth;
+
+    if (previewSize > 280.0f)
+    {
+        previewSize =
+            280.0f;
+    }
+
+    if (previewSize < 160.0f)
+    {
+        previewSize =
+            160.0f;
+    }
+
+    ImGui::Image(
+        (ImTextureID)(intptr_t)
+        assetPreviewTexture,
+
+        ImVec2(
+            previewSize,
+            previewSize
+        ),
+
         ImVec2(
             0.0f,
-            100.0f
+            1.0f
         ),
-        true
+
+        ImVec2(
+            1.0f,
+            0.0f
+        )
+    );
+    ImGui::Separator();
+
+    ImGui::Checkbox(
+        "Auto Rotate",
+        &assetPreviewAutoRotate
     );
 
-    ImGui::Spacing();
-
-    ImGui::TextDisabled(
-        "          3D ASSET PREVIEW"
-    );
-
-    ImGui::Spacing();
-
-    if (selectedAssetPreview.model != nullptr)
+    if (assetPreviewAutoRotate)
     {
-        ImGui::TextDisabled(
-            "Model loaded and ready."
+        ImGui::SliderFloat(
+            "Rotation Speed",
+            &assetPreviewRotationSpeed,
+            0.0f,
+            100.0f,
+            "%.1f"
         );
     }
-    else
-    {
-        ImGui::TextDisabled(
-            "Preview model not directly available."
-        );
-    }
 
-    ImGui::TextDisabled(
-        "V2 will render the model here."
+    ImGui::SliderFloat(
+        "Rotation",
+        &assetPreviewYaw,
+        0.0f,
+        360.0f,
+        "%.1f"
     );
 
-    ImGui::EndChild();
+    ImGui::SliderFloat(
+        "Zoom",
+        &assetPreviewDistance,
+        2.0f,
+        30.0f,
+        "%.1f"
+    );
+
+    ImGui::SliderFloat(
+        "Height",
+        &assetPreviewHeight,
+        -5.0f,
+        10.0f,
+        "%.2f"
+    );
+
+    if (ImGui::Button("Reset Preview Camera"))
+    {
+        assetPreviewYaw =
+            35.0f;
+
+        assetPreviewDistance =
+            9.0f;
+
+        assetPreviewHeight =
+            1.5f;
+
+        assetPreviewAutoRotate =
+            true;
+    }
 
     ImGui::End();
 }
@@ -10789,7 +11399,7 @@ void EditorUI::DrawAssetBrowser(
 }
 
 ImGui::End();
-DrawAssetPreviewWindow();
+DrawAssetPreviewWindow(shader);
 }
 // ================= SELECTION TOOLS V1 =================
 

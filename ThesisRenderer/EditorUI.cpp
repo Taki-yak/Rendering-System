@@ -89,7 +89,11 @@ struct AssetPreviewSelection
 
     bool hasCollider =
         false;
+    float previewDistance =
+        9.0f;
 
+    float previewHeight =
+        1.5f;
     Model* model =
         nullptr;
 };
@@ -131,6 +135,54 @@ true;
 
 static float assetPreviewRotationSpeed =
 25.0f;
+// ================= ASSET PREVIEW V2.1 =================
+
+static bool assetPreviewSpawnRequested =
+false;
+
+static std::vector<std::string> assetPreviewFavorites;
+
+
+static bool IsAssetPreviewFavorite(
+    const std::string& assetName
+)
+{
+    return
+        std::find(
+            assetPreviewFavorites.begin(),
+            assetPreviewFavorites.end(),
+            assetName
+        ) != assetPreviewFavorites.end();
+}
+
+
+static void ToggleAssetPreviewFavorite(
+    const std::string& assetName
+)
+{
+    auto it =
+        std::find(
+            assetPreviewFavorites.begin(),
+            assetPreviewFavorites.end(),
+            assetName
+        );
+
+    if (
+        it !=
+        assetPreviewFavorites.end()
+        )
+    {
+        assetPreviewFavorites.erase(
+            it
+        );
+    }
+    else
+    {
+        assetPreviewFavorites.push_back(
+            assetName
+        );
+    }
+}
 static void RenderSelectedAssetPreview(  Shader* shader);
 static void SelectAssetForPreview(
     const std::string& name,
@@ -170,7 +222,139 @@ static void SelectAssetForPreview(
     selectedAssetPreview.model =
         model;
 
-    // Reopen window if user previously closed it.
+    // ================= DEFAULT PREVIEW FRAMING =================
+
+    selectedAssetPreview.previewDistance =
+        9.0f;
+
+    selectedAssetPreview.previewHeight =
+        1.5f;
+
+
+    // Houses
+
+    if (
+        name.find("House") !=
+        std::string::npos
+        )
+    {
+        selectedAssetPreview.previewDistance =
+            18.0f;
+
+        selectedAssetPreview.previewHeight =
+            3.5f;
+    }
+
+
+    // Large trees
+
+    else if (
+        name.find("Large Pine") !=
+        std::string::npos
+        )
+    {
+        selectedAssetPreview.previewDistance =
+            14.0f;
+
+        selectedAssetPreview.previewHeight =
+            4.0f;
+    }
+
+
+    // Trees
+
+    else if (
+        name.find("Tree") !=
+        std::string::npos ||
+        name.find("Pine") !=
+        std::string::npos
+        )
+    {
+        selectedAssetPreview.previewDistance =
+            10.0f;
+
+        selectedAssetPreview.previewHeight =
+            3.0f;
+    }
+
+
+    // Rocks
+
+    else if (
+        name.find("Rock") !=
+        std::string::npos
+        )
+    {
+        selectedAssetPreview.previewDistance =
+            name.find("Large") !=
+            std::string::npos
+            ? 8.0f
+            : 6.0f;
+
+        selectedAssetPreview.previewHeight =
+            1.3f;
+    }
+
+
+    // Bush / Grass
+
+    else if (
+        name.find("Bush") !=
+        std::string::npos ||
+        name.find("Grass") !=
+        std::string::npos
+        )
+    {
+        selectedAssetPreview.previewDistance =
+            5.0f;
+
+        selectedAssetPreview.previewHeight =
+            1.0f;
+    }
+
+
+    // Logs / stumps
+
+    else if (
+        name.find("Log") !=
+        std::string::npos ||
+        name.find("Stump") !=
+        std::string::npos
+        )
+    {
+        selectedAssetPreview.previewDistance =
+            6.0f;
+
+        selectedAssetPreview.previewHeight =
+            1.2f;
+    }
+
+
+    // Campfire
+
+    else if (
+        name.find("Campfire") !=
+        std::string::npos
+        )
+    {
+        selectedAssetPreview.previewDistance =
+            6.0f;
+
+        selectedAssetPreview.previewHeight =
+            1.0f;
+    }
+
+
+    // Apply framing immediately.
+
+    assetPreviewDistance =
+        selectedAssetPreview.previewDistance;
+
+    assetPreviewHeight =
+        selectedAssetPreview.previewHeight;
+
+    assetPreviewYaw =
+        35.0f;
     showAssetPreviewWindow =
         true;
   
@@ -731,7 +915,50 @@ static void DrawAssetPreviewWindow(Shader* shader)
     );
 
     ImGui::Separator();
+    // ================= ASSET ACTIONS =================
 
+    if (
+        ImGui::Button(
+            "Spawn Selected Asset",
+            ImVec2(
+                180.0f,
+                32.0f
+            )
+        )
+        )
+    {
+        assetPreviewSpawnRequested =
+            true;
+    }
+
+    ImGui::SameLine();
+
+    bool isFavorite =
+        IsAssetPreviewFavorite(
+            selectedAssetPreview.name
+        );
+
+    if (
+        ImGui::Button(
+            isFavorite
+            ? "Remove Favorite"
+            : "Add Favorite"
+        )
+        )
+    {
+        ToggleAssetPreviewFavorite(
+            selectedAssetPreview.name
+        );
+    }
+
+    if (isFavorite)
+    {
+        ImGui::TextDisabled(
+            "Favorite asset"
+        );
+    }
+
+    ImGui::Separator();
     ImGui::Text(
         "Category:"
     );
@@ -904,10 +1131,10 @@ static void DrawAssetPreviewWindow(Shader* shader)
             35.0f;
 
         assetPreviewDistance =
-            9.0f;
+            selectedAssetPreview.previewDistance;
 
         assetPreviewHeight =
-            1.5f;
+            selectedAssetPreview.previewHeight;
 
         assetPreviewAutoRotate =
             true;
@@ -9859,14 +10086,6 @@ void EditorUI::DrawAssetBrowser(
                     model
                 );
 
-                SpawnModelObject(
-                    objectName,
-                    model,
-                    scale,
-                    collider,
-                    modelPath,
-                    ""
-                );
             }
         };
     auto SpawnCubeObject =
@@ -10375,10 +10594,6 @@ void EditorUI::DrawAssetBrowser(
                     "Flat terrain recommended",
                     woodenHouseModel
                 );
-
-                spawnHouseCallback(
-                    false
-                );
             }
 
             ImGui::SameLine();
@@ -10393,10 +10608,6 @@ void EditorUI::DrawAssetBrowser(
                     true,
                     "Flat terrain recommended",
                     newHouseModel
-                );
-
-                spawnHouseCallback(
-                    true
                 );
             }
 
@@ -10434,14 +10645,6 @@ void EditorUI::DrawAssetBrowser(
                     true,
                     "Ground surface / camp area",
                     nullptr
-                );
-
-                SpawnCampfire(
-                    scene,
-                    selectedObject,
-                    camera,
-                    cubeMesh,
-                    shader
                 );
             }
             ImGui::Text("World Zones");
@@ -11399,7 +11602,69 @@ void EditorUI::DrawAssetBrowser(
 }
 
 ImGui::End();
-DrawAssetPreviewWindow(shader);
+
+
+// ================= ASSET PREVIEW =================
+
+DrawAssetPreviewWindow(
+    shader
+);
+
+
+// ================= PREVIEW SPAWN REQUEST =================
+
+if (assetPreviewSpawnRequested)
+{
+    assetPreviewSpawnRequested =
+        false;
+
+    const std::string& previewName =
+        selectedAssetPreview.name;
+
+
+    // Houses use your existing house callback.
+
+    if (previewName == "House 1")
+    {
+        spawnHouseCallback(
+            false
+        );
+    }
+
+    else if (previewName == "House 2")
+    {
+        spawnHouseCallback(
+            true
+        );
+    }
+
+    else if (previewName == "Campfire")
+    {
+        SpawnCampfire(
+            scene,
+            selectedObject,
+            camera,
+            cubeMesh,
+            shader
+        );
+    }
+
+
+    else if (
+        selectedAssetPreview.model !=
+        nullptr
+        )
+    {
+        SpawnModelObject(
+            selectedAssetPreview.name,
+            selectedAssetPreview.model,
+            selectedAssetPreview.defaultScale,
+            selectedAssetPreview.hasCollider,
+            selectedAssetPreview.modelPath,
+            ""
+        );
+    }
+}
 }
 // ================= SELECTION TOOLS V1 =================
 

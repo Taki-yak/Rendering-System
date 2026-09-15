@@ -2163,16 +2163,57 @@ void DrawHierarchyNode(
         ImGui::TreePop();
     }
 }
-// ================= HIERARCHY OBJECT GROUPING V1 =================
+// ================= HIERARCHY ORGANIZATION V2 =================
 
 enum class EditorHierarchyGroup
 {
     Player,
-    Gameplay,
     Environment,
+    Nature,
+    Structures,
+    Gameplay,
     Generated,
     Other
 };
+
+enum class EditorHierarchySubgroup
+{
+    None,
+
+    // Environment
+    Terrain,
+    Mountains,
+    EnvironmentOther,
+
+    // Nature
+    Trees,
+    Rocks,
+    GrassFlowers,
+    Bushes,
+    ForestProps,
+    NatureOther,
+
+    // Structures
+    Houses,
+    Camps,
+    BuildingPieces,
+    StructuresOther,
+
+    // Gameplay
+    Coins,
+    Triggers,
+    Monsters,
+    MusicNPC,
+    GameplayOther,
+
+    // Generated
+    GeneratedEnvironment,
+    GeneratedNature,
+    GeneratedStructures,
+    GeneratedGameplay,
+    GeneratedOther
+};
+
 
 static bool HierarchyNameContains(
     SceneObject* object,
@@ -2183,8 +2224,12 @@ static bool HierarchyNameContains(
         return false;
 
     return
-        object->name.find(token) != std::string::npos;
+        object->name.find(token) !=
+        std::string::npos;
 }
+
+
+// ================= PLAYER =================
 
 static bool IsHierarchyPlayerObject(
     SceneObject* object
@@ -2196,11 +2241,19 @@ static bool IsHierarchyPlayerObject(
     if (object->name == "Player")
         return true;
 
-    if (object->assetType == AssetType::Player)
+    if (
+        object->assetType ==
+        AssetType::Player
+        )
+    {
         return true;
+    }
 
     return false;
 }
+
+
+// ================= GENERATED =================
 
 static bool IsHierarchyGeneratedObject(
     SceneObject* object
@@ -2209,20 +2262,49 @@ static bool IsHierarchyGeneratedObject(
     if (object == nullptr)
         return false;
 
-    if (object->spawnSource == SpawnSource::Procedural)
+    if (
+        object->spawnSource ==
+        SpawnSource::Procedural
+        )
+    {
         return true;
+    }
 
-    if (HierarchyNameContains(object, "Generated"))
+    if (
+        HierarchyNameContains(
+            object,
+            "Generated"
+        )
+        )
+    {
         return true;
+    }
 
-    if (HierarchyNameContains(object, "Painted"))
+    if (
+        HierarchyNameContains(
+            object,
+            "Painted"
+        )
+        )
+    {
         return true;
+    }
 
-    if (HierarchyNameContains(object, "World Painter"))
+    if (
+        HierarchyNameContains(
+            object,
+            "World Painter"
+        )
+        )
+    {
         return true;
+    }
 
     return false;
 }
+
+
+// ================= GAMEPLAY =================
 
 static bool IsHierarchyGameplayObject(
     SceneObject* object
@@ -2239,36 +2321,147 @@ static bool IsHierarchyGameplayObject(
         return true;
     }
 
-    if (object->assetType == AssetType::Gameplay)
+    if (
+        object->assetType ==
+        AssetType::Gameplay
+        )
+    {
         return true;
+    }
 
-    if (HierarchyNameContains(object, "Coin"))
+    if (
+        HierarchyNameContains(
+            object,
+            "Coin"
+        )
+        )
+    {
         return true;
+    }
 
-    if (HierarchyNameContains(object, "Trigger"))
+    if (
+        HierarchyNameContains(
+            object,
+            "Trigger"
+        )
+        )
+    {
         return true;
+    }
 
-    if (HierarchyNameContains(object, "Monster"))
+    if (
+        HierarchyNameContains(
+            object,
+            "Monster"
+        )
+        )
+    {
         return true;
+    }
 
-    if (HierarchyNameContains(object, "Music"))
+    if (
+        HierarchyNameContains(
+            object,
+            "Music"
+        )
+        )
+    {
         return true;
+    }
 
-    if (HierarchyNameContains(object, "NPC"))
+    if (
+        HierarchyNameContains(
+            object,
+            "NPC"
+        )
+        )
+    {
         return true;
+    }
 
     return false;
 }
 
-static bool IsHierarchyEnvironmentObject(
+
+// ================= STRUCTURES =================
+
+static bool IsHierarchyStructureObject(
     SceneObject* object
 )
 {
     if (object == nullptr)
         return false;
 
-    if (object->assetType == AssetType::Terrain)
+    if (
+        object->assetType ==
+        AssetType::House
+        )
+    {
         return true;
+    }
+
+    if (
+        object->assetType ==
+        AssetType::Fence
+        )
+    {
+        return true;
+    }
+
+    if (HierarchyNameContains(object, "House"))
+        return true;
+
+    if (HierarchyNameContains(object, "Campfire"))
+        return true;
+
+    if (HierarchyNameContains(object, "Camp "))
+        return true;
+
+    if (HierarchyNameContains(object, "Wall"))
+        return true;
+
+    if (HierarchyNameContains(object, "Fence"))
+        return true;
+
+    if (HierarchyNameContains(object, "Floor"))
+        return true;
+
+    if (HierarchyNameContains(object, "Ceiling"))
+        return true;
+
+    if (HierarchyNameContains(object, "Pillar"))
+        return true;
+
+    if (HierarchyNameContains(object, "Ramp"))
+        return true;
+
+    if (HierarchyNameContains(object, "Stair"))
+        return true;
+
+    if (HierarchyNameContains(object, "Platform"))
+        return true;
+
+    if (HierarchyNameContains(object, "Roof"))
+        return true;
+
+    if (HierarchyNameContains(object, "Arch"))
+        return true;
+
+    if (HierarchyNameContains(object, "Pipe"))
+        return true;
+
+    return false;
+}
+
+
+// ================= NATURE =================
+
+static bool IsHierarchyNatureObject(
+    SceneObject* object
+)
+{
+    if (object == nullptr)
+        return false;
 
     if (object->assetType == AssetType::Tree)
         return true;
@@ -2285,16 +2478,10 @@ static bool IsHierarchyEnvironmentObject(
     if (object->assetType == AssetType::Bush)
         return true;
 
-    if (object->assetType == AssetType::House)
-        return true;
-
-    if (object->assetType == AssetType::Mountain)
-        return true;
-
-    if (object->assetType == AssetType::Fence)
-        return true;
-
     if (HierarchyNameContains(object, "Tree"))
+        return true;
+
+    if (HierarchyNameContains(object, "Pine"))
         return true;
 
     if (HierarchyNameContains(object, "Rock"))
@@ -2306,45 +2493,427 @@ static bool IsHierarchyEnvironmentObject(
     if (HierarchyNameContains(object, "Grass"))
         return true;
 
-    if (HierarchyNameContains(object, "House"))
+    if (HierarchyNameContains(object, "Flower"))
         return true;
 
-    if (HierarchyNameContains(object, "Wall"))
+    if (HierarchyNameContains(object, "Log"))
+        return true;
+
+    if (HierarchyNameContains(object, "Stump"))
         return true;
 
     return false;
 }
+
+
+// ================= ENVIRONMENT =================
+
+static bool IsHierarchyEnvironmentObject(
+    SceneObject* object
+)
+{
+    if (object == nullptr)
+        return false;
+
+    if (
+        object->assetType ==
+        AssetType::Terrain
+        )
+    {
+        return true;
+    }
+
+    if (
+        object->assetType ==
+        AssetType::Mountain
+        )
+    {
+        return true;
+    }
+
+    if (HierarchyNameContains(object, "Terrain"))
+        return true;
+
+    if (HierarchyNameContains(object, "Mountain"))
+        return true;
+
+    if (HierarchyNameContains(object, "Sky"))
+        return true;
+
+    return false;
+}
+
+
+// ================= MAIN GROUP =================
 
 static EditorHierarchyGroup GetEditorHierarchyGroup(
     SceneObject* object
 )
 {
     if (IsHierarchyPlayerObject(object))
-        return EditorHierarchyGroup::Player;
+    {
+        return
+            EditorHierarchyGroup::Player;
+    }
+
+    // Generated is checked early so painted/generated
+    // objects don't flood Nature and Structures.
 
     if (IsHierarchyGeneratedObject(object))
-        return EditorHierarchyGroup::Generated;
+    {
+        return
+            EditorHierarchyGroup::Generated;
+    }
 
     if (IsHierarchyGameplayObject(object))
-        return EditorHierarchyGroup::Gameplay;
+    {
+        return
+            EditorHierarchyGroup::Gameplay;
+    }
+
+    if (IsHierarchyStructureObject(object))
+    {
+        return
+            EditorHierarchyGroup::Structures;
+    }
+
+    if (IsHierarchyNatureObject(object))
+    {
+        return
+            EditorHierarchyGroup::Nature;
+    }
 
     if (IsHierarchyEnvironmentObject(object))
-        return EditorHierarchyGroup::Environment;
+    {
+        return
+            EditorHierarchyGroup::Environment;
+    }
 
-    return EditorHierarchyGroup::Other;
+    return
+        EditorHierarchyGroup::Other;
 }
+
+
+// ================= SUBGROUP =================
+
+static EditorHierarchySubgroup GetEditorHierarchySubgroup(
+    SceneObject* object,
+    EditorHierarchyGroup group
+)
+{
+    if (object == nullptr)
+        return EditorHierarchySubgroup::None;
+
+
+    // ================= ENVIRONMENT =================
+
+    if (
+        group ==
+        EditorHierarchyGroup::Environment
+        )
+    {
+        if (
+            object->assetType ==
+            AssetType::Terrain ||
+            HierarchyNameContains(
+                object,
+                "Terrain"
+            )
+            )
+        {
+            return
+                EditorHierarchySubgroup::Terrain;
+        }
+
+        if (
+            object->assetType ==
+            AssetType::Mountain ||
+            HierarchyNameContains(
+                object,
+                "Mountain"
+            )
+            )
+        {
+            return
+                EditorHierarchySubgroup::Mountains;
+        }
+
+        return
+            EditorHierarchySubgroup::EnvironmentOther;
+    }
+
+
+    // ================= NATURE =================
+
+    if (
+        group ==
+        EditorHierarchyGroup::Nature
+        )
+    {
+        // Check logs/stumps before Trees because
+        // "Tree Stump" also contains the word Tree.
+
+        if (
+            HierarchyNameContains(
+                object,
+                "Log"
+            ) ||
+            HierarchyNameContains(
+                object,
+                "Stump"
+            )
+            )
+        {
+            return
+                EditorHierarchySubgroup::ForestProps;
+        }
+
+        if (
+            object->assetType ==
+            AssetType::Tree ||
+            HierarchyNameContains(
+                object,
+                "Tree"
+            ) ||
+            HierarchyNameContains(
+                object,
+                "Pine"
+            )
+            )
+        {
+            return
+                EditorHierarchySubgroup::Trees;
+        }
+
+        if (
+            object->assetType ==
+            AssetType::Rock ||
+            HierarchyNameContains(
+                object,
+                "Rock"
+            )
+            )
+        {
+            return
+                EditorHierarchySubgroup::Rocks;
+        }
+
+        if (
+            object->assetType ==
+            AssetType::Bush ||
+            HierarchyNameContains(
+                object,
+                "Bush"
+            )
+            )
+        {
+            return
+                EditorHierarchySubgroup::Bushes;
+        }
+
+        if (
+            object->assetType ==
+            AssetType::Grass ||
+            object->assetType ==
+            AssetType::Flower ||
+            HierarchyNameContains(
+                object,
+                "Grass"
+            ) ||
+            HierarchyNameContains(
+                object,
+                "Flower"
+            )
+            )
+        {
+            return
+                EditorHierarchySubgroup::GrassFlowers;
+        }
+
+        return
+            EditorHierarchySubgroup::NatureOther;
+    }
+
+
+    // ================= STRUCTURES =================
+
+    if (
+        group ==
+        EditorHierarchyGroup::Structures
+        )
+    {
+        if (
+            HierarchyNameContains(
+                object,
+                "Camp"
+            )
+            )
+        {
+            return
+                EditorHierarchySubgroup::Camps;
+        }
+
+        if (
+            object->assetType ==
+            AssetType::House ||
+            HierarchyNameContains(
+                object,
+                "House"
+            )
+            )
+        {
+            return
+                EditorHierarchySubgroup::Houses;
+        }
+
+        if (
+            HierarchyNameContains(object, "Wall") ||
+            HierarchyNameContains(object, "Fence") ||
+            HierarchyNameContains(object, "Floor") ||
+            HierarchyNameContains(object, "Ceiling") ||
+            HierarchyNameContains(object, "Pillar") ||
+            HierarchyNameContains(object, "Ramp") ||
+            HierarchyNameContains(object, "Stair") ||
+            HierarchyNameContains(object, "Platform") ||
+            HierarchyNameContains(object, "Roof") ||
+            HierarchyNameContains(object, "Arch") ||
+            HierarchyNameContains(object, "Pipe")
+            )
+        {
+            return
+                EditorHierarchySubgroup::BuildingPieces;
+        }
+
+        return
+            EditorHierarchySubgroup::StructuresOther;
+    }
+
+
+    // ================= GAMEPLAY =================
+
+    if (
+        group ==
+        EditorHierarchyGroup::Gameplay
+        )
+    {
+        if (
+            HierarchyNameContains(
+                object,
+                "Coin"
+            )
+            )
+        {
+            return
+                EditorHierarchySubgroup::Coins;
+        }
+
+        if (
+            HierarchyNameContains(
+                object,
+                "Trigger"
+            ) ||
+            HierarchyNameContains(
+                object,
+                "Zone"
+            )
+            )
+        {
+            return
+                EditorHierarchySubgroup::Triggers;
+        }
+
+        if (
+            HierarchyNameContains(
+                object,
+                "Monster"
+            )
+            )
+        {
+            return
+                EditorHierarchySubgroup::Monsters;
+        }
+
+        if (
+            HierarchyNameContains(
+                object,
+                "Music"
+            ) ||
+            HierarchyNameContains(
+                object,
+                "NPC"
+            )
+            )
+        {
+            return
+                EditorHierarchySubgroup::MusicNPC;
+        }
+
+        return
+            EditorHierarchySubgroup::GameplayOther;
+    }
+
+
+    // ================= GENERATED =================
+
+    if (
+        group ==
+        EditorHierarchyGroup::Generated
+        )
+    {
+        if (IsHierarchyGameplayObject(object))
+        {
+            return
+                EditorHierarchySubgroup::GeneratedGameplay;
+        }
+
+        if (IsHierarchyStructureObject(object))
+        {
+            return
+                EditorHierarchySubgroup::GeneratedStructures;
+        }
+
+        if (IsHierarchyNatureObject(object))
+        {
+            return
+                EditorHierarchySubgroup::GeneratedNature;
+        }
+
+        if (IsHierarchyEnvironmentObject(object))
+        {
+            return
+                EditorHierarchySubgroup::GeneratedEnvironment;
+        }
+
+        return
+            EditorHierarchySubgroup::GeneratedOther;
+    }
+
+    return
+        EditorHierarchySubgroup::None;
+}
+
+
+// ================= FILTER =================
 
 static bool ShouldDrawObjectInHierarchyFolder(
     SceneObject* object,
-    bool showGeneratedObjects,
+    bool showHiddenObjects,
     const char* searchBuffer
 )
 {
     if (object == nullptr)
         return false;
 
-    if (!object->showInHierarchy && !showGeneratedObjects)
+    if (
+        !object->showInHierarchy &&
+        !showHiddenObjects
+        )
+    {
         return false;
+    }
+
+    // Children are drawn recursively through
+    // DrawHierarchyNode().
 
     if (object->parent != nullptr)
         return false;
@@ -2354,11 +2923,10 @@ static bool ShouldDrawObjectInHierarchyFolder(
         strlen(searchBuffer) > 0
         )
     {
-        std::string objectName =
-            object->name;
-
         if (
-            objectName.find(searchBuffer) ==
+            object->name.find(
+                searchBuffer
+            ) ==
             std::string::npos
             )
         {
@@ -2369,25 +2937,63 @@ static bool ShouldDrawObjectInHierarchyFolder(
     return true;
 }
 
-static void DrawHierarchyFolder(
+
+// ================= GROUP VISIBILITY =================
+
+static void SetHierarchyGroupVisibility(
+    Scene& scene,
+    EditorHierarchyGroup group,
+    bool visible
+)
+{
+    for (
+        SceneObject* object :
+        scene.objects
+        )
+    {
+        if (object == nullptr)
+            continue;
+
+        if (
+            GetEditorHierarchyGroup(
+                object
+            ) != group
+            )
+        {
+            continue;
+        }
+
+        object->visible =
+            visible;
+    }
+}
+
+
+// ================= SUBFOLDER =================
+
+static void DrawHierarchySubfolder(
     Scene& scene,
     SceneObject*& selectedObject,
     EditorHierarchyGroup group,
+    EditorHierarchySubgroup subgroup,
     const char* folderName,
-    bool showGeneratedObjects,
+    bool showHiddenObjects,
     const char* searchBuffer,
-    bool openByDefault
+    bool openByDefault = false
 )
 {
     int count =
         0;
 
-    for (SceneObject* object : scene.objects)
+    for (
+        SceneObject* object :
+        scene.objects
+        )
     {
         if (
             !ShouldDrawObjectInHierarchyFolder(
                 object,
-                showGeneratedObjects,
+                showHiddenObjects,
                 searchBuffer
             )
             )
@@ -2395,7 +3001,186 @@ static void DrawHierarchyFolder(
             continue;
         }
 
-        if (GetEditorHierarchyGroup(object) == group)
+        if (
+            GetEditorHierarchyGroup(
+                object
+            ) != group
+            )
+        {
+            continue;
+        }
+
+        if (
+            GetEditorHierarchySubgroup(
+                object,
+                group
+            ) != subgroup
+            )
+        {
+            continue;
+        }
+
+        count++;
+    }
+
+    if (count == 0)
+        return;
+
+    std::string label =
+        std::string(folderName) +
+        " (" +
+        std::to_string(count) +
+        ")##HierarchySub_" +
+        std::to_string(
+            static_cast<int>(group)
+        ) +
+        "_" +
+        std::to_string(
+            static_cast<int>(subgroup)
+        );
+
+    ImGuiTreeNodeFlags flags =
+        ImGuiTreeNodeFlags_SpanAvailWidth;
+
+    if (openByDefault)
+    {
+        flags |=
+            ImGuiTreeNodeFlags_DefaultOpen;
+    }
+
+    bool opened =
+        ImGui::TreeNodeEx(
+            label.c_str(),
+            flags
+        );
+
+    if (!opened)
+        return;
+
+    for (
+        SceneObject* object :
+        scene.objects
+        )
+    {
+        if (
+            !ShouldDrawObjectInHierarchyFolder(
+                object,
+                showHiddenObjects,
+                searchBuffer
+            )
+            )
+        {
+            continue;
+        }
+
+        if (
+            GetEditorHierarchyGroup(
+                object
+            ) != group
+            )
+        {
+            continue;
+        }
+
+        if (
+            GetEditorHierarchySubgroup(
+                object,
+                group
+            ) != subgroup
+            )
+        {
+            continue;
+        }
+
+        DrawHierarchyNode(
+            object,
+            selectedObject
+        );
+    }
+
+    ImGui::TreePop();
+}
+
+
+// ================= FLAT GROUP =================
+
+static void DrawHierarchyFlatGroupObjects(
+    Scene& scene,
+    SceneObject*& selectedObject,
+    EditorHierarchyGroup group,
+    bool showHiddenObjects,
+    const char* searchBuffer
+)
+{
+    for (
+        SceneObject* object :
+        scene.objects
+        )
+    {
+        if (
+            !ShouldDrawObjectInHierarchyFolder(
+                object,
+                showHiddenObjects,
+                searchBuffer
+            )
+            )
+        {
+            continue;
+        }
+
+        if (
+            GetEditorHierarchyGroup(
+                object
+            ) != group
+            )
+        {
+            continue;
+        }
+
+        DrawHierarchyNode(
+            object,
+            selectedObject
+        );
+    }
+}
+
+
+// ================= MAIN GROUP UI =================
+
+static void DrawHierarchyGroupV2(
+    Scene& scene,
+    SceneObject*& selectedObject,
+    EditorHierarchyGroup group,
+    const char* folderName,
+    bool showHiddenObjects,
+    const char* searchBuffer,
+    bool openByDefault
+)
+{
+    int count =
+        0;
+
+    for (
+        SceneObject* object :
+        scene.objects
+        )
+    {
+        if (
+            !ShouldDrawObjectInHierarchyFolder(
+                object,
+                showHiddenObjects,
+                searchBuffer
+            )
+            )
+        {
+            continue;
+        }
+
+        if (
+            GetEditorHierarchyGroup(
+                object
+            ) == group
+            )
         {
             count++;
         }
@@ -2408,7 +3193,10 @@ static void DrawHierarchyFolder(
         std::string(folderName) +
         " (" +
         std::to_string(count) +
-        ")";
+        ")##HierarchyGroup_" +
+        std::to_string(
+            static_cast<int>(group)
+        );
 
     ImGuiTreeNodeFlags flags =
         openByDefault
@@ -2416,34 +3204,367 @@ static void DrawHierarchyFolder(
         : 0;
 
     if (
-        ImGui::CollapsingHeader(
+        !ImGui::CollapsingHeader(
             title.c_str(),
             flags
         )
         )
     {
-        for (SceneObject* object : scene.objects)
-        {
-            if (
-                !ShouldDrawObjectInHierarchyFolder(
-                    object,
-                    showGeneratedObjects,
-                    searchBuffer
-                )
-                )
-            {
-                continue;
-            }
-
-            if (GetEditorHierarchyGroup(object) != group)
-                continue;
-
-            DrawHierarchyNode(
-                object,
-                selectedObject
-            );
-        }
+        return;
     }
+
+
+    // ================= GROUP ACTIONS =================
+
+    ImGui::PushID(
+        static_cast<int>(group)
+    );
+
+    if (
+        ImGui::SmallButton(
+            "Hide All"
+        )
+        )
+    {
+        SetHierarchyGroupVisibility(
+            scene,
+            group,
+            false
+        );
+    }
+
+    ImGui::SameLine();
+
+    if (
+        ImGui::SmallButton(
+            "Show All"
+        )
+        )
+    {
+        SetHierarchyGroupVisibility(
+            scene,
+            group,
+            true
+        );
+    }
+
+    ImGui::PopID();
+
+    ImGui::Separator();
+
+
+    // ================= PLAYER =================
+
+    if (
+        group ==
+        EditorHierarchyGroup::Player
+        )
+    {
+        DrawHierarchyFlatGroupObjects(
+            scene,
+            selectedObject,
+            group,
+            showHiddenObjects,
+            searchBuffer
+        );
+
+        return;
+    }
+
+
+    // ================= ENVIRONMENT =================
+
+    if (
+        group ==
+        EditorHierarchyGroup::Environment
+        )
+    {
+        DrawHierarchySubfolder(
+            scene,
+            selectedObject,
+            group,
+            EditorHierarchySubgroup::Terrain,
+            "Terrain",
+            showHiddenObjects,
+            searchBuffer,
+            true
+        );
+
+        DrawHierarchySubfolder(
+            scene,
+            selectedObject,
+            group,
+            EditorHierarchySubgroup::Mountains,
+            "Mountains",
+            showHiddenObjects,
+            searchBuffer
+        );
+
+        DrawHierarchySubfolder(
+            scene,
+            selectedObject,
+            group,
+            EditorHierarchySubgroup::EnvironmentOther,
+            "Other Environment",
+            showHiddenObjects,
+            searchBuffer
+        );
+
+        return;
+    }
+
+
+    // ================= NATURE =================
+
+    if (
+        group ==
+        EditorHierarchyGroup::Nature
+        )
+    {
+        DrawHierarchySubfolder(
+            scene,
+            selectedObject,
+            group,
+            EditorHierarchySubgroup::Trees,
+            "Trees",
+            showHiddenObjects,
+            searchBuffer,
+            true
+        );
+
+        DrawHierarchySubfolder(
+            scene,
+            selectedObject,
+            group,
+            EditorHierarchySubgroup::Rocks,
+            "Rocks",
+            showHiddenObjects,
+            searchBuffer
+        );
+
+        DrawHierarchySubfolder(
+            scene,
+            selectedObject,
+            group,
+            EditorHierarchySubgroup::GrassFlowers,
+            "Grass / Flowers",
+            showHiddenObjects,
+            searchBuffer
+        );
+
+        DrawHierarchySubfolder(
+            scene,
+            selectedObject,
+            group,
+            EditorHierarchySubgroup::Bushes,
+            "Bushes",
+            showHiddenObjects,
+            searchBuffer
+        );
+
+        DrawHierarchySubfolder(
+            scene,
+            selectedObject,
+            group,
+            EditorHierarchySubgroup::ForestProps,
+            "Forest Props",
+            showHiddenObjects,
+            searchBuffer
+        );
+
+        DrawHierarchySubfolder(
+            scene,
+            selectedObject,
+            group,
+            EditorHierarchySubgroup::NatureOther,
+            "Other Nature",
+            showHiddenObjects,
+            searchBuffer
+        );
+
+        return;
+    }
+
+
+    // ================= STRUCTURES =================
+
+    if (
+        group ==
+        EditorHierarchyGroup::Structures
+        )
+    {
+        DrawHierarchySubfolder(
+            scene,
+            selectedObject,
+            group,
+            EditorHierarchySubgroup::Houses,
+            "Houses",
+            showHiddenObjects,
+            searchBuffer,
+            true
+        );
+
+        DrawHierarchySubfolder(
+            scene,
+            selectedObject,
+            group,
+            EditorHierarchySubgroup::Camps,
+            "Camps",
+            showHiddenObjects,
+            searchBuffer
+        );
+
+        DrawHierarchySubfolder(
+            scene,
+            selectedObject,
+            group,
+            EditorHierarchySubgroup::BuildingPieces,
+            "Building Pieces",
+            showHiddenObjects,
+            searchBuffer
+        );
+
+        DrawHierarchySubfolder(
+            scene,
+            selectedObject,
+            group,
+            EditorHierarchySubgroup::StructuresOther,
+            "Other Structures",
+            showHiddenObjects,
+            searchBuffer
+        );
+
+        return;
+    }
+
+
+    // ================= GAMEPLAY =================
+
+    if (
+        group ==
+        EditorHierarchyGroup::Gameplay
+        )
+    {
+        DrawHierarchySubfolder(
+            scene,
+            selectedObject,
+            group,
+            EditorHierarchySubgroup::Coins,
+            "Coins",
+            showHiddenObjects,
+            searchBuffer
+        );
+
+        DrawHierarchySubfolder(
+            scene,
+            selectedObject,
+            group,
+            EditorHierarchySubgroup::Triggers,
+            "Triggers / Zones",
+            showHiddenObjects,
+            searchBuffer
+        );
+
+        DrawHierarchySubfolder(
+            scene,
+            selectedObject,
+            group,
+            EditorHierarchySubgroup::Monsters,
+            "Monster Objects",
+            showHiddenObjects,
+            searchBuffer
+        );
+
+        DrawHierarchySubfolder(
+            scene,
+            selectedObject,
+            group,
+            EditorHierarchySubgroup::MusicNPC,
+            "Music / NPC",
+            showHiddenObjects,
+            searchBuffer
+        );
+
+        DrawHierarchySubfolder(
+            scene,
+            selectedObject,
+            group,
+            EditorHierarchySubgroup::GameplayOther,
+            "Other Gameplay",
+            showHiddenObjects,
+            searchBuffer
+        );
+
+        return;
+    }
+
+
+    // ================= GENERATED =================
+
+    if (
+        group ==
+        EditorHierarchyGroup::Generated
+        )
+    {
+        DrawHierarchySubfolder(
+            scene,
+            selectedObject,
+            group,
+            EditorHierarchySubgroup::GeneratedEnvironment,
+            "Environment",
+            showHiddenObjects,
+            searchBuffer
+        );
+
+        DrawHierarchySubfolder(
+            scene,
+            selectedObject,
+            group,
+            EditorHierarchySubgroup::GeneratedNature,
+            "Nature",
+            showHiddenObjects,
+            searchBuffer
+        );
+
+        DrawHierarchySubfolder(
+            scene,
+            selectedObject,
+            group,
+            EditorHierarchySubgroup::GeneratedStructures,
+            "Structures",
+            showHiddenObjects,
+            searchBuffer
+        );
+
+        DrawHierarchySubfolder(
+            scene,
+            selectedObject,
+            group,
+            EditorHierarchySubgroup::GeneratedGameplay,
+            "Gameplay",
+            showHiddenObjects,
+            searchBuffer
+        );
+
+        DrawHierarchySubfolder(
+            scene,
+            selectedObject,
+            group,
+            EditorHierarchySubgroup::GeneratedOther,
+            "Other Generated",
+            showHiddenObjects,
+            searchBuffer
+        );
+
+        return;
+    }
+    DrawHierarchyFlatGroupObjects(
+        scene,
+        selectedObject,
+        group,
+        showHiddenObjects,
+        searchBuffer
+    );
 }
 // ================= PREFAB TOOLS V2 =================
 
@@ -2820,7 +3941,7 @@ void EditorUI::DrawHierarchy(
         false;
 
     ImGui::Checkbox(
-        "Show generated objects",
+        "Show hidden objects",
         &showGeneratedObjects
     );
 
@@ -2832,9 +3953,9 @@ void EditorUI::DrawHierarchy(
     );
 
     ImGui::Separator();
-    // ================= VIRTUAL HIERARCHY FOLDERS =================
+    // ================= SMART HIERARCHY V2 =================
 
-    DrawHierarchyFolder(
+    DrawHierarchyGroupV2(
         scene,
         selectedObject,
         EditorHierarchyGroup::Player,
@@ -2844,17 +3965,7 @@ void EditorUI::DrawHierarchy(
         true
     );
 
-    DrawHierarchyFolder(
-        scene,
-        selectedObject,
-        EditorHierarchyGroup::Gameplay,
-        "Gameplay",
-        showGeneratedObjects,
-        searchBuffer,
-        true
-    );
-
-    DrawHierarchyFolder(
+    DrawHierarchyGroupV2(
         scene,
         selectedObject,
         EditorHierarchyGroup::Environment,
@@ -2864,17 +3975,47 @@ void EditorUI::DrawHierarchy(
         true
     );
 
-    DrawHierarchyFolder(
+    DrawHierarchyGroupV2(
+        scene,
+        selectedObject,
+        EditorHierarchyGroup::Nature,
+        "Nature",
+        showGeneratedObjects,
+        searchBuffer,
+        true
+    );
+
+    DrawHierarchyGroupV2(
+        scene,
+        selectedObject,
+        EditorHierarchyGroup::Structures,
+        "Structures",
+        showGeneratedObjects,
+        searchBuffer,
+        true
+    );
+
+    DrawHierarchyGroupV2(
+        scene,
+        selectedObject,
+        EditorHierarchyGroup::Gameplay,
+        "Gameplay",
+        showGeneratedObjects,
+        searchBuffer,
+        true
+    );
+
+    DrawHierarchyGroupV2(
         scene,
         selectedObject,
         EditorHierarchyGroup::Generated,
-        "Generated Objects",
+        "Generated",
         showGeneratedObjects,
         searchBuffer,
         false
     );
 
-    DrawHierarchyFolder(
+    DrawHierarchyGroupV2(
         scene,
         selectedObject,
         EditorHierarchyGroup::Other,
@@ -2883,42 +4024,80 @@ void EditorUI::DrawHierarchy(
         searchBuffer,
         false
     );
-
     ImGui::Separator();
 
-    ImGui::Text("Lights");
+    // ================= LIGHTING =================
 
-    for (Light* light : scene.lights)
+    std::string lightingTitle =
+        "Lighting (" +
+        std::to_string(
+            scene.lights.size()
+        ) +
+        ")";
+
+    if (
+        ImGui::CollapsingHeader(
+            lightingTitle.c_str(),
+            ImGuiTreeNodeFlags_DefaultOpen
+        )
+        )
     {
-
-        std::string id =
-            light->name +
-            "##" +
-            std::to_string((size_t)light);
-       
-        bool selected =
-            (selectedLight == light);
-
-        if (ImGui::Selectable(id.c_str(), selected))
+        if (scene.lights.empty())
         {
-            selectedLight = light;
-            selectedObject = nullptr;
+            ImGui::TextDisabled(
+                "No lights in scene."
+            );
+        }
+        else
+        {
+            for (
+                Light* light :
+                scene.lights
+                )
+            {
+                if (light == nullptr)
+                    continue;
+
+                std::string id =
+                    light->name +
+                    "##HierarchyLight_" +
+                    std::to_string(
+                        reinterpret_cast<size_t>(
+                            light
+                            )
+                    );
+
+                bool selected =
+                    selectedLight ==
+                    light;
+
+                if (
+                    ImGui::Selectable(
+                        id.c_str(),
+                        selected
+                    )
+                    )
+                {
+                    if (
+                        selectedObject !=
+                        nullptr
+                        )
+                    {
+                        selectedObject->isSelected =
+                            false;
+                    }
+
+                    selectedObject =
+                        nullptr;
+
+                    selectedLight =
+                        light;
+                }
+            }
         }
     }
-    for (Light* light : scene.lights)
-    {
-        bool selected =
-            (light == selectedLight);
 
-        if (ImGui::Selectable(
-            light->name.c_str(),
-            selected))
-        {
-            selectedLight = light;
-        }
-    }
     ImGui::Separator();
-
     ImGui::Text("Prefabs");
 
     if (PrefabManager::prefabs.empty())

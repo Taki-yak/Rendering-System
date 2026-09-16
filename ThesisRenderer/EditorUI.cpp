@@ -11428,6 +11428,35 @@ static SceneObject* SpawnWorldPaintedModel(
 
     return object;
 }
+static bool IsWorldPainterPaintedObject(
+    SceneObject* object
+)
+{
+    if (object == nullptr)
+        return false;
+
+    // Do not touch the cyan preview helper.
+    if (
+        object->name ==
+        "World Painter Preview"
+        )
+    {
+        return false;
+    }
+
+    if (
+        object->name.find(
+            "Painted "
+        ) != 0
+        )
+    {
+        return false;
+    }
+
+    return
+        object->spawnSource ==
+        SpawnSource::Procedural;
+}
 static void UndoLastWorldPainterStroke(
     Scene& scene,
     SceneObject*& selectedObject
@@ -11491,6 +11520,112 @@ static void UndoLastWorldPainterStroke(
         << " objects)."
         << std::endl;
 }
+static int EraseWorldPainterBrush(
+    Scene& scene,
+    SceneObject*& selectedObject,
+    Camera& camera,
+    float brushRadius,
+    float paintDistance
+)
+{
+    glm::vec3 center =
+        GetWorldPainterCenter(
+            camera,
+            paintDistance
+        );
+
+    int erasedCount =
+        0;
+
+    for (
+        auto it =
+        scene.objects.begin();
+
+        it !=
+        scene.objects.end();
+        )
+    {
+        SceneObject* object =
+            *it;
+
+        if (
+            !IsWorldPainterPaintedObject(
+                object
+            )
+            )
+        {
+            ++it;
+            continue;
+        }
+
+        glm::vec2 centerXZ(
+            center.x,
+            center.z
+        );
+
+        glm::vec2 objectXZ(
+            object->transform.position.x,
+            object->transform.position.z
+        );
+
+        float distance =
+            glm::distance(
+                centerXZ,
+                objectXZ
+            );
+
+        if (
+            distance >
+            brushRadius
+            )
+        {
+            ++it;
+            continue;
+        }
+
+
+        // Remove pointer from last-stroke history
+        // before deleting the object.
+
+        worldPainterLastStroke.erase(
+            std::remove(
+                worldPainterLastStroke.begin(),
+                worldPainterLastStroke.end(),
+                object
+            ),
+            worldPainterLastStroke.end()
+        );
+
+
+        if (
+            selectedObject ==
+            object
+            )
+        {
+            selectedObject =
+                nullptr;
+        }
+
+
+        delete object;
+
+        it =
+            scene.objects.erase(
+                it
+            );
+
+        erasedCount++;
+    }
+
+
+    std::cout
+        << "World Painter V2: erased "
+        << erasedCount
+        << " painted objects."
+        << std::endl;
+
+    return erasedCount;
+}
 static void PaintWorldBrush(
     Scene& scene,
     SceneObject*& selectedObject,
@@ -11508,7 +11643,9 @@ static void PaintWorldBrush(
     Model* commonTreeModel,
     Model* rockModel,
     Model* grassModel,
-    Model* bushModel
+    Model* bushModel,
+    Model* woodLogModel,
+    Model* treeStumpModel
 )
 {
     // New stroke starts here.
@@ -11609,15 +11746,10 @@ static void PaintWorldBrush(
 
 
         // ================= PINE FOREST =================
-        //
-        // Pine       65%
-        // Common     20%
-        // Bush       10%
-        // Rock        5%
 
         if (biomePreset == 0)
         {
-            if (randomChoice < 65.0f)
+            if (randomChoice < 55.0f)
             {
                 selectedModel =
                     pineTreeModel;
@@ -11634,7 +11766,8 @@ static void PaintWorldBrush(
                 scaleMultiplier =
                     1.25f;
             }
-            else if (randomChoice < 85.0f)
+
+            else if (randomChoice < 70.0f)
             {
                 selectedModel =
                     commonTreeModel;
@@ -11651,7 +11784,8 @@ static void PaintWorldBrush(
                 scaleMultiplier =
                     1.15f;
             }
-            else if (randomChoice < 95.0f)
+
+            else if (randomChoice < 80.0f)
             {
                 selectedModel =
                     bushModel;
@@ -11668,7 +11802,8 @@ static void PaintWorldBrush(
                 scaleMultiplier =
                     0.80f;
             }
-            else
+
+            else if (randomChoice < 87.0f)
             {
                 selectedModel =
                     rockModel;
@@ -11685,106 +11820,185 @@ static void PaintWorldBrush(
                 collider =
                     true;
             }
-        }
 
+            else if (randomChoice < 94.0f)
+            {
+                selectedModel =
+                    woodLogModel;
+
+                selectedName =
+                    "Painted Wood Log";
+
+                selectedPath =
+                    "Assets/Models/Environment/NaturePack/WoodLog.obj";
+
+                selectedAssetType =
+                    AssetType::Prop;
+
+                collider =
+                    true;
+
+                scaleMultiplier =
+                    0.90f;
+            }
+
+            else
+            {
+                selectedModel =
+                    treeStumpModel;
+
+                selectedName =
+                    "Painted Tree Stump";
+
+                selectedPath =
+                    "Assets/Models/Environment/NaturePack/TreeStump.obj";
+
+                selectedAssetType =
+                    AssetType::Prop;
+
+                collider =
+                    true;
+
+                scaleMultiplier =
+                    0.90f;
+            }
+        }
 
         // ================= MIXED FOREST =================
-        //
-        // Pine       30%
-        // Common     30%
-        // Bush       15%
-        // Grass      15%
-        // Rock       10%
+else if (biomePreset == 1)
+{
+    if (randomChoice < 25.0f)
+    {
+        selectedModel =
+            pineTreeModel;
 
-        else if (biomePreset == 1)
-        {
-            if (randomChoice < 30.0f)
-            {
-                selectedModel =
-                    pineTreeModel;
+        selectedName =
+            "Painted Pine Tree";
 
-                selectedName =
-                    "Painted Pine Tree";
+        selectedPath =
+            "Assets/Models/Environment/NaturePack/PineTree_1.obj";
 
-                selectedPath =
-                    "Assets/Models/Environment/NaturePack/PineTree_1.obj";
+        selectedAssetType =
+            AssetType::Tree;
 
-                selectedAssetType =
-                    AssetType::Tree;
+        scaleMultiplier =
+            1.20f;
+    }
 
-                scaleMultiplier =
-                    1.20f;
-            }
-            else if (randomChoice < 60.0f)
-            {
-                selectedModel =
-                    commonTreeModel;
+    else if (randomChoice < 50.0f)
+    {
+        selectedModel =
+            commonTreeModel;
 
-                selectedName =
-                    "Painted Common Tree";
+        selectedName =
+            "Painted Common Tree";
 
-                selectedPath =
-                    "Assets/Models/Environment/NaturePack/CommonTree_1.obj";
+        selectedPath =
+            "Assets/Models/Environment/NaturePack/CommonTree_1.obj";
 
-                selectedAssetType =
-                    AssetType::Tree;
+        selectedAssetType =
+            AssetType::Tree;
 
-                scaleMultiplier =
-                    1.15f;
-            }
-            else if (randomChoice < 75.0f)
-            {
-                selectedModel =
-                    bushModel;
+        scaleMultiplier =
+            1.15f;
+    }
 
-                selectedName =
-                    "Painted Bush";
+    else if (randomChoice < 65.0f)
+    {
+        selectedModel =
+            bushModel;
 
-                selectedPath =
-                    "Assets/Models/Environment/NaturePack/Bush_1.obj";
+        selectedName =
+            "Painted Bush";
 
-                selectedAssetType =
-                    AssetType::Bush;
+        selectedPath =
+            "Assets/Models/Environment/NaturePack/Bush_1.obj";
 
-                scaleMultiplier =
-                    0.80f;
-            }
-            else if (randomChoice < 90.0f)
-            {
-                selectedModel =
-                    grassModel;
+        selectedAssetType =
+            AssetType::Bush;
 
-                selectedName =
-                    "Painted Grass";
+        scaleMultiplier =
+            0.80f;
+    }
 
-                selectedPath =
-                    "Assets/Models/Environment/NaturePack/Grass.obj";
+    else if (randomChoice < 80.0f)
+    {
+        selectedModel =
+            grassModel;
 
-                selectedAssetType =
-                    AssetType::Grass;
+        selectedName =
+            "Painted Grass";
 
-                scaleMultiplier =
-                    0.55f;
-            }
-            else
-            {
-                selectedModel =
-                    rockModel;
+        selectedPath =
+            "Assets/Models/Environment/NaturePack/Grass.obj";
 
-                selectedName =
-                    "Painted Rock";
+        selectedAssetType =
+            AssetType::Grass;
 
-                selectedPath =
-                    "Assets/Models/Environment/NaturePack/Rock_1.obj";
+        scaleMultiplier =
+            0.55f;
+    }
 
-                selectedAssetType =
-                    AssetType::Rock;
+    else if (randomChoice < 88.0f)
+    {
+        selectedModel =
+            rockModel;
 
-                collider =
-                    true;
-            }
-        }
+        selectedName =
+            "Painted Rock";
 
+        selectedPath =
+            "Assets/Models/Environment/NaturePack/Rock_1.obj";
+
+        selectedAssetType =
+            AssetType::Rock;
+
+        collider =
+            true;
+    }
+
+    else if (randomChoice < 95.0f)
+    {
+        selectedModel =
+            woodLogModel;
+
+        selectedName =
+            "Painted Wood Log";
+
+        selectedPath =
+            "Assets/Models/Environment/NaturePack/WoodLog.obj";
+
+        selectedAssetType =
+            AssetType::Prop;
+
+        collider =
+            true;
+
+        scaleMultiplier =
+            0.90f;
+    }
+
+    else
+    {
+        selectedModel =
+            treeStumpModel;
+
+        selectedName =
+            "Painted Tree Stump";
+
+        selectedPath =
+            "Assets/Models/Environment/NaturePack/TreeStump.obj";
+
+        selectedAssetType =
+            AssetType::Prop;
+
+        collider =
+            true;
+
+        scaleMultiplier =
+            0.90f;
+    }
+    }
 
         // ================= ROCKY GROUND =================
 
@@ -12556,10 +12770,33 @@ void EditorUI::DrawAssetBrowser(
                     commonTreeModel,
                     rockModel,
                     grassModel,
-                    bushModel
+                    bushModel,
+                    woodLogModel,
+                    treeStumpModel
+                );
+            }
+            ImGui::SameLine();
+
+            if (
+                ImGui::Button(
+                    "ERASE PAINTED",
+                    ImVec2(
+                        150.0f,
+                        32.0f
+                    )
+                )
+                )
+            {
+                EraseWorldPainterBrush(
+                    scene,
+                    selectedObject,
+                    camera,
+                    brushRadius,
+                    paintDistance
                 );
             }
 
+            ImGui::SameLine();
             ImGui::SameLine();
 
             if (
@@ -12577,11 +12814,16 @@ void EditorUI::DrawAssetBrowser(
 
             ImGui::Text(
                 "Last Stroke: %d objects",
+
+
                 static_cast<int>(
                     worldPainterLastStroke.size()
                     )
-            );
 
+            );
+            ImGui::TextDisabled(
+                "Paint creates procedural objects. Erase affects only World Painter content inside the brush."
+            );
             ImGui::TextWrapped(
                 "The cyan ring marks the painting region. ORION rejects placement that violates slope, altitude, spacing, player, or structure rules."
             );

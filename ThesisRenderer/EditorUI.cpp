@@ -10535,7 +10535,460 @@ static float WorldPainterRandomFloat(
         (maxValue - minValue) *
         t;
 }
+// ================= WORLD PAINTER V2 SETTINGS =================
 
+struct WorldPainterRules
+{
+    float maxSlopeDegrees =
+        30.0f;
+
+    float minAltitude =
+        -10.0f;
+
+    float maxAltitude =
+        35.0f;
+
+    float minSpacing =
+        2.0f;
+
+    bool avoidStructures =
+        true;
+
+    bool avoidPlayer =
+        true;
+};
+static float GetWorldPainterSlopeDegrees(
+    float x,
+    float z
+)
+{
+    const float sampleDistance =
+        1.0f;
+
+    float leftHeight =
+        GetTerrainHeight(
+            x - sampleDistance,
+            z
+        );
+
+    float rightHeight =
+        GetTerrainHeight(
+            x + sampleDistance,
+            z
+        );
+
+    float backHeight =
+        GetTerrainHeight(
+            x,
+            z - sampleDistance
+        );
+
+    float frontHeight =
+        GetTerrainHeight(
+            x,
+            z + sampleDistance
+        );
+
+    glm::vec3 terrainNormal =
+        glm::normalize(
+            glm::vec3(
+                leftHeight -
+                rightHeight,
+
+                sampleDistance *
+                2.0f,
+
+                backHeight -
+                frontHeight
+            )
+        );
+
+    float normalY =
+        glm::clamp(
+            terrainNormal.y,
+            0.0f,
+            1.0f
+        );
+
+    return
+        glm::degrees(
+            std::acos(
+                normalY
+            )
+        );
+}
+static bool IsWorldPainterStructure(
+    SceneObject* object
+)
+{
+    if (object == nullptr)
+        return false;
+
+    if (
+        object->assetType ==
+        AssetType::House
+        )
+    {
+        return true;
+    }
+
+    if (
+        object->assetType ==
+        AssetType::Fence
+        )
+    {
+        return true;
+    }
+
+    const std::string& name =
+        object->name;
+
+    if (
+        name.find("House") !=
+        std::string::npos
+        )
+    {
+        return true;
+    }
+
+    if (
+        name.find("Camp") !=
+        std::string::npos
+        )
+    {
+        return true;
+    }
+
+    if (
+        name.find("Wall") !=
+        std::string::npos
+        )
+    {
+        return true;
+    }
+
+    if (
+        name.find("Fence") !=
+        std::string::npos
+        )
+    {
+        return true;
+    }
+
+    if (
+        name.find("Floor") !=
+        std::string::npos
+        )
+    {
+        return true;
+    }
+
+    if (
+        name.find("Pillar") !=
+        std::string::npos
+        )
+    {
+        return true;
+    }
+
+    if (
+        name.find("Platform") !=
+        std::string::npos
+        )
+    {
+        return true;
+    }
+
+    if (
+        name.find("Roof") !=
+        std::string::npos
+        )
+    {
+        return true;
+    }
+
+    return false;
+}
+static bool IsWorldPainterPositionAllowed(
+    Scene& scene,
+    const glm::vec3& position,
+    const WorldPainterRules& rules
+)
+{
+    float terrainHeight =
+        GetTerrainHeight(
+            position.x,
+            position.z
+        );
+
+
+    // ================= ALTITUDE =================
+
+    if (
+        terrainHeight <
+        rules.minAltitude
+        )
+    {
+        return false;
+    }
+
+    if (
+        terrainHeight >
+        rules.maxAltitude
+        )
+    {
+        return false;
+    }
+
+
+    // ================= SLOPE =================
+
+    float slopeDegrees =
+        GetWorldPainterSlopeDegrees(
+            position.x,
+            position.z
+        );
+
+    if (
+        slopeDegrees >
+        rules.maxSlopeDegrees
+        )
+    {
+        return false;
+    }
+
+
+    // ================= OBJECT SPACING =================
+
+    for (
+        SceneObject* object :
+        scene.objects
+        )
+    {
+        if (object == nullptr)
+            continue;
+
+        if (
+            object->name ==
+            "World Painter Preview"
+            )
+        {
+            continue;
+        }
+
+        glm::vec2 candidateXZ(
+            position.x,
+            position.z
+        );
+
+        glm::vec2 objectXZ(
+            object->transform.position.x,
+            object->transform.position.z
+        );
+
+        float distanceXZ =
+            glm::distance(
+                candidateXZ,
+                objectXZ
+            );
+
+
+        // Avoid already-painted objects.
+
+        if (
+            object->name.find(
+                "Painted"
+            ) !=
+            std::string::npos
+            )
+        {
+            if (
+                distanceXZ <
+                rules.minSpacing
+                )
+            {
+                return false;
+            }
+        }
+
+
+        // ================= PLAYER =================
+
+        if (
+            rules.avoidPlayer &&
+            (
+                object->name ==
+                "Player" ||
+                object->assetType ==
+                AssetType::Player
+                )
+            )
+        {
+            if (distanceXZ < 5.0f)
+            {
+                return false;
+            }
+        }
+
+
+        // ================= STRUCTURES =================
+
+        if (
+            rules.avoidStructures &&
+            IsWorldPainterStructure(
+                object
+            )
+            )
+        {
+            float structureRadius =
+                glm::max(
+                    object->colliderRadius,
+                    3.0f
+                );
+
+            if (
+                distanceXZ <
+                structureRadius +
+                rules.minSpacing
+                )
+            {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+static void ApplyWorldPainterPresetDefaults(
+    int preset,
+    float& brushRadius,
+    int& density,
+    float& minScale,
+    float& maxScale,
+    WorldPainterRules& rules
+)
+{
+    // ================= PINE FOREST =================
+
+    if (preset == 0)
+    {
+        brushRadius =
+            18.0f;
+
+        density =
+            26;
+
+        minScale =
+            0.75f;
+
+        maxScale =
+            1.65f;
+
+        rules.maxSlopeDegrees =
+            28.0f;
+
+        rules.minSpacing =
+            2.4f;
+    }
+
+
+    // ================= MIXED FOREST =================
+
+    else if (preset == 1)
+    {
+        brushRadius =
+            18.0f;
+
+        density =
+            30;
+
+        minScale =
+            0.65f;
+
+        maxScale =
+            1.70f;
+
+        rules.maxSlopeDegrees =
+            32.0f;
+
+        rules.minSpacing =
+            2.1f;
+    }
+
+
+    // ================= ROCKY GROUND =================
+
+    else if (preset == 2)
+    {
+        brushRadius =
+            16.0f;
+
+        density =
+            24;
+
+        minScale =
+            0.55f;
+
+        maxScale =
+            1.80f;
+
+        rules.maxSlopeDegrees =
+            48.0f;
+
+        rules.minSpacing =
+            1.8f;
+    }
+
+
+    // ================= MEADOW =================
+
+    else if (preset == 3)
+    {
+        brushRadius =
+            20.0f;
+
+        density =
+            55;
+
+        minScale =
+            0.30f;
+
+        maxScale =
+            0.90f;
+
+        rules.maxSlopeDegrees =
+            20.0f;
+
+        rules.minSpacing =
+            0.8f;
+    }
+
+
+    // ================= BUSHLAND =================
+
+    else if (preset == 4)
+    {
+        brushRadius =
+            15.0f;
+
+        density =
+            34;
+
+        minScale =
+            0.45f;
+
+        maxScale =
+            1.25f;
+
+        rules.maxSlopeDegrees =
+            30.0f;
+
+        rules.minSpacing =
+            1.4f;
+    }
+}
+static std::vector<SceneObject*>
+worldPainterLastStroke;
 static glm::vec3 GetWorldPainterCenter(
     Camera& camera,
     float distance
@@ -10868,7 +11321,7 @@ static void UpdateWorldPainterPreview(
         );
 }
 
-static void SpawnWorldPaintedModel(
+static SceneObject* SpawnWorldPaintedModel(
     Scene& scene,
     SceneObject*& selectedObject,
     Shader* shader,
@@ -10878,11 +11331,17 @@ static void SpawnWorldPaintedModel(
     const glm::vec3& position,
     float scaleValue,
     bool collider,
-    bool randomRotation
+    bool randomRotation,
+    AssetType assetType
 )
 {
-    if (model == nullptr)
-        return;
+    if (
+        model == nullptr ||
+        shader == nullptr
+        )
+    {
+        return nullptr;
+    }
 
     SceneObject* object =
         new SceneObject(
@@ -10931,10 +11390,13 @@ static void SpawnWorldPaintedModel(
         objectName;
 
     object->assetType =
-        AssetType::Prop;
+        assetType;
+
+
+    // Important for Scene Organization V2.
 
     object->spawnSource =
-        SpawnSource::Manual;
+        SpawnSource::Procedural;
 
     object->persistent =
         true;
@@ -10956,34 +11418,127 @@ static void SpawnWorldPaintedModel(
 
     selectedObject =
         object;
-}
 
+
+    // Remember this object for Undo Last Stroke.
+
+    worldPainterLastStroke.push_back(
+        object
+    );
+
+    return object;
+}
+static void UndoLastWorldPainterStroke(
+    Scene& scene,
+    SceneObject*& selectedObject
+)
+{
+    if (worldPainterLastStroke.empty())
+    {
+        std::cout
+            << "World Painter: no stroke to undo."
+            << std::endl;
+
+        return;
+    }
+
+    int removedCount =
+        0;
+
+    for (
+        SceneObject* strokeObject :
+        worldPainterLastStroke
+        )
+    {
+        auto it =
+            std::find(
+                scene.objects.begin(),
+                scene.objects.end(),
+                strokeObject
+            );
+
+        if (
+            it ==
+            scene.objects.end()
+            )
+        {
+            continue;
+        }
+
+        if (
+            selectedObject ==
+            strokeObject
+            )
+        {
+            selectedObject =
+                nullptr;
+        }
+
+        delete* it;
+
+        scene.objects.erase(
+            it
+        );
+
+        removedCount++;
+    }
+
+    worldPainterLastStroke.clear();
+
+    std::cout
+        << "World Painter: removed last stroke ("
+        << removedCount
+        << " objects)."
+        << std::endl;
+}
 static void PaintWorldBrush(
     Scene& scene,
     SceneObject*& selectedObject,
     Shader* shader,
     Camera& camera,
-    int brushType,
+    int biomePreset,
     float brushRadius,
     int density,
     float paintDistance,
     float minScale,
     float maxScale,
     bool randomRotation,
+    const WorldPainterRules& rules,
     Model* pineTreeModel,
+    Model* commonTreeModel,
     Model* rockModel,
     Model* grassModel,
     Model* bushModel
 )
 {
+    // New stroke starts here.
+
+    worldPainterLastStroke.clear();
+
     glm::vec3 center =
         GetWorldPainterCenter(
             camera,
             paintDistance
         );
 
-    for (int i = 0; i < density; i++)
+    int spawnedObjects =
+        0;
+
+    int attempts =
+        0;
+
+    int maximumAttempts =
+        density *
+        10;
+
+
+    while (
+        spawnedObjects < density &&
+        attempts < maximumAttempts
+        )
     {
+        attempts++;
+
         float angle =
             WorldPainterRandomFloat(
                 0.0f,
@@ -11010,83 +11565,484 @@ static void PaintWorldBrush(
             std::sin(angle) *
             radius;
 
-        int finalBrushType =
-            brushType;
+        position.y =
+            GetTerrainHeight(
+                position.x,
+                position.z
+            );
 
-        if (brushType == 4)
+
+        // ================= SMART PLACEMENT =================
+
+        if (
+            !IsWorldPainterPositionAllowed(
+                scene,
+                position,
+                rules
+            )
+            )
         {
-            finalBrushType =
-                std::rand() %
-                4;
+            continue;
         }
+
+
+        float randomChoice =
+            WorldPainterRandomFloat(
+                0.0f,
+                100.0f
+            );
+
+        Model* selectedModel =
+            nullptr;
+
+        std::string selectedName;
+        std::string selectedPath;
+
+        AssetType selectedAssetType =
+            AssetType::Prop;
+
+        bool collider =
+            false;
+
+        float scaleMultiplier =
+            1.0f;
+
+
+        // ================= PINE FOREST =================
+        //
+        // Pine       65%
+        // Common     20%
+        // Bush       10%
+        // Rock        5%
+
+        if (biomePreset == 0)
+        {
+            if (randomChoice < 65.0f)
+            {
+                selectedModel =
+                    pineTreeModel;
+
+                selectedName =
+                    "Painted Pine Tree";
+
+                selectedPath =
+                    "Assets/Models/Environment/NaturePack/PineTree_1.obj";
+
+                selectedAssetType =
+                    AssetType::Tree;
+
+                scaleMultiplier =
+                    1.25f;
+            }
+            else if (randomChoice < 85.0f)
+            {
+                selectedModel =
+                    commonTreeModel;
+
+                selectedName =
+                    "Painted Common Tree";
+
+                selectedPath =
+                    "Assets/Models/Environment/NaturePack/CommonTree_1.obj";
+
+                selectedAssetType =
+                    AssetType::Tree;
+
+                scaleMultiplier =
+                    1.15f;
+            }
+            else if (randomChoice < 95.0f)
+            {
+                selectedModel =
+                    bushModel;
+
+                selectedName =
+                    "Painted Bush";
+
+                selectedPath =
+                    "Assets/Models/Environment/NaturePack/Bush_1.obj";
+
+                selectedAssetType =
+                    AssetType::Bush;
+
+                scaleMultiplier =
+                    0.80f;
+            }
+            else
+            {
+                selectedModel =
+                    rockModel;
+
+                selectedName =
+                    "Painted Rock";
+
+                selectedPath =
+                    "Assets/Models/Environment/NaturePack/Rock_1.obj";
+
+                selectedAssetType =
+                    AssetType::Rock;
+
+                collider =
+                    true;
+            }
+        }
+
+
+        // ================= MIXED FOREST =================
+        //
+        // Pine       30%
+        // Common     30%
+        // Bush       15%
+        // Grass      15%
+        // Rock       10%
+
+        else if (biomePreset == 1)
+        {
+            if (randomChoice < 30.0f)
+            {
+                selectedModel =
+                    pineTreeModel;
+
+                selectedName =
+                    "Painted Pine Tree";
+
+                selectedPath =
+                    "Assets/Models/Environment/NaturePack/PineTree_1.obj";
+
+                selectedAssetType =
+                    AssetType::Tree;
+
+                scaleMultiplier =
+                    1.20f;
+            }
+            else if (randomChoice < 60.0f)
+            {
+                selectedModel =
+                    commonTreeModel;
+
+                selectedName =
+                    "Painted Common Tree";
+
+                selectedPath =
+                    "Assets/Models/Environment/NaturePack/CommonTree_1.obj";
+
+                selectedAssetType =
+                    AssetType::Tree;
+
+                scaleMultiplier =
+                    1.15f;
+            }
+            else if (randomChoice < 75.0f)
+            {
+                selectedModel =
+                    bushModel;
+
+                selectedName =
+                    "Painted Bush";
+
+                selectedPath =
+                    "Assets/Models/Environment/NaturePack/Bush_1.obj";
+
+                selectedAssetType =
+                    AssetType::Bush;
+
+                scaleMultiplier =
+                    0.80f;
+            }
+            else if (randomChoice < 90.0f)
+            {
+                selectedModel =
+                    grassModel;
+
+                selectedName =
+                    "Painted Grass";
+
+                selectedPath =
+                    "Assets/Models/Environment/NaturePack/Grass.obj";
+
+                selectedAssetType =
+                    AssetType::Grass;
+
+                scaleMultiplier =
+                    0.55f;
+            }
+            else
+            {
+                selectedModel =
+                    rockModel;
+
+                selectedName =
+                    "Painted Rock";
+
+                selectedPath =
+                    "Assets/Models/Environment/NaturePack/Rock_1.obj";
+
+                selectedAssetType =
+                    AssetType::Rock;
+
+                collider =
+                    true;
+            }
+        }
+
+
+        // ================= ROCKY GROUND =================
+
+        else if (biomePreset == 2)
+        {
+            if (randomChoice < 65.0f)
+            {
+                selectedModel =
+                    rockModel;
+
+                selectedName =
+                    "Painted Rock";
+
+                selectedPath =
+                    "Assets/Models/Environment/NaturePack/Rock_1.obj";
+
+                selectedAssetType =
+                    AssetType::Rock;
+
+                collider =
+                    true;
+            }
+            else if (randomChoice < 85.0f)
+            {
+                selectedModel =
+                    grassModel;
+
+                selectedName =
+                    "Painted Grass";
+
+                selectedPath =
+                    "Assets/Models/Environment/NaturePack/Grass.obj";
+
+                selectedAssetType =
+                    AssetType::Grass;
+
+                scaleMultiplier =
+                    0.60f;
+            }
+            else if (randomChoice < 95.0f)
+            {
+                selectedModel =
+                    bushModel;
+
+                selectedName =
+                    "Painted Bush";
+
+                selectedPath =
+                    "Assets/Models/Environment/NaturePack/Bush_1.obj";
+
+                selectedAssetType =
+                    AssetType::Bush;
+
+                scaleMultiplier =
+                    0.75f;
+            }
+            else
+            {
+                selectedModel =
+                    pineTreeModel;
+
+                selectedName =
+                    "Painted Pine Tree";
+
+                selectedPath =
+                    "Assets/Models/Environment/NaturePack/PineTree_1.obj";
+
+                selectedAssetType =
+                    AssetType::Tree;
+            }
+        }
+
+
+        // ================= MEADOW =================
+
+        else if (biomePreset == 3)
+        {
+            if (randomChoice < 70.0f)
+            {
+                selectedModel =
+                    grassModel;
+
+                selectedName =
+                    "Painted Grass";
+
+                selectedPath =
+                    "Assets/Models/Environment/NaturePack/Grass.obj";
+
+                selectedAssetType =
+                    AssetType::Grass;
+
+                scaleMultiplier =
+                    0.65f;
+            }
+            else if (randomChoice < 85.0f)
+            {
+                selectedModel =
+                    bushModel;
+
+                selectedName =
+                    "Painted Bush";
+
+                selectedPath =
+                    "Assets/Models/Environment/NaturePack/Bush_1.obj";
+
+                selectedAssetType =
+                    AssetType::Bush;
+
+                scaleMultiplier =
+                    0.70f;
+            }
+            else if (randomChoice < 95.0f)
+            {
+                selectedModel =
+                    rockModel;
+
+                selectedName =
+                    "Painted Rock";
+
+                selectedPath =
+                    "Assets/Models/Environment/NaturePack/Rock_1.obj";
+
+                selectedAssetType =
+                    AssetType::Rock;
+
+                collider =
+                    true;
+
+                scaleMultiplier =
+                    0.65f;
+            }
+            else
+            {
+                selectedModel =
+                    commonTreeModel;
+
+                selectedName =
+                    "Painted Common Tree";
+
+                selectedPath =
+                    "Assets/Models/Environment/NaturePack/CommonTree_1.obj";
+
+                selectedAssetType =
+                    AssetType::Tree;
+            }
+        }
+
+
+        // ================= BUSHLAND =================
+
+        else
+        {
+            if (randomChoice < 55.0f)
+            {
+                selectedModel =
+                    bushModel;
+
+                selectedName =
+                    "Painted Bush";
+
+                selectedPath =
+                    "Assets/Models/Environment/NaturePack/Bush_1.obj";
+
+                selectedAssetType =
+                    AssetType::Bush;
+            }
+            else if (randomChoice < 80.0f)
+            {
+                selectedModel =
+                    grassModel;
+
+                selectedName =
+                    "Painted Grass";
+
+                selectedPath =
+                    "Assets/Models/Environment/NaturePack/Grass.obj";
+
+                selectedAssetType =
+                    AssetType::Grass;
+
+                scaleMultiplier =
+                    0.60f;
+            }
+            else if (randomChoice < 90.0f)
+            {
+                selectedModel =
+                    rockModel;
+
+                selectedName =
+                    "Painted Rock";
+
+                selectedPath =
+                    "Assets/Models/Environment/NaturePack/Rock_1.obj";
+
+                selectedAssetType =
+                    AssetType::Rock;
+
+                collider =
+                    true;
+            }
+            else
+            {
+                selectedModel =
+                    commonTreeModel;
+
+                selectedName =
+                    "Painted Common Tree";
+
+                selectedPath =
+                    "Assets/Models/Environment/NaturePack/CommonTree_1.obj";
+
+                selectedAssetType =
+                    AssetType::Tree;
+            }
+        }
+
+
+        if (selectedModel == nullptr)
+            continue;
+
 
         float scaleValue =
             WorldPainterRandomFloat(
                 minScale,
                 maxScale
+            ) *
+            scaleMultiplier;
+
+
+        SceneObject* createdObject =
+            SpawnWorldPaintedModel(
+                scene,
+                selectedObject,
+                shader,
+                selectedModel,
+                selectedName,
+                selectedPath,
+                position,
+                scaleValue,
+                collider,
+                randomRotation,
+                selectedAssetType
             );
 
-        if (finalBrushType == 0)
+        if (createdObject != nullptr)
         {
-            SpawnWorldPaintedModel(
-                scene,
-                selectedObject,
-                shader,
-                pineTreeModel,
-                "Painted Pine Tree",
-                "Assets/Models/Environment/NaturePack/PineTree_1.obj",
-                position,
-                scaleValue,
-                false,
-                randomRotation
-            );
-        }
-        else if (finalBrushType == 1)
-        {
-            SpawnWorldPaintedModel(
-                scene,
-                selectedObject,
-                shader,
-                rockModel,
-                "Painted Rock",
-                "Assets/Models/Environment/NaturePack/Rock_1.obj",
-                position,
-                scaleValue,
-                true,
-                randomRotation
-            );
-        }
-        else if (finalBrushType == 2)
-        {
-            SpawnWorldPaintedModel(
-                scene,
-                selectedObject,
-                shader,
-                grassModel,
-                "Painted Grass",
-                "Assets/Models/Environment/NaturePack/Grass.obj",
-                position,
-                scaleValue,
-                false,
-                randomRotation
-            );
-        }
-        else if (finalBrushType == 3)
-        {
-            SpawnWorldPaintedModel(
-                scene,
-                selectedObject,
-                shader,
-                bushModel,
-                "Painted Bush",
-                "Assets/Models/Environment/NaturePack/Bush_1.obj",
-                position,
-                scaleValue,
-                false,
-                randomRotation
-            );
+            spawnedObjects++;
         }
     }
+
+
+    std::cout
+        << "World Painter V2: created "
+        << spawnedObjects
+        << " objects from "
+        << attempts
+        << " placement attempts."
+        << std::endl;
 }
 void EditorUI::DrawAssetBrowser(
     Scene& scene,
@@ -11359,23 +12315,23 @@ void EditorUI::DrawAssetBrowser(
     {
         if (ImGui::BeginTabItem("World Painter"))
         {
-            static int brushType =
-                4;
+            static int biomePreset =
+                1;
 
             static float brushRadius =
-                14.0f;
+                18.0f;
 
             static int brushDensity =
-                18;
+                30;
 
             static float paintDistance =
                 18.0f;
 
             static float minScale =
-                0.75f;
+                0.65f;
 
             static float maxScale =
-                1.75f;
+                1.70f;
 
             static bool randomRotation =
                 true;
@@ -11383,35 +12339,68 @@ void EditorUI::DrawAssetBrowser(
             static bool showBrushPreview =
                 true;
 
-            const char* brushNames[] =
+            static WorldPainterRules rules;
+
+
+            const char* biomeNames[] =
             {
-                "Pine Trees",
-                "Rocks",
-                "Grass",
-                "Bushes",
-                "Mixed Forest"
+                "Pine Forest",
+                "Mixed Forest",
+                "Rocky Ground",
+                "Meadow",
+                "Bushland"
             };
 
+
             ImGui::Text(
-                "Terrain Object Painting Tool"
+                "Smart Biome Painter"
+            );
+
+            ImGui::TextDisabled(
+                "Terrain-aware procedural environment placement"
             );
 
             ImGui::Separator();
 
-            ImGui::Combo(
-                "Brush Type",
-                &brushType,
-                brushNames,
-                IM_ARRAYSIZE(
-                    brushNames
+
+            // ================= BIOME =================
+
+            if (
+                ImGui::Combo(
+                    "Biome Preset",
+                    &biomePreset,
+                    biomeNames,
+                    IM_ARRAYSIZE(
+                        biomeNames
+                    )
                 )
+                )
+            {
+                ApplyWorldPainterPresetDefaults(
+                    biomePreset,
+                    brushRadius,
+                    brushDensity,
+                    minScale,
+                    maxScale,
+                    rules
+                );
+            }
+
+
+            // ================= BRUSH =================
+
+            ImGui::Separator();
+
+            ImGui::Text(
+                "Brush Settings"
             );
 
             ImGui::SliderFloat(
                 "Brush Radius",
                 &brushRadius,
                 4.0f,
-                40.0f
+                40.0f,
+                "%.1f"
             );
 
             ImGui::SliderInt(
@@ -11425,21 +12414,24 @@ void EditorUI::DrawAssetBrowser(
                 "Paint Distance",
                 &paintDistance,
                 6.0f,
-                70.0f
+                70.0f,
+                "%.1f"
             );
 
             ImGui::SliderFloat(
                 "Min Scale",
                 &minScale,
-                0.25f,
-                3.0f
+                0.20f,
+                3.0f,
+                "%.2f"
             );
 
             ImGui::SliderFloat(
                 "Max Scale",
                 &maxScale,
-                0.25f,
-                4.0f
+                0.20f,
+                4.0f,
+                "%.2f"
             );
 
             if (maxScale < minScale)
@@ -11452,6 +12444,71 @@ void EditorUI::DrawAssetBrowser(
                 "Random Rotation",
                 &randomRotation
             );
+
+
+            // ================= PLACEMENT RULES =================
+
+            ImGui::Separator();
+
+            ImGui::Text(
+                "Smart Placement Rules"
+            );
+
+            ImGui::SliderFloat(
+                "Maximum Slope",
+                &rules.maxSlopeDegrees,
+                0.0f,
+                70.0f,
+                "%.1f deg"
+            );
+
+            ImGui::SliderFloat(
+                "Minimum Altitude",
+                &rules.minAltitude,
+                -30.0f,
+                60.0f,
+                "%.1f"
+            );
+
+            ImGui::SliderFloat(
+                "Maximum Altitude",
+                &rules.maxAltitude,
+                -30.0f,
+                80.0f,
+                "%.1f"
+            );
+
+            if (
+                rules.maxAltitude <
+                rules.minAltitude
+                )
+            {
+                rules.maxAltitude =
+                    rules.minAltitude;
+            }
+
+            ImGui::SliderFloat(
+                "Minimum Spacing",
+                &rules.minSpacing,
+                0.2f,
+                10.0f,
+                "%.2f"
+            );
+
+            ImGui::Checkbox(
+                "Avoid Structures",
+                &rules.avoidStructures
+            );
+
+            ImGui::Checkbox(
+                "Avoid Player",
+                &rules.avoidPlayer
+            );
+
+
+            // ================= PREVIEW =================
+
+            ImGui::Separator();
 
             ImGui::Checkbox(
                 "Show Brush Preview",
@@ -11467,23 +12524,36 @@ void EditorUI::DrawAssetBrowser(
                 showBrushPreview
             );
 
+
+            // ================= ACTIONS =================
+
             ImGui::Separator();
 
-            if (ImGui::Button("Paint Brush"))
+            if (
+                ImGui::Button(
+                    "PAINT BIOME",
+                    ImVec2(
+                        150.0f,
+                        32.0f
+                    )
+                )
+                )
             {
                 PaintWorldBrush(
                     scene,
                     selectedObject,
                     shader,
                     camera,
-                    brushType,
+                    biomePreset,
                     brushRadius,
                     brushDensity,
                     paintDistance,
                     minScale,
                     maxScale,
                     randomRotation,
+                    rules,
                     pineTreeModel,
+                    commonTreeModel,
                     rockModel,
                     grassModel,
                     bushModel
@@ -11492,52 +12562,28 @@ void EditorUI::DrawAssetBrowser(
 
             ImGui::SameLine();
 
-            if (ImGui::Button("Small Forest Patch"))
+            if (
+                ImGui::Button(
+                    "Undo Last Stroke"
+                )
+                )
             {
-                PaintWorldBrush(
+                UndoLastWorldPainterStroke(
                     scene,
-                    selectedObject,
-                    shader,
-                    camera,
-                    4,
-                    10.0f,
-                    18,
-                    paintDistance,
-                    0.65f,
-                    1.55f,
-                    true,
-                    pineTreeModel,
-                    rockModel,
-                    grassModel,
-                    bushModel
+                    selectedObject
                 );
             }
 
-            ImGui::SameLine();
 
-            if (ImGui::Button("Dense Grass Patch"))
-            {
-                PaintWorldBrush(
-                    scene,
-                    selectedObject,
-                    shader,
-                    camera,
-                    2,
-                    16.0f,
-                    50,
-                    paintDistance,
-                    0.35f,
-                    0.95f,
-                    true,
-                    pineTreeModel,
-                    rockModel,
-                    grassModel,
-                    bushModel
-                );
-            }
+            ImGui::Text(
+                "Last Stroke: %d objects",
+                static_cast<int>(
+                    worldPainterLastStroke.size()
+                    )
+            );
 
             ImGui::TextWrapped(
-                "Move the editor camera, adjust Paint Distance, then press Paint Brush. The cyan ring shows where objects will be painted."
+                "The cyan ring marks the painting region. ORION rejects placement that violates slope, altitude, spacing, player, or structure rules."
             );
 
             ImGui::EndTabItem();

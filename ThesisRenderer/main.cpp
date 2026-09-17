@@ -6453,7 +6453,1307 @@ std::vector<SceneHealthEntry> EvaluateSceneHealth(
 
     return entries;
 }
+// ============================================================
+// ORION CONTEXT-AWARE EDITOR ASSISTANT V1
+// ============================================================
 
+enum class OrionSuggestionLevel
+{
+    Info,
+    Suggestion,
+    Warning,
+    Critical
+};
+
+
+enum class OrionSuggestionAction
+{
+    None,
+
+    SelectTarget,
+
+    OpenValidator,
+
+    OpenStatistics,
+
+    OpenWorldPainter,
+
+    AddCampfireLight
+};
+
+
+struct OrionSuggestion
+{
+    OrionSuggestionLevel level =
+        OrionSuggestionLevel::Info;
+
+    std::string title;
+
+    std::string description;
+
+    OrionSuggestionAction action =
+        OrionSuggestionAction::None;
+
+    SceneObject* target =
+        nullptr;
+};
+
+
+// ============================================================
+// VISUAL HELPERS
+// ============================================================
+
+static ImVec4 GetOrionSuggestionColor(
+    OrionSuggestionLevel level
+)
+{
+    if (
+        level ==
+        OrionSuggestionLevel::Critical
+        )
+    {
+        return ImVec4(
+            1.0f,
+            0.25f,
+            0.25f,
+            1.0f
+        );
+    }
+
+    if (
+        level ==
+        OrionSuggestionLevel::Warning
+        )
+    {
+        return ImVec4(
+            1.0f,
+            0.70f,
+            0.20f,
+            1.0f
+        );
+    }
+
+    if (
+        level ==
+        OrionSuggestionLevel::Suggestion
+        )
+    {
+        return ImVec4(
+            0.25f,
+            0.80f,
+            1.0f,
+            1.0f
+        );
+    }
+
+    return ImVec4(
+        0.35f,
+        1.0f,
+        0.45f,
+        1.0f
+    );
+}
+
+
+static const char* GetOrionSuggestionPrefix(
+    OrionSuggestionLevel level
+)
+{
+    if (
+        level ==
+        OrionSuggestionLevel::Critical
+        )
+    {
+        return "[CRITICAL]";
+    }
+
+    if (
+        level ==
+        OrionSuggestionLevel::Warning
+        )
+    {
+        return "[WARNING]";
+    }
+
+    if (
+        level ==
+        OrionSuggestionLevel::Suggestion
+        )
+    {
+        return "[SUGGESTION]";
+    }
+
+    return "[OK]";
+}
+
+
+static const char* GetOrionActionLabel(
+    OrionSuggestionAction action
+)
+{
+    if (
+        action ==
+        OrionSuggestionAction::SelectTarget
+        )
+    {
+        return "Select Object";
+    }
+
+    if (
+        action ==
+        OrionSuggestionAction::OpenValidator
+        )
+    {
+        return "Open Validator";
+    }
+
+    if (
+        action ==
+        OrionSuggestionAction::OpenStatistics
+        )
+    {
+        return "Open Statistics";
+    }
+
+    if (
+        action ==
+        OrionSuggestionAction::OpenWorldPainter
+        )
+    {
+        return "Open World Painter";
+    }
+
+    if (
+        action ==
+        OrionSuggestionAction::AddCampfireLight
+        )
+    {
+        return "Add Campfire Light";
+    }
+
+    return "";
+}
+static void AddOrionSuggestion(
+    std::vector<OrionSuggestion>& suggestions,
+    OrionSuggestionLevel level,
+    const std::string& title,
+    const std::string& description,
+    OrionSuggestionAction action =
+    OrionSuggestionAction::None,
+    SceneObject* target =
+    nullptr
+)
+{
+    OrionSuggestion suggestion;
+
+    suggestion.level =
+        level;
+
+    suggestion.title =
+        title;
+
+    suggestion.description =
+        description;
+
+    suggestion.action =
+        action;
+
+    suggestion.target =
+        target;
+
+    suggestions.push_back(
+        suggestion
+    );
+}
+
+
+// ============================================================
+// SCENE CLASSIFICATION
+// ============================================================
+
+static bool OrionNameContains(
+    SceneObject* object,
+    const std::string& text
+)
+{
+    if (object == nullptr)
+        return false;
+
+    return
+        object->name.find(
+            text
+        ) !=
+        std::string::npos;
+}
+
+
+static bool IsOrionNatureObject(
+    SceneObject* object
+)
+{
+    if (object == nullptr)
+        return false;
+
+    if (
+        object->assetType ==
+        AssetType::Tree
+        )
+    {
+        return true;
+    }
+
+    if (
+        object->assetType ==
+        AssetType::Rock
+        )
+    {
+        return true;
+    }
+
+    if (
+        object->assetType ==
+        AssetType::Grass
+        )
+    {
+        return true;
+    }
+
+    if (
+        object->assetType ==
+        AssetType::Flower
+        )
+    {
+        return true;
+    }
+
+    if (
+        object->assetType ==
+        AssetType::Bush
+        )
+    {
+        return true;
+    }
+
+    if (OrionNameContains(object, "Tree"))
+        return true;
+
+    if (OrionNameContains(object, "Pine"))
+        return true;
+
+    if (OrionNameContains(object, "Rock"))
+        return true;
+
+    if (OrionNameContains(object, "Grass"))
+        return true;
+
+    if (OrionNameContains(object, "Bush"))
+        return true;
+
+    return false;
+}
+
+
+static bool IsOrionHouseObject(
+    SceneObject* object
+)
+{
+    if (object == nullptr)
+        return false;
+
+    if (
+        object->assetType ==
+        AssetType::House
+        )
+    {
+        return true;
+    }
+
+    return
+        OrionNameContains(
+            object,
+            "House"
+        );
+}
+
+
+static bool IsOrionGeneratedObject(
+    SceneObject* object
+)
+{
+    if (object == nullptr)
+        return false;
+
+    if (
+        object->name ==
+        "World Painter Preview"
+        )
+    {
+        return false;
+    }
+
+    if (
+        object->spawnSource ==
+        SpawnSource::Procedural
+        )
+    {
+        return true;
+    }
+
+    if (
+        OrionNameContains(
+            object,
+            "Generated"
+        )
+        )
+    {
+        return true;
+    }
+
+    if (
+        OrionNameContains(
+            object,
+            "Painted"
+        )
+        )
+    {
+        return true;
+    }
+
+    return false;
+}
+static SceneObject* FindOrionObjectBelowTerrain(
+    Scene& scene,
+    int& belowTerrainCount
+)
+{
+    belowTerrainCount =
+        0;
+
+    SceneObject* firstProblem =
+        nullptr;
+
+    for (
+        SceneObject* object :
+        scene.objects
+        )
+    {
+        if (object == nullptr)
+            continue;
+
+        if (!object->visible)
+            continue;
+
+        if (
+            object->name ==
+            "Player"
+            )
+        {
+            continue;
+        }
+
+        if (
+            object->name ==
+            "Procedural Terrain"
+            )
+        {
+            continue;
+        }
+
+        if (
+            object->name ==
+            "Ground"
+            )
+        {
+            continue;
+        }
+
+        if (
+            object->name ==
+            "World Painter Preview"
+            )
+        {
+            continue;
+        }
+
+        float terrainY =
+            GetTerrainHeight(
+                object->transform.position.x,
+                object->transform.position.z
+            );
+
+        if (
+            object->transform.position.y <
+            terrainY - 2.0f
+            )
+        {
+            belowTerrainCount++;
+
+            if (
+                firstProblem ==
+                nullptr
+                )
+            {
+                firstProblem =
+                    object;
+            }
+        }
+    }
+
+    return firstProblem;
+}
+static SceneObject* FindOrionPlayerObstacle(
+    Scene& scene,
+    SceneObject* player
+)
+{
+    if (player == nullptr)
+        return nullptr;
+
+    glm::vec2 playerXZ(
+        player->transform.position.x,
+        player->transform.position.z
+    );
+
+    float playerRadius =
+        glm::max(
+            player->colliderRadius,
+            1.0f
+        );
+
+    for (
+        SceneObject* object :
+        scene.objects
+        )
+    {
+        if (object == nullptr)
+            continue;
+
+        if (object == player)
+            continue;
+
+        if (!object->visible)
+            continue;
+
+        if (!object->isCollider)
+            continue;
+
+        if (
+            object->name ==
+            "Procedural Terrain"
+            )
+        {
+            continue;
+        }
+
+        if (
+            object->name ==
+            "Ground"
+            )
+        {
+            continue;
+        }
+
+        glm::vec2 objectXZ(
+            object->transform.position.x,
+            object->transform.position.z
+        );
+
+        float distanceXZ =
+            glm::distance(
+                playerXZ,
+                objectXZ
+            );
+
+        float objectRadius =
+            glm::max(
+                object->colliderRadius,
+                0.5f
+            );
+
+        float safeDistance =
+            playerRadius +
+            objectRadius +
+            0.75f;
+
+        if (
+            distanceXZ <
+            safeDistance
+            )
+        {
+            return object;
+        }
+    }
+
+    return nullptr;
+}
+static SceneObject* FindOrionSparseHouse(
+    Scene& scene
+)
+{
+    const float vegetationRadius =
+        18.0f;
+
+    const int minimumNatureObjects =
+        3;
+
+    for (
+        SceneObject* house :
+        scene.objects
+        )
+    {
+        if (
+            !IsOrionHouseObject(
+                house
+            )
+            )
+        {
+            continue;
+        }
+
+        int nearbyNature =
+            0;
+
+        glm::vec2 houseXZ(
+            house->transform.position.x,
+            house->transform.position.z
+        );
+
+        for (
+            SceneObject* object :
+            scene.objects
+            )
+        {
+            if (
+                !IsOrionNatureObject(
+                    object
+                )
+                )
+            {
+                continue;
+            }
+
+            glm::vec2 natureXZ(
+                object->transform.position.x,
+                object->transform.position.z
+            );
+
+            if (
+                glm::distance(
+                    houseXZ,
+                    natureXZ
+                ) <=
+                vegetationRadius
+                )
+            {
+                nearbyNature++;
+            }
+        }
+
+        if (
+            nearbyNature <
+            minimumNatureObjects
+            )
+        {
+            return house;
+        }
+    }
+
+    return nullptr;
+}
+
+
+// ============================================================
+// CAMPFIRE LIGHT CHECK
+// ============================================================
+
+static SceneObject* FindOrionCampfireWithoutLight(
+    Scene& scene
+)
+{
+    for (
+        SceneObject* object :
+        scene.objects
+        )
+    {
+        if (object == nullptr)
+            continue;
+
+        if (
+            !OrionNameContains(
+                object,
+                "Campfire"
+            )
+            )
+        {
+            continue;
+        }
+
+        if (
+            object->attachedLight !=
+            nullptr
+            )
+        {
+            continue;
+        }
+
+        glm::vec3 campfirePosition =
+            object->transform.position;
+
+        bool hasNearbyLight =
+            false;
+
+        for (
+            Light* light :
+            scene.lights
+            )
+        {
+            if (light == nullptr)
+                continue;
+
+            if (
+                light->type !=
+                LightType::Point
+                )
+            {
+                continue;
+            }
+
+            float distance =
+                glm::distance(
+                    light->position,
+                    campfirePosition
+                );
+
+            if (distance < 4.0f)
+            {
+                hasNearbyLight =
+                    true;
+
+                break;
+            }
+        }
+
+        if (!hasNearbyLight)
+        {
+            return object;
+        }
+    }
+
+    return nullptr;
+}
+
+
+static void AddOrionCampfireLight(
+    Scene& scene,
+    SceneObject* campfire
+)
+{
+    if (campfire == nullptr)
+        return;
+
+    Light* light =
+        new Light();
+
+    light->name =
+        "ORION Campfire Light";
+
+    light->type =
+        LightType::Point;
+
+    light->position =
+        campfire->transform.position +
+        glm::vec3(
+            0.0f,
+            1.25f,
+            0.0f
+        );
+
+    light->color =
+        glm::vec3(
+            7.0f,
+            3.5f,
+            1.0f
+        );
+
+    light->intensity =
+        1.0f;
+
+    scene.AddLight(
+        light
+    );
+
+    campfire->attachedLight =
+        light;
+
+    campfire->attachedLightOffset =
+        glm::vec3(
+            0.0f,
+            1.25f,
+            0.0f
+        );
+
+    std::cout
+        << "ORION Assistant: added light to "
+        << campfire->name
+        << std::endl;
+}
+static std::vector<OrionSuggestion>
+EvaluateOrionSuggestions(
+    Scene& scene,
+    SceneObject* playerObject
+)
+{
+    std::vector<OrionSuggestion>
+        suggestions;
+
+
+    // ================= PLAYER =================
+
+    SceneObject* player =
+        playerObject;
+
+    if (player == nullptr)
+    {
+        player =
+            FindPlayerObject(
+                scene
+            );
+    }
+
+    if (player == nullptr)
+    {
+        AddOrionSuggestion(
+            suggestions,
+            OrionSuggestionLevel::Critical,
+            "Player is missing",
+            "ORION could not find a Player object. The scene cannot be tested correctly in Play Mode.",
+            OrionSuggestionAction::OpenValidator
+        );
+    }
+    else
+    {
+        SceneObject* obstacle =
+            FindOrionPlayerObstacle(
+                scene,
+                player
+            );
+
+        if (obstacle != nullptr)
+        {
+            AddOrionSuggestion(
+                suggestions,
+                OrionSuggestionLevel::Warning,
+                "Player spawn area may be obstructed",
+                "A collider is very close to the Player. Inspect the object before entering Play Mode.",
+                OrionSuggestionAction::SelectTarget,
+                obstacle
+            );
+        }
+    }
+
+
+    // ================= BELOW TERRAIN =================
+
+    int belowTerrainCount =
+        0;
+
+    SceneObject* belowTerrainObject =
+        FindOrionObjectBelowTerrain(
+            scene,
+            belowTerrainCount
+        );
+
+    if (belowTerrainCount > 0)
+    {
+        AddOrionSuggestion(
+            suggestions,
+            OrionSuggestionLevel::Warning,
+            std::to_string(
+                belowTerrainCount
+            ) +
+            " objects may be below terrain",
+
+            "ORION detected visible objects significantly below the terrain surface. Select the first detected object and inspect its transform.",
+
+            OrionSuggestionAction::SelectTarget,
+            belowTerrainObject
+        );
+    }
+
+
+    // ================= GAMEPLAY OBJECTIVE =================
+
+    bool hasObjective =
+        false;
+
+    int coinCount =
+        0;
+
+    int triggerCount =
+        0;
+
+    int monsterCount =
+        0;
+
+    int musicGateCount =
+        0;
+
+    int musicNpcCount =
+        0;
+
+    for (
+        SceneObject* object :
+        scene.objects
+        )
+    {
+        if (object == nullptr)
+            continue;
+
+        if (IsCoinObject(object))
+            coinCount++;
+
+        if (IsTriggerZoneObject(object))
+            triggerCount++;
+
+        if (IsMonsterSpawnObject(object))
+            monsterCount++;
+
+        if (IsMusicGateObject(object))
+            musicGateCount++;
+
+        if (IsMusicNpcObject(object))
+            musicNpcCount++;
+    }
+
+    hasObjective =
+        coinCount > 0 ||
+        (
+            triggerCount > 0 &&
+            monsterCount > 0
+            ) ||
+        (
+            musicGateCount > 0 &&
+            musicNpcCount > 0
+            );
+
+    if (!hasObjective)
+    {
+        AddOrionSuggestion(
+            suggestions,
+            OrionSuggestionLevel::Suggestion,
+            "Scene has no clear gameplay objective",
+            "Consider adding a Coin Hunt, Monster Encounter, or Music objective before the final play test.",
+            OrionSuggestionAction::OpenValidator
+        );
+    }
+
+
+    // ================= WORLD COMPOSITION =================
+
+    SceneObject* sparseHouse =
+        FindOrionSparseHouse(
+            scene
+        );
+
+    if (sparseHouse != nullptr)
+    {
+        AddOrionSuggestion(
+            suggestions,
+            OrionSuggestionLevel::Suggestion,
+            "Structure could use environmental detail",
+            sparseHouse->name +
+            " has very little vegetation nearby. The World Painter can add a controlled biome around this area.",
+            OrionSuggestionAction::OpenWorldPainter,
+            sparseHouse
+        );
+    }
+
+
+    // ================= CAMPFIRE =================
+
+    SceneObject* unlitCampfire =
+        FindOrionCampfireWithoutLight(
+            scene
+        );
+
+    if (unlitCampfire != nullptr)
+    {
+        AddOrionSuggestion(
+            suggestions,
+            OrionSuggestionLevel::Suggestion,
+            "Campfire has no local light",
+            "A campfire was detected without a nearby point light. ORION can create a warm light automatically.",
+            OrionSuggestionAction::AddCampfireLight,
+            unlitCampfire
+        );
+    }
+
+
+    // ================= GENERATED CONTENT =================
+
+    int generatedCount =
+        0;
+
+    for (
+        SceneObject* object :
+        scene.objects
+        )
+    {
+        if (
+            IsOrionGeneratedObject(
+                object
+            )
+            )
+        {
+            generatedCount++;
+        }
+    }
+
+    if (generatedCount > 500)
+    {
+        AddOrionSuggestion(
+            suggestions,
+            OrionSuggestionLevel::Warning,
+            "Heavy generated world content",
+            "The scene contains " +
+            std::to_string(
+                generatedCount
+            ) +
+            " procedurally generated objects. Review the Statistics panel if editor performance begins to decrease.",
+            OrionSuggestionAction::OpenStatistics
+        );
+    }
+
+
+    // ================= LIGHT COUNT =================
+
+    int pointLightCount =
+        0;
+
+    for (
+        Light* light :
+        scene.lights
+        )
+    {
+        if (
+            light != nullptr &&
+            light->type ==
+            LightType::Point
+            )
+        {
+            pointLightCount++;
+        }
+    }
+
+    if (pointLightCount > 10)
+    {
+        AddOrionSuggestion(
+            suggestions,
+            OrionSuggestionLevel::Warning,
+            "Scene is approaching the point-light limit",
+            std::to_string(
+                pointLightCount
+            ) +
+            " point lights are active. The current renderer supports up to 12 active point lights.",
+            OrionSuggestionAction::OpenValidator
+        );
+    }
+
+
+    // ================= HEALTHY SCENE =================
+
+    if (suggestions.empty())
+    {
+        AddOrionSuggestion(
+            suggestions,
+            OrionSuggestionLevel::Info,
+            "Scene looks healthy",
+            "ORION found no immediate structural, gameplay, placement, or performance suggestions."
+        );
+    }
+
+    return suggestions;
+}
+static void SelectOrionTarget(
+    SceneObject*& selectedObject,
+    SceneObject* target
+)
+{
+    if (target == nullptr)
+        return;
+
+    if (
+        selectedObject != nullptr
+        )
+    {
+        selectedObject->isSelected =
+            false;
+    }
+
+    selectedObject =
+        target;
+
+    selectedObject->isSelected =
+        true;
+}
+
+
+static void DrawOrionAssistant(
+    Scene& scene,
+    SceneObject*& selectedObject,
+    SceneObject* playerObject,
+    bool& showSceneHealthValidator,
+    bool& showStatisticsPanel,
+    bool& showAssetBrowserPanel
+)
+{
+    ImGui::SetNextWindowPos(
+        ImVec2(
+            centerX +
+            300.0f,
+            topY +
+            130.0f
+        ),
+        ImGuiCond_FirstUseEver
+    );
+
+    ImGui::SetNextWindowSize(
+        ImVec2(
+            430.0f,
+            520.0f
+        ),
+        ImGuiCond_FirstUseEver
+    );
+
+    ImGui::Begin(
+        "ORION Assistant"
+    );
+
+
+    // ================= HEADER =================
+
+    ImGui::Text(
+        "Context-Aware Scene Assistant"
+    );
+
+    ImGui::TextDisabled(
+        "Live analysis of the current editor scene"
+    );
+
+    ImGui::Separator();
+
+
+    std::vector<OrionSuggestion>
+        suggestions =
+        EvaluateOrionSuggestions(
+            scene,
+            playerObject
+        );
+
+
+    int warningCount =
+        0;
+
+    int improvementCount =
+        0;
+
+    for (
+        const OrionSuggestion& suggestion :
+        suggestions
+        )
+    {
+        if (
+            suggestion.level ==
+            OrionSuggestionLevel::Warning ||
+            suggestion.level ==
+            OrionSuggestionLevel::Critical
+            )
+        {
+            warningCount++;
+        }
+
+        if (
+            suggestion.level ==
+            OrionSuggestionLevel::Suggestion
+            )
+        {
+            improvementCount++;
+        }
+    }
+
+
+    ImGui::Text(
+        "Scene Objects: %d",
+        static_cast<int>(
+            scene.objects.size()
+            )
+    );
+
+    ImGui::SameLine();
+
+    ImGui::Text(
+        "| Suggestions: %d",
+        static_cast<int>(
+            suggestions.size()
+            )
+    );
+
+    ImGui::Text(
+        "Warnings: %d | Improvements: %d",
+        warningCount,
+        improvementCount
+    );
+
+    ImGui::Separator();
+
+
+    // ================= SUGGESTION CARDS =================
+
+    for (
+        int i = 0;
+        i <
+        static_cast<int>(
+            suggestions.size()
+            );
+        i++
+        )
+    {
+        OrionSuggestion& suggestion =
+            suggestions[i];
+
+        ImGui::PushID(
+            i
+        );
+
+        std::string childId =
+            "##OrionSuggestionCard_" +
+            std::to_string(i);
+
+        ImGui::BeginChild(
+            childId.c_str(),
+            ImVec2(
+                0.0f,
+                118.0f
+            ),
+            true
+        );
+
+        ImGui::TextColored(
+            GetOrionSuggestionColor(
+                suggestion.level
+            ),
+            "%s",
+            GetOrionSuggestionPrefix(
+                suggestion.level
+            )
+        );
+
+        ImGui::SameLine();
+
+        ImGui::TextWrapped(
+            "%s",
+            suggestion.title.c_str()
+        );
+
+        ImGui::Spacing();
+
+        ImGui::TextWrapped(
+            "%s",
+            suggestion.description.c_str()
+        );
+
+
+        // ================= ACTION =================
+
+        if (
+            suggestion.action !=
+            OrionSuggestionAction::None
+            )
+        {
+            ImGui::Spacing();
+
+            if (
+                ImGui::Button(
+                    GetOrionActionLabel(
+                        suggestion.action
+                    )
+                )
+                )
+            {
+                if (
+                    suggestion.action ==
+                    OrionSuggestionAction::SelectTarget
+                    )
+                {
+                    SelectOrionTarget(
+                        selectedObject,
+                        suggestion.target
+                    );
+                }
+
+                else if (
+                    suggestion.action ==
+                    OrionSuggestionAction::OpenValidator
+                    )
+                {
+                    showSceneHealthValidator =
+                        true;
+                }
+
+                else if (
+                    suggestion.action ==
+                    OrionSuggestionAction::OpenStatistics
+                    )
+                {
+                    showStatisticsPanel =
+                        true;
+                }
+
+                else if (
+                    suggestion.action ==
+                    OrionSuggestionAction::OpenWorldPainter
+                    )
+                {
+                    SelectOrionTarget(
+                        selectedObject,
+                        suggestion.target
+                    );
+
+                    showAssetBrowserPanel =
+                        true;
+                }
+
+                else if (
+                    suggestion.action ==
+                    OrionSuggestionAction::AddCampfireLight
+                    )
+                {
+                    AddOrionCampfireLight(
+                        scene,
+                        suggestion.target
+                    );
+                }
+            }
+        }
+
+        ImGui::EndChild();
+
+        ImGui::Spacing();
+
+        ImGui::PopID();
+    }
+
+
+    // ================= FOOTER =================
+
+    ImGui::Separator();
+
+    ImGui::TextDisabled(
+        "ORION Assistant uses deterministic editor rules, scene metadata, and spatial analysis."
+    );
+
+    ImGui::End();
+}
 void DrawSceneHealthValidator(
     Scene& scene,
     SceneObject* playerObject,
@@ -9891,6 +11191,10 @@ int main()
 
     bool showSceneHealthValidator =
         false;
+
+    bool showOrionAssistant =
+        true;
+
     bool useAnimatedPlayerVisual =
         false;
 
@@ -10447,6 +11751,22 @@ int main()
                scene,
                playerObject,
                useAnimatedPlayerVisual
+           );
+       }
+       if (
+           appMode ==
+           AppMode::Editor &&
+           showOrionAssistant &&
+           !cinematicOverlay.enabled
+           )
+       {
+           DrawOrionAssistant(
+               scene,
+               selectedObject,
+               playerObject,
+               showSceneHealthValidator,
+               showStatisticsPanel,
+               showAssetBrowserPanel
            );
        }
        // resseting plaaayer to the start .............................
@@ -13185,7 +14505,8 @@ ImGuiIO& io = ImGui::GetIO();
 
                     showSceneHealthValidator =
                         false;
-
+                    showOrionAssistant =
+                        true;
                     showSelectedObjectToolsPanel =
                         false;
                     showPlayerToolsPanel =
@@ -13224,7 +14545,8 @@ ImGuiIO& io = ImGui::GetIO();
 
                     showSceneHealthValidator =
                         true;
-
+                    showOrionAssistant =
+                        true;
                     showSelectedObjectToolsPanel =
                         true;
                     showPlayerToolsPanel =
@@ -13319,6 +14641,10 @@ ImGuiIO& io = ImGui::GetIO();
                 ImGui::Checkbox(
                     "Playability Validator",
                     &showSceneHealthValidator
+                );
+                ImGui::Checkbox(
+                    "ORION Assistant",
+                    &showOrionAssistant
                 );
                 ImGui::Checkbox(
                     "Selected Tools",

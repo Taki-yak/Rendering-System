@@ -58,6 +58,7 @@
 #ifdef min
 #undef min
 #endif
+
 static void DrawObjectShadowDepth(
     SceneObject* object,
     Shader& depthShader
@@ -437,7 +438,53 @@ ObjectiveMarkerSystem objectiveMarkerSystem;
 WeatherSystem weatherSystem;
 DayNightSystem dayNightSystem;
 CoinRushGameMode coinRushGameMode;
+
 MonsterEscapeGameMode monsterEscapeGameMode;
+// ================= ORION LIVE WORLD STATE =================
+bool showLiveWorldStatePanel =
+true;
+
+bool liveWorldStateEnabled =
+true;
+
+bool liveWorldAutoLights =
+true;
+
+bool liveWorldCampfireResponse =
+true;
+
+bool liveWorldEditorPreviewActive =
+false;
+
+float liveWorldNightFactor =
+0.0f;
+// ================= LIVE WORLD TIME SHIFT =================
+static void ShiftLiveWorldTime(
+    float hours
+)
+{
+    dayNightSystem.timeOfDay +=
+        hours;
+
+    while (
+        dayNightSystem.timeOfDay >=
+        24.0f
+        )
+    {
+        dayNightSystem.timeOfDay -=
+            24.0f;
+    }
+
+    while (
+        dayNightSystem.timeOfDay <
+        0.0f
+        )
+    {
+        dayNightSystem.timeOfDay +=
+            24.0f;
+    }
+}
+
 enum class RuntimeGameMode
 {
     FreeRoam = 0,
@@ -8311,6 +8358,200 @@ void ToggleTorchLight(
             GetTorchLightOnColor();
     }
 }
+// ============================================================
+// LIVE WORLD TIME HELPERS
+static float GetLiveWorldNightFactor(
+    float timeOfDay
+)
+{
+    // Full night:
+    // 20:00 -> 05:00
+
+    if (
+        timeOfDay >= 20.0f ||
+        timeOfDay < 5.0f
+        )
+    {
+        return 1.0f;
+    }
+
+
+    // Sunset transition:
+    // 18:00 -> 20:00
+
+    if (
+        timeOfDay >= 18.0f &&
+        timeOfDay < 20.0f
+        )
+    {
+        return
+            glm::clamp(
+                (
+                    timeOfDay -
+                    18.0f
+                    ) /
+                2.0f,
+                0.0f,
+                1.0f
+            );
+    }
+
+
+    // Sunrise transition:
+    // 05:00 -> 07:00
+
+    if (
+        timeOfDay >= 5.0f &&
+        timeOfDay < 7.0f
+        )
+    {
+        return
+            1.0f -
+            glm::clamp(
+                (
+                    timeOfDay -
+                    5.0f
+                    ) /
+                2.0f,
+                0.0f,
+                1.0f
+            );
+    }
+
+
+    // Daytime.
+
+    return 0.0f;
+}
+static const char* GetLiveWorldPhaseName(
+    float timeOfDay
+)
+{
+    if (
+        timeOfDay >= 5.0f &&
+        timeOfDay < 7.0f
+        )
+    {
+        return "Dawn";
+    }
+
+    if (
+        timeOfDay >= 7.0f &&
+        timeOfDay < 11.0f
+        )
+    {
+        return "Morning";
+    }
+
+    if (
+        timeOfDay >= 11.0f &&
+        timeOfDay < 17.0f
+        )
+    {
+        return "Day";
+    }
+
+    if (
+        timeOfDay >= 17.0f &&
+        timeOfDay < 20.0f
+        )
+    {
+        return "Golden Hour";
+    }
+
+    return "Night";
+}
+static void UpdateLiveWorldReactiveLights(
+    Scene& scene
+)
+{
+    liveWorldNightFactor =
+        GetLiveWorldNightFactor(
+            dayNightSystem.timeOfDay
+        );
+
+
+    if (!liveWorldAutoLights)
+        return;
+
+
+    bool shouldTorchesBeOn =
+        liveWorldNightFactor >
+        0.30f;
+
+
+    for (
+        SceneObject* object :
+        scene.objects
+        )
+    {
+        if (object == nullptr)
+            continue;
+
+
+        // Campfires stay alive at all times.
+        // Their brightness is handled separately.
+
+        if (
+            IsCampfireObject(
+                object
+            )
+            )
+        {
+            continue;
+        }
+
+
+        if (
+            !IsTorchObject(
+                object
+            )
+            )
+        {
+            continue;
+        }
+
+
+        if (
+            object->attachedLight ==
+            nullptr
+            )
+        {
+            continue;
+        }
+
+        // ================= NIGHT =================
+
+        if (shouldTorchesBeOn)
+        {
+            if (
+                !IsTorchLightOn(
+                    object
+                )
+                )
+            {
+                object->attachedLight->color =
+                    GetTorchLightOnColor();
+            }
+        }
+        // ================= DAY =================
+
+        else
+        {
+            if (
+                IsTorchLightOn(
+                    object
+                )
+                )
+            {
+                object->attachedLight->color =
+                    glm::vec3(
+                        0.0f
+                    );
+            }
+        }
+    }
+}
 void UpdateTorchFireFlicker(
     Scene& scene,
     float currentTime
@@ -8372,6 +8613,21 @@ void UpdateTorchFireFlicker(
                     3.5f,
                     1.0f
                 );
+            if (
+                liveWorldEditorPreviewActive &&
+                liveWorldCampfireResponse
+                )
+            {
+                float campfireIntensity =
+                    glm::mix(
+                        0.65f,
+                        1.20f,
+                        liveWorldNightFactor
+                    );
+
+                baseColor *=
+                    campfireIntensity;
+            }
         }
 
         object->attachedLight->color =
@@ -8483,6 +8739,330 @@ SceneObject* FindNearestInteractableObject(
     }
 
     return nearestObject;
+}
+static void DrawLiveWorldStatePanel()
+{
+    ImGui::SetNextWindowPos(
+        ImVec2(
+            centerX +
+            40.0f,
+            topY +
+            80.0f
+        ),
+        ImGuiCond_FirstUseEver
+    );
+
+    ImGui::SetNextWindowSize(
+        ImVec2(
+            390.0f,
+            500.0f
+        ),
+        ImGuiCond_FirstUseEver
+    );
+
+    ImGui::Begin(
+        "ORION Live World"
+    );
+
+
+    // ================= HEADER =================
+
+    ImGui::Text(
+        "Live World Simulation"
+    );
+
+    ImGui::TextDisabled(
+        "Preview environmental state directly in Editor Mode"
+    );
+
+    ImGui::Separator();
+
+
+    ImGui::Checkbox(
+        "Enable Live World State",
+        &liveWorldStateEnabled
+    );
+
+
+    // ================= CURRENT WORLD STATE =================
+
+    ImGui::Separator();
+
+    ImGui::Text(
+        "Current World State"
+    );
+
+
+    int displayHour =
+        static_cast<int>(
+            dayNightSystem.timeOfDay
+            );
+
+    int displayMinute =
+        static_cast<int>(
+            (
+                dayNightSystem.timeOfDay -
+                static_cast<float>(
+                    displayHour
+                    )
+                ) *
+            60.0f
+            );
+
+
+    ImGui::Text(
+        "Time: %02d:%02d",
+        displayHour,
+        displayMinute
+    );
+
+    ImGui::SameLine();
+
+    ImGui::TextColored(
+        ImVec4(
+            0.35f,
+            0.80f,
+            1.0f,
+            1.0f
+        ),
+        "  %s",
+        GetLiveWorldPhaseName(
+            dayNightSystem.timeOfDay
+        )
+    );
+
+
+    // ================= TIMELINE =================
+
+    ImGui::SliderFloat(
+        "World Timeline",
+        &dayNightSystem.timeOfDay,
+        0.0f,
+        24.0f,
+        "%.2f h"
+    );
+
+
+    ImGui::Checkbox(
+        "Run Time Cycle",
+        &dayNightSystem.enabled
+    );
+
+
+    ImGui::DragFloat(
+        "Cycle Speed",
+        &dayNightSystem.cycleSpeed,
+        0.01f,
+        0.01f,
+        5.0f,
+        "%.2f"
+    );
+
+
+    if (
+        ImGui::Button(
+            "-1 Hour"
+        )
+        )
+    {
+        ShiftLiveWorldTime(
+            -1.0f
+        );
+    }
+
+    ImGui::SameLine();
+
+    if (
+        ImGui::Button(
+            "+1 Hour"
+        )
+        )
+    {
+        ShiftLiveWorldTime(
+            1.0f
+        );
+    }
+
+
+    // ================= TIME PRESETS =================
+
+    ImGui::Separator();
+
+    ImGui::Text(
+        "Time Presets"
+    );
+
+
+    if (
+        ImGui::Button(
+            "Dawn"
+        )
+        )
+    {
+        dayNightSystem.timeOfDay =
+            6.0f;
+    }
+
+
+    ImGui::SameLine();
+
+    if (
+        ImGui::Button(
+            "Day"
+        )
+        )
+    {
+        dayNightSystem.SetDay();
+    }
+
+
+    ImGui::SameLine();
+
+    if (
+        ImGui::Button(
+            "Golden Hour"
+        )
+        )
+    {
+        dayNightSystem.SetGoldenHour();
+    }
+
+
+    ImGui::SameLine();
+
+    if (
+        ImGui::Button(
+            "Night"
+        )
+        )
+    {
+        dayNightSystem.SetNight();
+    }
+
+
+    // ================= WEATHER =================
+
+    ImGui::Separator();
+
+    ImGui::Text(
+        "Live Weather"
+    );
+
+
+    ImGui::Checkbox(
+        "Enable Weather",
+        &weatherSystem.enabled
+    );
+
+
+    ImGui::Combo(
+        "Weather State",
+        &weatherSystem.presetIndex,
+        WeatherSystem::PresetNames,
+        WeatherSystem::PresetCount
+    );
+
+
+    ImGui::Checkbox(
+        "Weather Overlay",
+        &weatherSystem.showOverlay
+    );
+
+
+    ImGui::Text(
+        "Fog: %s",
+        weatherSystem.useFog
+        ? "Active"
+        : "Inactive"
+    );
+
+    ImGui::SameLine();
+
+    ImGui::Text(
+        "| Rain: %s",
+        weatherSystem.rainOverlay
+        ? "Active"
+        : "Inactive"
+    );
+
+
+    // ================= REACTIONS =================
+
+    ImGui::Separator();
+
+    ImGui::Text(
+        "World Reactions"
+    );
+
+
+    ImGui::Checkbox(
+        "Automatic Environment Lights",
+        &liveWorldAutoLights
+    );
+
+
+    ImGui::Checkbox(
+        "Campfires React To Time",
+        &liveWorldCampfireResponse
+    );
+
+
+    ImGui::TextDisabled(
+        "Sun direction and shadows already follow the current time."
+    );
+
+    ImGui::TextDisabled(
+        "Weather is applied live to the atmosphere."
+    );
+
+    ImGui::Separator();
+
+    ImGui::Text(
+        "Night Influence"
+    );
+
+
+    ImGui::ProgressBar(
+        liveWorldNightFactor,
+        ImVec2(
+            -1.0f,
+            16.0f
+        )
+    );
+
+
+    ImGui::Text(
+        "%.0f%% night response",
+        liveWorldNightFactor *
+        100.0f
+    );
+
+
+    // ================= STATUS =================
+
+    ImGui::Separator();
+
+    if (liveWorldStateEnabled)
+    {
+        ImGui::TextColored(
+            ImVec4(
+                0.35f,
+                1.0f,
+                0.45f,
+                1.0f
+            ),
+            "LIVE WORLD ACTIVE"
+        );
+    }
+    else
+    {
+        ImGui::TextDisabled(
+            "Live World preview paused."
+        );
+    }
+
+
+    ImGui::End();
 }
 // ================= MAIN =================
 glm::vec3 rotationAxis = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -11883,6 +12463,24 @@ int main()
         dayNightSystem.Update(
             deltaTime
         );
+        liveWorldEditorPreviewActive =
+            appMode ==
+            AppMode::Editor &&
+            liveWorldStateEnabled;
+
+
+        if (liveWorldEditorPreviewActive)
+        {
+            UpdateLiveWorldReactiveLights(
+                scene
+            );
+        }
+        else
+        {
+            liveWorldNightFactor =
+                0.0f;
+        }
+
 
         weatherSystem.ApplyToAtmosphere(
             dayNightSystem.skyColor,
@@ -14516,6 +15114,8 @@ ImGuiIO& io = ImGui::GetIO();
                         true;
                     showCollisionDebug =
                         false;
+                    showLiveWorldStatePanel =
+                        true;
                 }
 
                 ImGui::SameLine();
@@ -14555,6 +15155,8 @@ ImGuiIO& io = ImGui::GetIO();
                     showVisualPolishPanel =
                         true;
                     showCollisionDebug =
+                        true;
+                    showLiveWorldStatePanel =
                         true;
                 }
                 ImGui::Separator();
@@ -14628,6 +15230,10 @@ ImGuiIO& io = ImGui::GetIO();
                 ImGui::Checkbox(
                     "Visual Polish",
                     &showVisualPolishPanel
+                );
+                ImGui::Checkbox(
+                    "Live World",
+                    &showLiveWorldStatePanel
                 );
                 ImGui::Checkbox(
                     "Debug",
@@ -15207,6 +15813,19 @@ ImGuiIO& io = ImGui::GetIO();
 
                         ImGui::End();
                     }
+
+                    // ================= ORION LIVE WORLD PANEL =================
+
+                    if (
+                        appMode ==
+                        AppMode::Editor &&
+                        showLiveWorldStatePanel &&
+                        !cinematicOverlay.enabled
+                        )
+                    {
+                        DrawLiveWorldStatePanel();
+                    }
+
             // ================= SELECTED OBJECT PLACEMENT TOOLS =================
             if (showSelectedObjectToolsPanel)
             {

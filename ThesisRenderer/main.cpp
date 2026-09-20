@@ -401,7 +401,48 @@ bool showVisualPolishPanel =
 true;
 bool showUIPanelsWindow =
 true;
+enum class OrionEditorWorkspace
+{
+    WorldBuilding = 0,
+    Gameplay = 1,
+    Presentation = 2,
+    Debugging = 3
+};
+static const char* GetOrionWorkspaceName(
+    OrionEditorWorkspace workspace
+)
+{
+    if (
+        workspace ==
+        OrionEditorWorkspace::WorldBuilding
+        )
+    {
+        return "World Building";
+    }
 
+    if (
+        workspace ==
+        OrionEditorWorkspace::Gameplay
+        )
+    {
+        return "Gameplay";
+    }
+
+    if (
+        workspace ==
+        OrionEditorWorkspace::Presentation
+        )
+    {
+        return "Presentation";
+    }
+
+    return "Debugging";
+}
+OrionEditorWorkspace currentEditorWorkspace =
+OrionEditorWorkspace::WorldBuilding;
+
+bool showEditorStatusBar =
+true;
 bool showHierarchyPanel =
 true;
 
@@ -15060,7 +15101,7 @@ ImGuiIO& io = ImGui::GetIO();
                 ImGui::SetNextWindowSize(
                     ImVec2(
                         leftWidth,
-                        280.0f
+                        430.0f
                     ),
                     ImGuiCond_FirstUseEver
                 );
@@ -15073,11 +15114,240 @@ ImGuiIO& io = ImGui::GetIO();
                 );
 
                 ImGui::Text(
-                    "Editor Window Visibility"
+                    "ORION Workspace"
                 );
 
+                ImGui::TextDisabled(
+                    "Task-focused editor layouts"
+                );
                 ImGui::Separator();
+                // ================= WORKSPACE PRESETS =================
 
+                ImGui::Text(
+                    "Active: %s",
+                    GetOrionWorkspaceName(
+                        currentEditorWorkspace
+                    )
+                );
+
+
+                if (
+                    ImGui::Button(
+                        "World Building"
+                    )
+                    )
+                {
+                    currentEditorWorkspace =
+                        OrionEditorWorkspace::WorldBuilding;
+
+                    showHierarchyPanel =
+                        true;
+
+                    showInspectorPanel =
+                        true;
+
+                    showAssetBrowserPanel =
+                        true;
+
+                    showStatisticsPanel =
+                        false;
+
+                    showLightInspectorPanel =
+                        false;
+
+                    showDebugPanel =
+                        false;
+
+                    showAnimationPreviewWindow =
+                        false;
+
+                    showSceneHealthValidator =
+                        false;
+
+                    showSelectedObjectToolsPanel =
+                        true;
+
+                    showPlayerToolsPanel =
+                        false;
+
+                    showVisualPolishPanel =
+                        false;
+
+                    showCollisionDebug =
+                        false;
+
+                    showOrionAssistant =
+                        true;
+
+                    showLiveWorldStatePanel =
+                        true;
+                }
+
+
+                ImGui::SameLine();
+
+                if (
+                    ImGui::Button(
+                        "Gameplay"
+                    )
+                    )
+                {
+                    currentEditorWorkspace =
+                        OrionEditorWorkspace::Gameplay;
+
+                    showHierarchyPanel =
+                        true;
+
+                    showInspectorPanel =
+                        true;
+
+                    showAssetBrowserPanel =
+                        true;
+
+                    showStatisticsPanel =
+                        false;
+
+                    showLightInspectorPanel =
+                        false;
+
+                    showDebugPanel =
+                        false;
+
+                    showAnimationPreviewWindow =
+                        false;
+
+                    showSceneHealthValidator =
+                        true;
+
+                    showSelectedObjectToolsPanel =
+                        false;
+
+                    showPlayerToolsPanel =
+                        true;
+
+                    showVisualPolishPanel =
+                        false;
+
+                    showCollisionDebug =
+                        false;
+
+                    showOrionAssistant =
+                        true;
+
+                    showLiveWorldStatePanel =
+                        false;
+                }
+
+
+                if (
+                    ImGui::Button(
+                        "Presentation"
+                    )
+                    )
+                {
+                    currentEditorWorkspace =
+                        OrionEditorWorkspace::Presentation;
+
+                    showHierarchyPanel =
+                        false;
+
+                    showInspectorPanel =
+                        false;
+
+                    showAssetBrowserPanel =
+                        false;
+
+                    showStatisticsPanel =
+                        false;
+
+                    showLightInspectorPanel =
+                        false;
+
+                    showDebugPanel =
+                        false;
+
+                    showAnimationPreviewWindow =
+                        false;
+
+                    showSceneHealthValidator =
+                        false;
+
+                    showSelectedObjectToolsPanel =
+                        false;
+
+                    showPlayerToolsPanel =
+                        false;
+
+                    showCollisionDebug =
+                        false;
+
+                    showOrionAssistant =
+                        false;
+
+                    showVisualPolishPanel =
+                        true;
+
+                    showLiveWorldStatePanel =
+                        true;
+                }
+
+
+                ImGui::SameLine();
+
+                if (
+                    ImGui::Button(
+                        "Debugging"
+                    )
+                    )
+                {
+                    currentEditorWorkspace =
+                        OrionEditorWorkspace::Debugging;
+
+                    showHierarchyPanel =
+                        true;
+
+                    showInspectorPanel =
+                        true;
+
+                    showAssetBrowserPanel =
+                        false;
+
+                    showStatisticsPanel =
+                        true;
+
+                    showLightInspectorPanel =
+                        true;
+
+                    showDebugPanel =
+                        true;
+
+                    showAnimationPreviewWindow =
+                        false;
+
+                    showSceneHealthValidator =
+                        true;
+
+                    showSelectedObjectToolsPanel =
+                        true;
+
+                    showPlayerToolsPanel =
+                        false;
+
+                    showVisualPolishPanel =
+                        false;
+
+                    showCollisionDebug =
+                        true;
+
+                    showOrionAssistant =
+                        true;
+
+                    showLiveWorldStatePanel =
+                        false;
+                }
+
+
+                ImGui::Separator();
                 if (ImGui::Button("Clean Layout"))
                 {
                     showHierarchyPanel =
@@ -15115,6 +15385,11 @@ ImGuiIO& io = ImGui::GetIO();
                     showCollisionDebug =
                         false;
                     showLiveWorldStatePanel =
+                        true;
+                    currentEditorWorkspace =
+                        OrionEditorWorkspace::WorldBuilding;
+
+                    showEditorStatusBar =
                         true;
                 }
 
@@ -15157,6 +15432,8 @@ ImGuiIO& io = ImGui::GetIO();
                     showCollisionDebug =
                         true;
                     showLiveWorldStatePanel =
+                        true;
+                    showEditorStatusBar =
                         true;
                 }
                 ImGui::Separator();
@@ -15235,6 +15512,15 @@ ImGuiIO& io = ImGui::GetIO();
                     "Live World",
                     &showLiveWorldStatePanel
                 );
+
+                ImGui::Checkbox(
+                    "ORION Assistant",
+                    &showOrionAssistant
+                );
+                ImGui::Checkbox(
+                    "Live World",
+                    &showLiveWorldStatePanel
+                );
                 ImGui::Checkbox(
                     "Debug",
                     &showDebugPanel
@@ -15259,6 +15545,10 @@ ImGuiIO& io = ImGui::GetIO();
                 ImGui::Checkbox(
                     "Collision Debug",
                     &showCollisionDebug
+                );
+                ImGui::Checkbox(
+                    "Editor Status Bar",
+                    &showEditorStatusBar
                 );
 
                 ImGui::End();
@@ -15813,7 +16103,139 @@ ImGuiIO& io = ImGui::GetIO();
 
                         ImGui::End();
                     }
+                    // ============================================================
+// ORION EDITOR STATUS BAR
+// ============================================================
 
+                    if (
+                        appMode ==
+                        AppMode::Editor &&
+                        showEditorStatusBar
+                        )
+                    {
+                        ImVec2 displaySize =
+                            ImGui::GetIO().DisplaySize;
+
+                        const float statusBarHeight =
+                            28.0f;
+
+
+                        ImGui::SetNextWindowPos(
+                            ImVec2(
+                                0.0f,
+                                displaySize.y -
+                                statusBarHeight
+                            ),
+                            ImGuiCond_Always
+                        );
+
+                        ImGui::SetNextWindowSize(
+                            ImVec2(
+                                displaySize.x,
+                                statusBarHeight
+                            ),
+                            ImGuiCond_Always
+                        );
+
+
+                        ImGuiWindowFlags statusFlags =
+                            ImGuiWindowFlags_NoTitleBar |
+                            ImGuiWindowFlags_NoResize |
+                            ImGuiWindowFlags_NoMove |
+                            ImGuiWindowFlags_NoCollapse |
+                            ImGuiWindowFlags_NoScrollbar |
+                            ImGuiWindowFlags_NoSavedSettings;
+
+
+                        ImGui::Begin(
+                            "##ORION_STATUS_BAR",
+                            nullptr,
+                            statusFlags
+                        );
+
+
+                        ImGui::TextColored(
+                            ImVec4(
+                                0.30f,
+                                0.75f,
+                                1.0f,
+                                1.0f
+                            ),
+                            "ORION"
+                        );
+
+
+                        ImGui::SameLine();
+
+                        ImGui::Text(
+                            "| Workspace: %s",
+                            GetOrionWorkspaceName(
+                                currentEditorWorkspace
+                            )
+                        );
+
+
+                        ImGui::SameLine();
+
+                        ImGui::Text(
+                            "| Objects: %d",
+                            static_cast<int>(
+                                scene.objects.size()
+                                )
+                        );
+
+
+                        ImGui::SameLine();
+
+                        ImGui::Text(
+                            "| Time: %02d:%02d",
+                            static_cast<int>(
+                                dayNightSystem.timeOfDay
+                                ),
+                            static_cast<int>(
+                                (
+                                    dayNightSystem.timeOfDay -
+                                    static_cast<int>(
+                                        dayNightSystem.timeOfDay
+                                        )
+                                    ) *
+                                60.0f
+                                )
+                        );
+
+
+                        ImGui::SameLine();
+
+                        ImGui::Text(
+                            "| %s",
+                            GetLiveWorldPhaseName(
+                                dayNightSystem.timeOfDay
+                            )
+                        );
+
+
+                        ImGui::SameLine();
+
+                        if (
+                            selectedObject !=
+                            nullptr
+                            )
+                        {
+                            ImGui::Text(
+                                "| Selected: %s",
+                                selectedObject->name.c_str()
+                            );
+                        }
+                        else
+                        {
+                            ImGui::Text(
+                                "| Selected: None"
+                            );
+                        }
+
+
+                        ImGui::End();
+                    }
                     // ================= ORION LIVE WORLD PANEL =================
 
                     if (

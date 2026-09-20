@@ -2703,12 +2703,12 @@ MainMenuAction DrawMainMenuScreen(
             0.0f,
             0.0f
         ),
-        ImGuiCond_FirstUseEver
+        ImGuiCond_Always
     );
 
     ImGui::SetNextWindowSize(
         io.DisplaySize,
-        ImGuiCond_FirstUseEver
+        ImGuiCond_Always
     );
 
     ImGuiWindowFlags flags =
@@ -2765,30 +2765,33 @@ MainMenuAction DrawMainMenuScreen(
     }
 
     float buttonWidth =
-        io.DisplaySize.x * 0.320f;
+        io.DisplaySize.x * 0.327f;
 
     float buttonHeight =
-        io.DisplaySize.y * 0.105f;
+        io.DisplaySize.y * 0.110f;
 
     float buttonX =
-        io.DisplaySize.x * 0.360f;
+        io.DisplaySize.x * 0.342f;
+
 
     ImVec2 playPosition =
         ImVec2(
             buttonX,
-            io.DisplaySize.y * 0.410f
+            io.DisplaySize.y * 0.377f
         );
+
 
     ImVec2 editorPosition =
         ImVec2(
             buttonX,
-            io.DisplaySize.y * 0.565f
+            io.DisplaySize.y * 0.514f
         );
+
 
     ImVec2 exitPosition =
         ImVec2(
             buttonX,
-            io.DisplaySize.y * 0.700f
+            io.DisplaySize.y * 0.636f
         );
 
     ImVec2 buttonSize =
@@ -2879,6 +2882,128 @@ MainMenuAction DrawMainMenuScreen(
         mainMenuHoveredButton =
             2;
     }
+// MAIN MENU V2 UTILITY BUTTONS
+    ImVec2 settingsPosition =
+        ImVec2(
+            io.DisplaySize.x * 0.331f,
+            io.DisplaySize.y * 0.768f
+        );
+
+    ImVec2 settingsSize =
+        ImVec2(
+            io.DisplaySize.x * 0.096f,
+            io.DisplaySize.y * 0.050f
+        );
+
+
+    ImVec2 projectInfoPosition =
+        ImVec2(
+            io.DisplaySize.x * 0.437f,
+            io.DisplaySize.y * 0.768f
+        );
+
+    ImVec2 projectInfoSize =
+        ImVec2(
+            io.DisplaySize.x * 0.120f,
+            io.DisplaySize.y * 0.050f
+        );
+
+
+    ImVec2 controlsPosition =
+        ImVec2(
+            io.DisplaySize.x * 0.567f,
+            io.DisplaySize.y * 0.768f
+        );
+
+    ImVec2 controlsSize =
+        ImVec2(
+            io.DisplaySize.x * 0.106f,
+            io.DisplaySize.y * 0.050f
+        );
+
+
+    // ================= SETTINGS =================
+
+    if (
+        DrawMainMenuButton(
+            "MainMenu_Settings",
+            "SETTINGS",
+            settingsPosition,
+            settingsSize,
+            hoverFill,
+            hoverBorder
+        )
+        )
+    {
+        ImGui::OpenPopup(
+            "ORION Settings"
+        );
+
+        mainMenuLinkClicked =
+            true;
+    }
+
+    if (ImGui::IsItemHovered())
+    {
+        mainMenuHoveredButton =
+            3;
+    }
+
+
+    // ================= PROJECT INFO =================
+
+    if (
+        DrawMainMenuButton(
+            "MainMenu_ProjectInfo",
+            "PROJECT INFO",
+            projectInfoPosition,
+            projectInfoSize,
+            hoverFill,
+            hoverBorder
+        )
+        )
+    {
+        ImGui::OpenPopup(
+            "ORION Project Info"
+        );
+
+        mainMenuLinkClicked =
+            true;
+    }
+
+    if (ImGui::IsItemHovered())
+    {
+        mainMenuHoveredButton =
+            4;
+    }
+
+
+    // ================= CONTROLS =================
+
+    if (
+        DrawMainMenuButton(
+            "MainMenu_Controls",
+            "CONTROLS",
+            controlsPosition,
+            controlsSize,
+            hoverFill,
+            hoverBorder
+        )
+        )
+    {
+        ImGui::OpenPopup(
+            "ORION Controls"
+        );
+
+        mainMenuLinkClicked =
+            true;
+    }
+
+    if (ImGui::IsItemHovered())
+    {
+        mainMenuHoveredButton =
+            5;
+    }
     float linkButtonWidth =
         io.DisplaySize.x * 0.055f;
 
@@ -2938,6 +3063,305 @@ MainMenuAction DrawMainMenuScreen(
     {
         mainMenuHoveredButton =
             0;
+    }
+// SETTINGS POPUP
+    if (
+        ImGui::BeginPopupModal(
+            "ORION Settings",
+            nullptr,
+            ImGuiWindowFlags_AlwaysAutoResize
+        )
+        )
+    {
+        ImGui::Text(
+            "ORION ENGINE SETTINGS"
+        );
+
+        ImGui::Separator();
+
+        ImGui::Text(
+            "Display"
+        );
+
+        static bool menuVSyncEnabled =
+            true;
+
+        if (
+            ImGui::Checkbox(
+                "VSync",
+                &menuVSyncEnabled
+            )
+            )
+        {
+            glfwSwapInterval(
+                menuVSyncEnabled
+                ? 1
+                : 0
+            );
+        }
+
+
+        ImGui::Text(
+            "Resolution: %.0f x %.0f",
+            io.DisplaySize.x,
+            io.DisplaySize.y
+        );
+
+
+        ImGui::Spacing();
+        ImGui::Separator();
+
+
+        if (
+            ImGui::Button(
+                "Close",
+                ImVec2(
+                    120.0f,
+                    0.0f
+                )
+            )
+            )
+        {
+            ImGui::CloseCurrentPopup();
+        }
+
+
+        ImGui::EndPopup();
+    }
+// PROJECT INFO POPUP
+    if (
+        ImGui::BeginPopupModal(
+            "ORION Project Info",
+            nullptr,
+            ImGuiWindowFlags_AlwaysAutoResize
+        )
+        )
+    {
+        ImGui::Text(
+            "ORION GAME ENGINE"
+        );
+
+        ImGui::TextDisabled(
+            "Custom C++ / OpenGL Game Engine"
+        );
+
+        ImGui::Separator();
+
+
+        ImGui::Text(
+            "Core Engine Systems"
+        );
+
+        ImGui::BulletText(
+            "Scene Editor and Hierarchy"
+        );
+
+        ImGui::BulletText(
+            "Inspector and Transform Tools"
+        );
+
+        ImGui::BulletText(
+            "Directional Shadow Mapping"
+        );
+
+        ImGui::BulletText(
+            "Animated Character System"
+        );
+
+        ImGui::BulletText(
+            "Interactive Asset Preview"
+        );
+
+        ImGui::BulletText(
+            "Prefab System"
+        );
+
+        ImGui::BulletText(
+            "Smart World Painter"
+        );
+
+        ImGui::BulletText(
+            "Context-Aware ORION Assistant"
+        );
+
+        ImGui::BulletText(
+            "Live World Simulation"
+        );
+
+        ImGui::BulletText(
+            "Playable Runtime Modes"
+        );
+
+
+        ImGui::Spacing();
+
+        ImGui::TextDisabled(
+            "Graduation Project"
+        );
+
+
+        ImGui::Separator();
+
+
+        if (
+            ImGui::Button(
+                "Close",
+                ImVec2(
+                    120.0f,
+                    0.0f
+                )
+            )
+            )
+        {
+            ImGui::CloseCurrentPopup();
+        }
+
+
+        ImGui::EndPopup();
+    }
+// CONTROLS POPUP
+    if (
+        ImGui::BeginPopupModal(
+            "ORION Controls",
+            nullptr,
+            ImGuiWindowFlags_AlwaysAutoResize
+        )
+        )
+    {
+        ImGui::Text(
+            "EDITOR CONTROLS"
+        );
+
+        ImGui::Separator();
+
+
+        ImGui::Text(
+            "W A S D"
+        );
+
+        ImGui::SameLine();
+
+        ImGui::TextDisabled(
+            "- Movement"
+        );
+
+
+        ImGui::Text(
+            "Mouse"
+        );
+
+        ImGui::SameLine();
+
+        ImGui::TextDisabled(
+            "- Camera Look"
+        );
+
+
+        ImGui::Text(
+            "TAB"
+        );
+
+        ImGui::SameLine();
+
+        ImGui::TextDisabled(
+            "- Editor / Play Mode"
+        );
+
+
+        ImGui::Text(
+            "CTRL + Z"
+        );
+
+        ImGui::SameLine();
+
+        ImGui::TextDisabled(
+            "- Undo"
+        );
+
+
+        ImGui::Text(
+            "CTRL + Y"
+        );
+
+        ImGui::SameLine();
+
+        ImGui::TextDisabled(
+            "- Redo"
+        );
+
+
+        ImGui::Spacing();
+
+        ImGui::Text(
+            "PLAY MODE"
+        );
+
+        ImGui::Separator();
+
+
+        ImGui::Text(
+            "W A S D"
+        );
+
+        ImGui::SameLine();
+
+        ImGui::TextDisabled(
+            "- Player Movement"
+        );
+
+
+        ImGui::Text(
+            "SHIFT"
+        );
+
+        ImGui::SameLine();
+
+        ImGui::TextDisabled(
+            "- Run"
+        );
+
+
+        ImGui::Text(
+            "SPACE"
+        );
+
+        ImGui::SameLine();
+
+        ImGui::TextDisabled(
+            "- Jump"
+        );
+
+
+        ImGui::Text(
+            "E"
+        );
+
+        ImGui::SameLine();
+
+        ImGui::TextDisabled(
+            "- Interact"
+        );
+
+
+        ImGui::Spacing();
+        ImGui::Separator();
+
+
+        if (
+            ImGui::Button(
+                "Close",
+                ImVec2(
+                    120.0f,
+                    0.0f
+                )
+            )
+            )
+        {
+            ImGui::CloseCurrentPopup();
+        }
+
+
+        ImGui::EndPopup();
     }
     ImGui::End();
 

@@ -177,6 +177,7 @@
     <ClCompile Include="stb_image.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="ThirdParty\miniaudio\miniaudio.c" />
+    <ClCompile Include="UI\IntroVideoPlayer.cpp" />
     <ClCompile Include="WeatherSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -221,6 +222,7 @@
     <ClInclude Include="ThirdParty\miniaudio\miniaudio.h" />
     <ClInclude Include="ThirdPersonController.h" />
     <ClInclude Include="Transform.h" />
+    <ClInclude Include="UI\IntroVideoPlayer.h" />
     <ClInclude Include="WeatherSystem.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

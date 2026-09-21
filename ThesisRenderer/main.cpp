@@ -52,6 +52,7 @@
 #include "CoinRushGameMode.h"
 #include "MonsterEscapeGameMode.h"
 #include "EditorLayout.h"
+#include "UI/IntroVideoPlayer.h"
 #ifdef max
 #undef max
 #endif
@@ -9703,6 +9704,19 @@ int main()
         LoadMenuTexture(
             "Assets/UI/orion_build_learn_create.png"
         );
+    IntroVideoPlayer introVideo;
+    bool showIntroVideo =
+        introVideo.Load(
+            L"Assets/UI/orion_intro.mp4"
+        );
+
+
+    if (!showIntroVideo)
+    {
+        std::cout
+            << "Intro video unavailable. Continuing to Main Menu."
+            << std::endl;
+    }
     playerAnimations.LoadAnimation(
         "Jump",
         "Assets/Models/Characters/Player/Jump.fbx"
@@ -12293,6 +12307,113 @@ int main()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
         UpdateResponsiveEditorLayout();
+        // ============================================================
+// ORION STARTUP INTRO VIDEO
+// ============================================================
+
+        if (showIntroVideo)
+        {
+            introVideo.Update(
+                ImGui::GetIO().DeltaTime
+            );
+
+
+            bool skipWithKeyboard =
+                glfwGetKey(
+                    window,
+                    GLFW_KEY_SPACE
+                ) == GLFW_PRESS ||
+
+                glfwGetKey(
+                    window,
+                    GLFW_KEY_ENTER
+                ) == GLFW_PRESS ||
+
+                glfwGetKey(
+                    window,
+                    GLFW_KEY_ESCAPE
+                ) == GLFW_PRESS;
+
+
+            bool skipWithButton =
+                introVideo.Draw();
+
+
+            bool closeIntroAfterFrame =
+                skipWithKeyboard ||
+                skipWithButton ||
+                introVideo.IsFinished();
+
+
+            // ================= RENDER INTRO FRAME =================
+
+            int introWidth =
+                0;
+
+            int introHeight =
+                0;
+
+
+            glfwGetFramebufferSize(
+                window,
+                &introWidth,
+                &introHeight
+            );
+
+
+            glViewport(
+                0,
+                0,
+                introWidth,
+                introHeight
+            );
+
+
+            glClearColor(
+                0.0f,
+                0.0f,
+                0.0f,
+                1.0f
+            );
+
+
+            glClear(
+                GL_COLOR_BUFFER_BIT |
+                GL_DEPTH_BUFFER_BIT
+            );
+
+
+            ImGui::Render();
+
+
+            ImGui_ImplOpenGL3_RenderDrawData(
+                ImGui::GetDrawData()
+            );
+
+
+            glfwSwapBuffers(
+                window
+            );
+
+
+            // ================= END INTRO =================
+
+            if (closeIntroAfterFrame)
+            {
+                introVideo.Stop();
+
+                showIntroVideo =
+                    false;
+
+
+                std::cout
+                    << "Intro finished. Opening Main Menu."
+                    << std::endl;
+            }
+
+
+            continue;
+        }
         // ================= RETURN TO MAIN MENU WITH ESC =================
         bool escapeDown =
             glfwGetKey(

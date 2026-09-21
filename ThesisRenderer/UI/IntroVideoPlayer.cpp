@@ -577,7 +577,20 @@ void IntroVideoPlayer::UploadPendingFrame()
     {
         return;
     }
+    for (
+        size_t i = 3;
+        i < pendingFrame.size();
+        i += 4
+        )
+    {
+        pendingFrame[i] =
+            255;
+    }
 
+
+    // ============================================================
+    // UPLOAD FRAME
+    // ============================================================
 
     glBindTexture(
         GL_TEXTURE_2D,
@@ -798,7 +811,6 @@ bool IntroVideoPlayer::Draw()
         videoPosition
     );
 
-
     ImGui::Image(
         static_cast<ImTextureID>(
             textureId
@@ -806,11 +818,11 @@ bool IntroVideoPlayer::Draw()
         videoSize,
         ImVec2(
             0.0f,
-            1.0f
+            0.0f
         ),
         ImVec2(
             1.0f,
-            0.0f
+            1.0f
         )
     );
 

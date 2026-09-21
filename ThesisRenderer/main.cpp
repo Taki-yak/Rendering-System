@@ -12109,7 +12109,11 @@ int main()
         "Assets/Audio/menu_music.wav",
         true
     );
-
+    audioSystem.LoadSound(
+        "intro_audio",
+        "Assets/Audio/orion_intro.wav",
+        false
+    );
     audioSystem.LoadSound(
         "menu_click",
         "Assets/Audio/menu_click.wav",
@@ -12402,6 +12406,20 @@ int main()
             {
                 introVideo.Stop();
 
+                bool introAudioPlaying =
+                    false;
+
+                if (introAudioPlaying)
+                {
+                    audioSystem.Stop(
+                        "intro_audio"
+                    );
+
+                    introAudioPlaying =
+                        false;
+                }
+
+
                 showIntroVideo =
                     false;
 
@@ -12613,6 +12631,20 @@ int main()
             );
 
             continue;
+        }
+        bool introAudioPlaying =
+            false;
+
+
+        if (showIntroVideo)
+        {
+            audioSystem.PlayFromStart(
+                "intro_audio",
+                1.0f
+            );
+
+            introAudioPlaying =
+                true;
         }
         // ================= LIVE EDIT-TEST WORKFLOW =================
 

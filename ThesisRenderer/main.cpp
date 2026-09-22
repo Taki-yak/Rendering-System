@@ -12301,6 +12301,26 @@ int main()
 
     bool animatedJumpPreviousSpaceDown =
         false;
+    bool introAudioPlaying =
+        false;
+
+
+    if (showIntroVideo)
+    {
+        audioSystem.PlayFromStart(
+            "intro_audio",
+            1.0f
+        );
+
+        introAudioPlaying =
+            true;
+
+        std::cout
+            << "Intro audio started."
+            << std::endl;
+    }
+
+
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
@@ -12406,8 +12426,6 @@ int main()
             {
                 introVideo.Stop();
 
-                bool introAudioPlaying =
-                    false;
 
                 if (introAudioPlaying)
                 {
@@ -12631,20 +12649,6 @@ int main()
             );
 
             continue;
-        }
-        bool introAudioPlaying =
-            false;
-
-
-        if (showIntroVideo)
-        {
-            audioSystem.PlayFromStart(
-                "intro_audio",
-                1.0f
-            );
-
-            introAudioPlaying =
-                true;
         }
         // ================= LIVE EDIT-TEST WORKFLOW =================
 

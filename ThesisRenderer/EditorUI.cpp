@@ -2593,7 +2593,6 @@ static EditorHierarchyGroup GetEditorHierarchyGroup(
         EditorHierarchyGroup::Other;
 }
 
-
 // ================= SUBGROUP =================
 
 static EditorHierarchySubgroup GetEditorHierarchySubgroup(
